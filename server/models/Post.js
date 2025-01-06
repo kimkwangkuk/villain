@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const postSchema = new mongoose.Schema({
+const PostSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true
@@ -13,10 +13,10 @@ const postSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  comments: [{
+  category: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Comment'
-  }],
+    ref: 'VillainCategory'
+  },
   likes: {
     type: Number,
     default: 0
@@ -25,8 +25,6 @@ const postSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-}, {
-  collection: 'posts'
 });
 
-module.exports = mongoose.model('Post', postSchema); 
+module.exports = mongoose.model('Post', PostSchema);

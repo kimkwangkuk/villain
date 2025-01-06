@@ -13,6 +13,9 @@ app.use(express.json());
 const postRouter = require('./router/postRouter');
 app.use('/api/posts', postRouter);
 
+const categoryRouter = require('./router/categoryRouter');
+app.use('/api/categories', categoryRouter);
+
 // MongoDB 연결
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB 연결 성공'))

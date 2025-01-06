@@ -19,7 +19,9 @@ router.post('/', async (req, res) => {
   const post = new Post({
     title: req.body.title,
     content: req.body.content,
-    author: req.body.author
+    author: req.body.author,
+    category: req.body.categoryId,
+    likes: 0
   });
 
   try {
@@ -33,25 +35,16 @@ router.post('/', async (req, res) => {
 // 댓글 추가
 router.post('/:id/comments', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
-    
     // 새 댓글 생성
     const comment = new Comment({
-      text: req.body.text,
-      author: req.body.author,
-      post: post._id
+      content: req.body.content,    // text -> content
+      userId: req.body.userId,      // author -> userId
+      postId: req.params.id         // post -> postId
     });
     
     // 댓글 저장
     const savedComment = await comment.save();
-    
-    // 포스트에 댓글 ID 추가
-    post.comments.push(savedComment._id);
-    const updatedPost = await post.save();
-    
-    // populate로 댓글 정보 포함해서 응답
-    const populatedPost = await Post.findById(updatedPost._id).populate('comments');
-    res.json(populatedPost);
+    res.status(201).json(savedComment);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -76,8 +69,16 @@ router.get('/:id', async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: '포스트를 찾을 수 없습니다.' });
     }
-    res.json(post);
+
+    const comments = await Comment.find({ postId: req.params.id })
+      .sort({ createdAt: -1 });
+
+    const response = post.toObject();
+    response.comments = comments;
+
+    res.json(response);
   } catch (err) {
+    console.error('에러:', err);
     res.status(500).json({ message: err.message });
   }
 });
