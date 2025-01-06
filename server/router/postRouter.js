@@ -4,13 +4,21 @@ const path = require('path');
 const Post = require(path.join(__dirname, '..', 'models', 'Post'));
 const Comment = require(path.join(__dirname, '..', 'models', 'Comment'));
 
-// 모든 포스트 가져오기 (댓글 포함)
+// 모든 포스트 가져오기
 router.get('/', async (req, res) => {
   try {
-    const posts = await Post.find().populate('comments');
+    console.log('포스트 조회 시작');
+    const posts = await Post.find().sort({ createdAt: -1 });
+    console.log('조회된 포스트:', posts);
     res.json(posts);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('포스트 조회 에러의 전체 내용:', error);
+    console.error('에러 메시지:', error.message);
+    console.error('에러 스택:', error.stack);
+    res.status(500).json({ 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
