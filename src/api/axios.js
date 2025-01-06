@@ -14,4 +14,5 @@ const api = axios.create({
 export const getPosts = () => api.get('/posts');
 export const createPost = (postData) => api.post('/posts', postData);
 export const addComment = (postId, commentData) => api.post(`/posts/${postId}/comments`, commentData);
-export const updateReaction = (postId, reactionType) => api.patch(`/posts/${postId}/reactions`, { type: reactionType }); 
+export const updateReaction = (postId, reactionType) => api.patch(`/posts/${postId}/reactions`, { type: reactionType });
+export const getPost = (id) => api.get(`/posts/${id}`); 

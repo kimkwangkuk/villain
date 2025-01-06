@@ -69,4 +69,17 @@ router.patch('/:id/likes', async (req, res) => {
   }
 });
 
+// 단일 포스트 조회
+router.get('/:id', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: '포스트를 찾을 수 없습니다.' });
+    }
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
