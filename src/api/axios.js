@@ -34,8 +34,14 @@ export const createPost = (postData) => {
     }
   });
 };
-export const addComment = (postId, commentData) => 
-  api.post(`/posts/${postId}/comments`, commentData);          // 댓글 추가
+export const addComment = (postId, commentData) => {
+  const token = localStorage.getItem('token');
+  return api.post(`/posts/${postId}/comments`, commentData, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+};
 export const updateReaction = (postId, reactionType) => 
   api.patch(`/posts/${postId}/reactions`, { type: reactionType }); // 반응 업데이트
 export const getCategories = () => api.get('/categories'); 

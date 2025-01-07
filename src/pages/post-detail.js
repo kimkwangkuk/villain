@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPost, addComment } from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 
 function PostDetail() {
   const { id } = useParams();
   const [post, setPost] = useState(null);
+  const [commentContent, setCommentContent] = useState('');
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -21,6 +24,27 @@ function PostDetail() {
 
     fetchPost();
   }, [id]);
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!commentContent.trim()) return;
+
+    try {
+      const response = await addComment(id, { 
+        content: commentContent.trim() 
+      });
+      
+      console.log('댓글 응답:', response.data);
+
+      setPost(prevPost => ({
+        ...prevPost,
+        comments: [...prevPost.comments, response.data]
+      }));
+      setCommentContent('');
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+    }
+  };
 
   if (!post) return <div>로딩중...</div>;
 
@@ -38,6 +62,29 @@ function PostDetail() {
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">댓글</h2>
+          {isLoggedIn ? (
+            <form onSubmit={handleCommentSubmit} className="mb-6">
+              <div className="flex flex-col space-y-2">
+                <textarea
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                  placeholder="댓글을 작성해주세요"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows="3"
+                />
+                <button
+                  type="submit"
+                  className="self-end px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  disabled={!commentContent.trim()}
+                >
+                  댓글 작성
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p className="text-gray-500 mb-4">댓글을 작성하려면 로그인이 필요합니다.</p>
+          )}
+
           {Array.isArray(post.comments) && post.comments.length > 0 ? (
             <div className="space-y-4">
               {post.comments.map(comment => (

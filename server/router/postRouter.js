@@ -46,20 +46,43 @@ router.post('/', auth, async (req, res) => {
 });
 
 // 댓글 추가
-router.post('/:id/comments', async (req, res) => {
+router.post('/:id/comments', auth, async (req, res) => {
   try {
+    console.log('댓글 작성 요청:', {
+      body: req.body,
+      user: req.user,
+      postId: req.params.id
+    });
+
+    // 입력값 검증
+    if (!req.body.content) {
+      return res.status(400).json({ message: '댓글 내용이 필요합니다.' });
+    }
+
+    if (!req.user || !req.user._id) {
+      return res.status(400).json({ message: '사용자 정보가 없습니다.' });
+    }
+
     // 새 댓글 생성
     const comment = new Comment({
-      content: req.body.content,    // text -> content
-      userId: req.body.userId,      // author -> userId
-      postId: req.params.id         // post -> postId
+      content: req.body.content,
+      userId: req.user._id,
+      postId: req.params.id
     });
+    
+    console.log('생성할 댓글:', comment);
     
     // 댓글 저장
     const savedComment = await comment.save();
+    console.log('저장된 댓글:', savedComment);
+    
     res.status(201).json(savedComment);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error('댓글 작성 에러:', err);
+    res.status(400).json({ 
+      message: err.message,
+      details: err.errors // Mongoose 유효성 검사 에러 정보
+    });
   }
 });
 

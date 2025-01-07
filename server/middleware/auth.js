@@ -1,26 +1,30 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
-const auth = async (req, res, next) => {
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: '인증 토큰이 필요합니다.' });
+  }
+
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      throw new Error('인증이 필요합니다.');
-    }
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    console.log('디코딩된 토큰:', decoded);
 
-    if (!user) {
-      throw new Error('사용자를 찾을 수 없습니다.');
-    }
-
-    req.user = user;
+    // 토큰에서 추출한 사용자 정보를 req.user에 저장
+    req.user = {
+      _id: decoded.userId,
+      username: decoded.username,
+      email: decoded.email
+    };
+    
+    console.log('설정된 req.user:', req.user);
     next();
   } catch (error) {
-    res.status(401).json({ message: '인증에 실패했습니다.' });
+    console.error('토큰 검증 에러:', error);
+    return res.status(403).json({ message: '유효하지 않은 토큰입니다.' });
   }
 };
 
-module.exports = auth; 
+module.exports = authenticateToken; 
