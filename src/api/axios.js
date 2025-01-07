@@ -32,3 +32,21 @@ export const addComment = (postId, commentData) =>
 export const updateReaction = (postId, reactionType) => 
   api.patch(`/posts/${postId}/reactions`, { type: reactionType }); // 반응 업데이트
 export const getCategories = () => api.get('/categories'); 
+
+// 인증 관련 API
+export const signup = (userData) => api.post('/auth/signup', userData);
+export const login = (credentials) => api.post('/auth/login', credentials);
+
+// 토큰 인터셉터 추가
+api.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  error => {
+    return Promise.reject(error);
+  }
+); 
