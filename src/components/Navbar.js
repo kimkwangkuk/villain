@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
   const navigate = useNavigate();
@@ -49,6 +49,14 @@ function Navbar() {
                   회원가입
                 </Link>
               </>
+            )}
+            {isLoggedIn && (
+              <Link 
+                to="/posts/new" 
+                className="bg-green-500 px-4 py-2 rounded-md hover:bg-green-600"
+              >
+                글쓰기
+              </Link>
             )}
           </div>
         </div>

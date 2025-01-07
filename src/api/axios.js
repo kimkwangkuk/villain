@@ -24,9 +24,16 @@ api.interceptors.response.use(
 );
 
 // API 함수들
-export const getPosts = () => api.get('/posts');                // 전체 게시글 조회
+export const getPosts = () => api.get('/posts');  // 원래대로 복구
 export const getPost = (id) => api.get(`/posts/${id}`);        // 단일 게시글 조회
-export const createPost = (postData) => api.post('/posts', postData);  // 게시글 작성
+export const createPost = (postData) => {
+  const token = localStorage.getItem('token');
+  return api.post('/posts', postData, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+};
 export const addComment = (postId, commentData) => 
   api.post(`/posts/${postId}/comments`, commentData);          // 댓글 추가
 export const updateReaction = (postId, reactionType) => 

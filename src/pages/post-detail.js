@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getPost } from '../api/axios';
-import CommentCard from '../components/comments/CommentCard';
+import { getPost, addComment } from '../api/axios';
+import CommentCard from '../components/CommentCard';
 
 function PostDetail() {
   const { id } = useParams();

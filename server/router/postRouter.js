@@ -3,6 +3,7 @@ const router = express.Router();
 const path = require('path');
 const Post = require(path.join(__dirname, '..', 'models', 'Post'));
 const Comment = require(path.join(__dirname, '..', 'models', 'Comment'));
+const auth = require('../middleware/auth');
 
 // 모든 포스트 가져오기
 router.get('/', async (req, res) => {
@@ -23,20 +24,24 @@ router.get('/', async (req, res) => {
 });
 
 // 새 포스트 작성
-router.post('/', async (req, res) => {
-  const post = new Post({
-    title: req.body.title,
-    content: req.body.content,
-    author: req.body.author,
-    category: req.body.categoryId,
-    likes: 0
-  });
-
+router.post('/', auth, async (req, res) => {
   try {
-    const newPost = await post.save();
-    res.status(201).json(newPost);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    const { title, content, category } = req.body;
+    const author = req.user._id;  // 이제 req.user를 사용할 수 있습니다
+
+    const post = new Post({
+      title,
+      content,
+      author,
+      category,
+      date: new Date()
+    });
+
+    await post.save();
+    res.status(201).json(post);
+  } catch (error) {
+    console.error('게시글 작성 에러:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 

@@ -10,21 +10,21 @@ const PostSchema = new mongoose.Schema({
     required: true
   },
   author: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'VillainCategory'
+    ref: 'VillainCategory',
+    required: true
   },
-  likes: {
-    type: Number,
-    default: 0
-  },
-  createdAt: {
+  date: {
     type: Date,
     default: Date.now
   }
+}, {
+  collection: 'posts'
 });
 
 module.exports = mongoose.model('Post', PostSchema);
