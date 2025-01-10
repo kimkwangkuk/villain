@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     unique: true
   }
 }, {
-  collection: 'users'  // 기존 컬렉션 이름과 매칭
+  collection: 'users'  // 실제 MongoDB의 컬렉션 이름과 일치하는지 확인
 });
 
 module.exports = mongoose.model('User', userSchema); 

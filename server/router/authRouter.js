@@ -9,22 +9,25 @@ router.post('/signup', async (req, res) => {
   try {
     const { email, username, password } = req.body;
     
-    console.log('회원가입 요청 데이터:', { email, username });  // 비밀번호는 로깅하지 않음
+    console.log('1. 회원가입 요청 데이터:', { email, username });
 
     // 이메일 중복 체크
     const existingUser = await User.findOne({ email });
+    console.log('2. 이메일 중복 체크:', { email, exists: !!existingUser });
     if (existingUser) {
       return res.status(400).json({ message: '이미 사용중인 이메일입니다.' });
     }
 
-    // 사용자명 중복 체크 추가
+    // 사용자명 중복 체크
     const existingUsername = await User.findOne({ username });
+    console.log('3. 사용자명 중복 체크:', { username, exists: !!existingUsername });
     if (existingUsername) {
       return res.status(400).json({ message: '이미 사용중인 사용자 이름입니다.' });
     }
 
     // 비밀번호 해싱
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('4. 비밀번호 해싱 완료');
 
     // 새 유저 생성
     const user = new User({
@@ -33,14 +36,15 @@ router.post('/signup', async (req, res) => {
       password: hashedPassword
     });
 
-    console.log('생성할 유저 정보:', user);  // 해시된 비밀번호 포함
+    console.log('5. 새 유저 객체 생성:', user);
 
+    // MongoDB에 저장
     await user.save();
-    console.log('유저 저장 완료');
+    console.log('6. 유저 저장 완료. ID:', user._id);
 
     res.status(201).json({ message: '회원가입이 완료되었습니다.' });
   } catch (error) {
-    console.error('회원가입 에러:', error);  // 상세 에러 로깅
+    console.error('회원가입 에러:', error);
     res.status(500).json({ 
       message: '회원가입 처리 중 오류가 발생했습니다.',
       error: error.message 
