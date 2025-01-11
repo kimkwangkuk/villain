@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 function AddPostPage() {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -16,7 +16,7 @@ function AddPostPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !user) {
       navigate('/login');
       return;
     }
@@ -35,7 +35,7 @@ function AddPostPage() {
     };
 
     fetchCategories();
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, user, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -48,15 +48,27 @@ function AddPostPage() {
     e.preventDefault();
     setError('');
 
+    if (!user) {
+      setError('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    if (!formData.category) {
+      setError('카테고리를 선택해주세요.');
+      return;
+    }
+
     try {
       await createPost({
-        ...formData,
+        title: formData.title,
+        content: formData.content,
         categoryId: formData.category
       });
       navigate('/');
     } catch (error) {
       console.error('게시글 작성 실패:', error);
-      setError(error.response?.data?.message || '게시글 작성에 실패했습니다.');
+      setError(error.message || '게시글 작성에 실패했습니다.');
     }
   };
 

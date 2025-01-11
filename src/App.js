@@ -6,6 +6,7 @@ import PostDetail from './pages/post-detail';
 import LoginPage from './pages/login';
 import SignupPage from './pages/signup';
 import AddPostPage from './pages/add-post';
+import MyPage from './pages/MyPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/posts/new" element={<AddPostPage />} />
           <Route path="/posts/:id" element={<PostDetail />} />
+          <Route path="/mypage" element={<MyPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

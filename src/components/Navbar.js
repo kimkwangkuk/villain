@@ -24,6 +24,12 @@ function Navbar() {
             </Link>
             {isLoggedIn ? (
               <>
+                <Link 
+                  to="/mypage" 
+                  className="hover:text-gray-300"
+                >
+                  마이페이지
+                </Link>
                 <button 
                   className="hover:text-gray-300"
                   onClick={handleLogout}
