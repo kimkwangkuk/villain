@@ -48,11 +48,16 @@ export const createPost = async (postData) => {
     comments: []
   };
 
-  const docRef = await addDoc(collection(db, 'posts'), post);
-  return {
-    id: docRef.id,
-    ...post
-  };
+  try {
+    const docRef = await addDoc(collection(db, 'posts'), post);
+    return {
+      id: docRef.id,
+      ...post
+    };
+  } catch (error) {
+    console.error('게시글 생성 실패:', error);
+    throw error;
+  }
 };
 
 // Comments
@@ -157,19 +162,55 @@ export const signup = async ({ email, password }) => {
 
 export const createCategories = async () => {
   const categories = [
-    { name: "빌런1", description: "빌런1 설명" },
-    { name: "빌런2", description: "빌런2 설명" },
-    // ... 더 많은 카테고리
+    { name: "직장인 빌런", description: "직장 내 빌런 유형" },
+    { name: "학교 빌런", description: "학교에서 만나는 빌런" },
+    { name: "카페 빌런", description: "카페에서 마주치는 빌런" },
+    { name: "식당 빌런", description: "식당에서 마주치는 빌런" },
+    { name: "대중교통 빌런", description: "대중교통에서 만나는 빌런" },
+    { name: "운동시설 빌런", description: "운동시설에서 마주치는 빌런" },
+    { name: "병원 빌런", description: "병원에서 마주치는 빌런" },
+    { name: "공공장소 빌런", description: "공공장소에서 만나는 빌런" },
+    { name: "온라인 빌런", description: "온라인에서 만나는 빌런" },
+    { name: "이웃 빌런", description: "이웃/아파트에서 만나는 빌런" }
   ];
 
+  const createdCategories = [];
   for (const category of categories) {
-    await addDoc(collection(db, 'categories'), {
+    const docRef = await addDoc(collection(db, 'categories'), {
       ...category,
       createdAt: serverTimestamp()
     });
+    createdCategories.push({ id: docRef.id, ...category });
   }
-}; 
+  return createdCategories;
+};
 
-// 파일 맨 아래에 추가
+// 테스트 포스트 생성 함수 추가
+export const createTestPosts = async () => {
+  const categories = await getCategories();
+  
+  const posts = [];
+  for (const category of categories) {
+    for (let i = 1; i <= 10; i++) {
+      const post = {
+        title: `${category.name} 사례 #${i}`,
+        content: `이것은 ${category.name}의 ${i}번째 사례입니다. 여기에 자세한 내용이 들어갑니다...`,
+        categoryId: category.id,
+        authorId: "test-author",
+        authorName: "테스트 작성자",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        likes: Math.floor(Math.random() * 50),
+        comments: []
+      };
+      
+      const docRef = await addDoc(collection(db, 'posts'), post);
+      posts.push({ id: docRef.id, ...post });
+    }
+  }
+  return posts;
+};
+
+// window 객체에 함수 추가
 window.createCategories = createCategories;
-window.getCategories = getCategories; 
+window.createTestPosts = createTestPosts;
