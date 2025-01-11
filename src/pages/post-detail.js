@@ -1,28 +1,55 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getPost, addComment } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
+import { db } from '../firebase';
+import { doc, getDoc, collection, addDoc, onSnapshot } from 'firebase/firestore';
 
 function PostDetail() {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [commentContent, setCommentContent] = useState('');
-  const { isLoggedIn } = useAuth();
+  const { user, isLoggedIn } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await getPost(id);
-        console.log('받은 데이터:', response.data);
-        console.log('댓글 데이터:', response.data.comments);
-        setPost(response.data);
+        console.log('Fetching post with ID:', id);
+        const postDoc = await getDoc(doc(db, 'posts', id));
+        
+        if (postDoc.exists()) {
+          console.log('Post data:', postDoc.data());
+          setPost({ id: postDoc.id, ...postDoc.data() });
+        } else {
+          setError('포스트를 찾을 수 없습니다.');
+        }
       } catch (error) {
         console.error('포스트를 불러오는데 실패했습니다:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
+    const unsubscribeComments = onSnapshot(
+      collection(db, 'posts', id, 'comments'),
+      (snapshot) => {
+        const comments = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setPost(prev => prev ? { ...prev, comments } : null);
+      },
+      (error) => {
+        console.error('댓글 구독 에러:', error);
+        setError(error.message);
+      }
+    );
+
     fetchPost();
+    return () => unsubscribeComments();
   }, [id]);
 
   const handleCommentSubmit = async (e) => {
@@ -30,23 +57,24 @@ function PostDetail() {
     if (!commentContent.trim()) return;
 
     try {
-      const response = await addComment(id, { 
-        content: commentContent.trim() 
+      await addDoc(collection(db, 'posts', id, 'comments'), {
+        content: commentContent.trim(),
+        userId: user.uid,
+        author: user.email,
+        createdAt: new Date()
       });
       
-      console.log('댓글 응답:', response.data);
-
-      setPost(prevPost => ({
-        ...prevPost,
-        comments: [...prevPost.comments, response.data]
-      }));
       setCommentContent('');
     } catch (error) {
       console.error('댓글 작성 실패:', error);
     }
   };
 
-  if (!post) return <div>로딩중...</div>;
+  if (loading) return <div className="text-center py-8">로딩중...</div>;
+  
+  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
+  
+  if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login as loginApi } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
@@ -22,14 +21,13 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
+    
     try {
-      const response = await loginApi(formData);
-      login(response.data);
+      await login(formData.email.trim(), formData.password);
       navigate('/');
     } catch (error) {
       console.error('로그인 실패:', error);
-      setError(error.response?.data?.message || '로그인에 실패했습니다.');
+      setError(error.message || '로그인에 실패했습니다.');
     }
   };
 

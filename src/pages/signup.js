@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signup } from '../api/axios';
+import { signup } from '../api/firebase';
 
 function SignupPage() {
   const navigate = useNavigate();

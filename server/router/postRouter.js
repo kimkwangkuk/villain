@@ -3,7 +3,6 @@ const router = express.Router();
 const path = require('path');
 const Post = require(path.join(__dirname, '..', 'models', 'Post'));
 const Comment = require(path.join(__dirname, '..', 'models', 'Comment'));
-const auth = require('../middleware/auth');
 
 // 모든 포스트 가져오기
 router.get('/', async (req, res) => {
@@ -24,10 +23,9 @@ router.get('/', async (req, res) => {
 });
 
 // 새 포스트 작성
-router.post('/', auth, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { title, content, category } = req.body;
-    const author = req.user._id;  // 이제 req.user를 사용할 수 있습니다
+    const { title, content, category, author } = req.body;
 
     const post = new Post({
       title,
@@ -46,43 +44,25 @@ router.post('/', auth, async (req, res) => {
 });
 
 // 댓글 추가
-router.post('/:id/comments', auth, async (req, res) => {
+router.post('/:id/comments', async (req, res) => {
   try {
-    console.log('댓글 작성 요청:', {
-      body: req.body,
-      user: req.user,
-      postId: req.params.id
-    });
+    const { content, userId } = req.body;
 
-    // 입력값 검증
-    if (!req.body.content) {
+    if (!content) {
       return res.status(400).json({ message: '댓글 내용이 필요합니다.' });
     }
 
-    if (!req.user || !req.user._id) {
-      return res.status(400).json({ message: '사용자 정보가 없습니다.' });
-    }
-
-    // 새 댓글 생성
     const comment = new Comment({
-      content: req.body.content,
-      userId: req.user._id,
+      content,
+      userId,
       postId: req.params.id
     });
     
-    console.log('생성할 댓글:', comment);
-    
-    // 댓글 저장
     const savedComment = await comment.save();
-    console.log('저장된 댓글:', savedComment);
-    
     res.status(201).json(savedComment);
   } catch (err) {
     console.error('댓글 작성 에러:', err);
-    res.status(400).json({ 
-      message: err.message,
-      details: err.errors // Mongoose 유효성 검사 에러 정보
-    });
+    res.status(400).json({ message: err.message });
   }
 });
 

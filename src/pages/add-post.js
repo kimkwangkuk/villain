@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPost, getCategories } from '../api/axios';
+import { createPost, getCategories } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
 
 function AddPostPage() {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -15,20 +16,21 @@ function AddPostPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // 로그인하지 않은 사용자는 홈으로 리다이렉트
     if (!isLoggedIn) {
       navigate('/login');
       return;
     }
 
-    // 카테고리 목록 가져오기
     const fetchCategories = async () => {
       try {
-        const response = await getCategories();
-        setCategories(response.data);
+        setLoading(true);
+        const categoriesData = await getCategories();
+        setCategories(categoriesData || []);
       } catch (error) {
         console.error('카테고리 로딩 실패:', error);
         setError('카테고리를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -48,12 +50,22 @@ function AddPostPage() {
 
     try {
       await createPost(formData);
-      navigate('/');  // 작성 완료 후 홈으로 이동
+      navigate('/');
     } catch (error) {
       console.error('게시글 작성 실패:', error);
       setError(error.response?.data?.message || '게시글 작성에 실패했습니다.');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <p className="text-center">카테고리 로딩중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -81,7 +93,7 @@ function AddPostPage() {
             >
               <option value="">카테고리 선택</option>
               {categories.map(category => (
-                <option key={category._id} value={category._id}>
+                <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
