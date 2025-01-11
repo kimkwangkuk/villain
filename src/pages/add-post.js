@@ -49,7 +49,10 @@ function AddPostPage() {
     setError('');
 
     try {
-      await createPost(formData);
+      await createPost({
+        ...formData,
+        categoryId: formData.category
+      });
       navigate('/');
     } catch (error) {
       console.error('게시글 작성 실패:', error);

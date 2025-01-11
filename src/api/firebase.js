@@ -154,3 +154,22 @@ export const signup = async ({ email, password }) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   return userCredential.user;
 }; 
+
+export const createCategories = async () => {
+  const categories = [
+    { name: "빌런1", description: "빌런1 설명" },
+    { name: "빌런2", description: "빌런2 설명" },
+    // ... 더 많은 카테고리
+  ];
+
+  for (const category of categories) {
+    await addDoc(collection(db, 'categories'), {
+      ...category,
+      createdAt: serverTimestamp()
+    });
+  }
+}; 
+
+// 파일 맨 아래에 추가
+window.createCategories = createCategories;
+window.getCategories = getCategories; 
