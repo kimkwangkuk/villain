@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 
 function HomePage() {
   const [posts, setPosts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,7 +15,6 @@ function HomePage() {
           getCategories()
         ]);
         setPosts(postsData);
-        setCategories(categoriesData);
       } catch (error) {
         console.error('데이터 로딩 실패:', error);
       } finally {

@@ -2,7 +2,7 @@ import { db, auth } from '../firebase';
 import { 
   collection, getDocs, getDoc, addDoc, doc,
   query, orderBy, serverTimestamp, updateDoc,
-  arrayUnion, where 
+  arrayUnion 
 } from 'firebase/firestore';
 import { 
   signInWithEmailAndPassword,
