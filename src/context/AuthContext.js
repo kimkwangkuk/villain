@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
     // Firebase 인증 상태 감지
     const unsubscribe = authService.onAuthStateChange((user) => {
       setUser(user);
-      setIsLoggedIn(!!user);
+      setIsLoggedIn(!!user || savedLoginState);
       setLoading(false);
       
       if (user) {

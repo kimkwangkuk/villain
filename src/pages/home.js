@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPosts, getCategories } from '../api/firebase';
+import { getPosts } from '../api/firebase';
 import PostCard from '../components/PostCard';
 import { Link } from 'react-router-dom';
 
@@ -10,10 +10,7 @@ function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [postsData, categoriesData] = await Promise.all([
-          getPosts(),
-          getCategories()
-        ]);
+        const postsData = await getPosts();
         setPosts(postsData);
       } catch (error) {
         console.error('데이터 로딩 실패:', error);
