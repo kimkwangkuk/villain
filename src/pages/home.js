@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getPosts, getCategories } from '../api/firebase';
 import PostCard from '../components/PostCard';
-import { Link } from 'react-router-dom';
 
 function HomePage() {
   const [posts, setPosts] = useState([]);
@@ -63,9 +62,7 @@ function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPosts.map(post => (
-            <Link to={`/posts/${post.id}`} key={post.id}>
-              <PostCard post={post} />
-            </Link>
+            <PostCard key={post.id} post={post} />
           ))}
         </div>
       </div>

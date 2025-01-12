@@ -1,12 +1,23 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getCategories, updateLikes } from '../api/firebase';
 import { useAuth } from '../hooks/useAuth';
+import { db } from '../firebase';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';  // 한국어 로케일
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+// dayjs 설정
+dayjs.locale('ko');
+dayjs.extend(relativeTime);
 
 function PostCard({ post }) {
   const [categoryName, setCategoryName] = useState('');
   const [likes, setLikes] = useState(post.likes || 0);
   const [isLiked, setIsLiked] = useState(false);
-  const { isLoggedIn } = useAuth();
+  const [commentCount, setCommentCount] = useState(0);
+  const { isLoggedIn, user } = useAuth();
 
   useEffect(() => {
     const fetchCategoryName = async () => {
@@ -21,45 +32,80 @@ function PostCard({ post }) {
       }
     };
 
-    fetchCategoryName();
-  }, [post.categoryId]);
+    // 댓글 수 실시간 업데이트
+    const commentsQuery = query(collection(db, 'posts', post.id, 'comments'));
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+      setCommentCount(snapshot.size);
+    });
 
-  const handleLike = async () => {
-    if (!isLoggedIn) {
+    if (user && post.likedBy) {
+      setIsLiked(post.likedBy.includes(user.uid));
+    }
+
+    fetchCategoryName();
+    return () => unsubscribe();  // cleanup
+  }, [post.categoryId, post.likedBy, post.id, user]);
+
+  const handleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isLoggedIn || !user) {
       alert('로그인이 필요합니다.');
       return;
     }
 
     try {
-      const updatedPost = await updateLikes(post.id);
+      const updatedPost = await updateLikes(post.id, user.uid);
       setLikes(updatedPost.likes);
-      setIsLiked(true);
+      setIsLiked(!isLiked);
     } catch (error) {
       console.error('좋아요 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
     }
   };
 
+  const getRelativeTime = (date) => {
+    return dayjs(date).fromNow();
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow">
+    <Link 
+      to={`/posts/${post.id}`}
+      className="block bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+    >
       <div className="text-sm text-blue-600 mb-2">
         {categoryName}
       </div>
-
       <h2 className="text-xl font-semibold text-gray-800 mb-2">{post.title}</h2>
       <p className="text-gray-600 mb-4">{post.content}</p>
       <div className="flex justify-between text-sm text-gray-500">
-        <span>작성자: {post.authorName}</span>
-        <button 
-          onClick={handleLike}
-          className={`flex items-center space-x-1 ${isLiked ? 'text-blue-500' : 'hover:text-blue-500'}`}
-          disabled={isLiked}
-        >
-          <span>{isLiked ? '❤️' : '🤍'}</span>
-          <span>{likes}</span>
-        </button>
+        <div className="flex flex-col">
+          <span>작성자: {post.authorName}</span>
+          <span className="text-xs text-gray-400">
+            {getRelativeTime(post.createdAt?.toDate())}
+          </span>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1">
+            <span>💬</span>
+            <span>{commentCount}</span>
+          </div>
+          <div 
+            onClick={e => e.stopPropagation()}
+            onMouseDown={e => e.preventDefault()}
+          >
+            <button 
+              onClick={handleLike}
+              className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+            >
+              <span>{isLiked ? '❤️' : '🤍'}</span>
+              <span>{likes}</span>
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
