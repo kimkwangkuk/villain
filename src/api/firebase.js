@@ -89,7 +89,7 @@ export const getCategories = async () => {
   }));
 };
 // Likes
-export const updateLikes = async (postId) => {
+export const updateLikes = async (postId, userId) => {
   const postRef = doc(db, 'posts', postId);
   const postSnap = await getDoc(postRef);
   
@@ -97,13 +97,25 @@ export const updateLikes = async (postId) => {
     throw new Error('Post not found');
   }
 
+  const post = postSnap.data();
+  const likedBy = post.likedBy || [];
+  const isLiked = likedBy.includes(userId);
+
+  // 좋아요 토글
   await updateDoc(postRef, {
-    likes: (postSnap.data().likes || 0) + 1
+    likes: isLiked ? post.likes - 1 : post.likes + 1,
+    likedBy: isLiked 
+      ? likedBy.filter(id => id !== userId) 
+      : [...likedBy, userId]
   });
 
   return {
+    ...post,
     id: postId,
-    likes: postSnap.data().likes + 1
+    likes: isLiked ? post.likes - 1 : post.likes + 1,
+    likedBy: isLiked 
+      ? likedBy.filter(id => id !== userId) 
+      : [...likedBy, userId]
   };
 }; 
 
@@ -214,3 +226,20 @@ export const createTestPosts = async () => {
 // window 객체에 함수 추가
 window.createCategories = createCategories;
 window.createTestPosts = createTestPosts;
+
+export const createNotification = async (type, postId, recipientId, senderId, senderName, content = '') => {
+  try {
+    await addDoc(collection(db, 'notifications'), {
+      type,
+      postId,
+      recipientId,
+      senderId,
+      senderName,
+      content,
+      createdAt: new Date(),
+      read: false
+    });
+  } catch (error) {
+    console.error('알림 생성 실패:', error);
+  }
+};

@@ -7,6 +7,7 @@ import LoginPage from './pages/login';
 import SignupPage from './pages/signup';
 import AddPostPage from './pages/add-post';
 import MyPage from './pages/MyPage';
+import NotificationsPage from './pages/notifications';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/posts/new" element={<AddPostPage />} />
           <Route path="/posts/:id" element={<PostDetail />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
-import { doc, getDoc, collection, addDoc, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { createNotification } from '../api/firebase';
 
 function PostDetail() {
   const { id } = useParams();
@@ -13,6 +14,7 @@ function PostDetail() {
   const { user, isLoggedIn } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -20,7 +22,12 @@ function PostDetail() {
         const postDoc = await getDoc(doc(db, 'posts', id));
         
         if (postDoc.exists()) {
-          setPost({ id: postDoc.id, ...postDoc.data() });
+          const postData = { id: postDoc.id, ...postDoc.data() };
+          setPost(postData);
+          // 사용자의 좋아요 상태 확인
+          if (user && postData.likedBy) {
+            setIsLiked(postData.likedBy.includes(user.uid));
+          }
         } else {
           setError('포스트를 찾을 수 없습니다.');
         }
@@ -55,10 +62,19 @@ function PostDetail() {
 
     fetchPost();
     return () => unsubscribeComments();
-  }, [id]);
+  }, [id, user]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
+    
+    // 1. 먼저 user 객체가 실제로 존재하는지 확인
+    console.log('Current user:', user); // 디버깅용
+    
+    if (!user?.uid) {  // user가 undefined이거나 uid가 없는 경우
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
     if (!commentContent.trim()) return;
 
     try {
@@ -69,9 +85,65 @@ function PostDetail() {
         createdAt: new Date()
       });
       
+      // 게시글 작성자에게 알림 생성
+      if (post.authorId !== user.uid) {  // 자신의 게시글에는 알림 생성 안 함
+        await createNotification(
+          'comment',
+          post.id,
+          post.authorId,
+          user.uid,
+          user.email,
+          commentContent.trim()
+        );
+      }
+      
       setCommentContent('');
     } catch (error) {
       console.error('댓글 작성 실패:', error);
+      alert('댓글 작성에 실패했습니다.');
+    }
+  };
+
+  const handleLike = async () => {
+    if (!isLoggedIn || !user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      const postRef = doc(db, 'posts', id);
+      const postDoc = await getDoc(postRef);
+      const postData = postDoc.data();
+      const likedBy = postData.likedBy || [];
+      const currentLikes = postData.likes || 0;
+
+      if (isLiked) {
+        // 좋아요 취소
+        await updateDoc(postRef, {
+          likes: currentLikes - 1,
+          likedBy: likedBy.filter(uid => uid !== user.uid)
+        });
+        setPost(prev => ({
+          ...prev,
+          likes: currentLikes - 1,
+          likedBy: likedBy.filter(uid => uid !== user.uid)
+        }));
+      } else {
+        // 좋아요 추가
+        await updateDoc(postRef, {
+          likes: currentLikes + 1,
+          likedBy: [...likedBy, user.uid]
+        });
+        setPost(prev => ({
+          ...prev,
+          likes: currentLikes + 1,
+          likedBy: [...likedBy, user.uid]
+        }));
+      }
+      setIsLiked(!isLiked);
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error);
+      alert('좋아요 처리에 실패했습니다.');
     }
   };
 
@@ -89,12 +161,26 @@ function PostDetail() {
           <p className="text-gray-600 mb-6">{post.content}</p>
           <div className="flex justify-between text-sm text-gray-500">
             <span>작성자: {post.authorName}</span>
-            <span>👍 {post.likes || 0}</span>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1">
+                <span>💬</span>
+                <span>{comments.length}</span>
+              </div>
+              <button 
+                onClick={handleLike}
+                className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+              >
+                <span>{isLiked ? '❤️' : '🤍'}</span>
+                <span>{post.likes || 0}</span>
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">댓글</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            댓글 <span className="text-gray-500">({comments.length})</span>
+          </h2>
           {isLoggedIn ? (
             <form onSubmit={handleCommentSubmit} className="mb-6">
               <div className="flex flex-col space-y-2">
@@ -121,7 +207,11 @@ function PostDetail() {
           {comments.length > 0 ? (
             <div className="space-y-4">
               {comments.map(comment => (
-                <CommentCard key={comment.id} comment={comment} />
+                <CommentCard 
+                  key={comment.id} 
+                  comment={comment} 
+                  postAuthorId={post.authorId}
+                />
               ))}
             </div>
           ) : (
