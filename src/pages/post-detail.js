@@ -3,11 +3,12 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
-import { doc, getDoc, collection, addDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, onSnapshot, orderBy, query } from 'firebase/firestore';
 
 function PostDetail() {
   const { id } = useParams();
   const [post, setPost] = useState(null);
+  const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
   const { user, isLoggedIn } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -16,11 +17,9 @@ function PostDetail() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        console.log('Fetching post with ID:', id);
         const postDoc = await getDoc(doc(db, 'posts', id));
         
         if (postDoc.exists()) {
-          console.log('Post data:', postDoc.data());
           setPost({ id: postDoc.id, ...postDoc.data() });
         } else {
           setError('포스트를 찾을 수 없습니다.');
@@ -33,14 +32,20 @@ function PostDetail() {
       }
     };
 
-    const unsubscribeComments = onSnapshot(
+    const commentsQuery = query(
       collection(db, 'posts', id, 'comments'),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribeComments = onSnapshot(
+      commentsQuery,
       (snapshot) => {
-        const comments = snapshot.docs.map(doc => ({
+        const commentsData = snapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate()
         }));
-        setPost(prev => prev ? { ...prev, comments } : null);
+        setComments(commentsData);
       },
       (error) => {
         console.error('댓글 구독 에러:', error);
@@ -83,7 +88,7 @@ function PostDetail() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
           <p className="text-gray-600 mb-6">{post.content}</p>
           <div className="flex justify-between text-sm text-gray-500">
-            <span>작성자: {post.author}</span>
+            <span>작성자: {post.authorName}</span>
             <span>👍 {post.likes || 0}</span>
           </div>
         </div>
@@ -113,10 +118,10 @@ function PostDetail() {
             <p className="text-gray-500 mb-4">댓글을 작성하려면 로그인이 필요합니다.</p>
           )}
 
-          {Array.isArray(post.comments) && post.comments.length > 0 ? (
+          {comments.length > 0 ? (
             <div className="space-y-4">
-              {post.comments.map(comment => (
-                <CommentCard key={comment._id} comment={comment} />
+              {comments.map(comment => (
+                <CommentCard key={comment.id} comment={comment} />
               ))}
             </div>
           ) : (
