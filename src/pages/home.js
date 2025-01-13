@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getPosts, getCategories } from '../api/firebase';
 import PostCard from '../components/PostCard';
 
 function HomePage() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -36,6 +38,13 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4">
+        <div
+          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white cursor-pointer hover:ring-2 hover:ring-blue-500 transition mb-4 text-gray-400"
+          onClick={() => navigate('/posts/new')}
+        >
+          빌런을 제보하세요. 우리가 많은 이들에게 알리고 공감을 얻어올게요.
+        </div>
+
         <div className="mb-6 flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedCategory(null)}

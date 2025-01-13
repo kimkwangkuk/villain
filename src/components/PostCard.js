@@ -87,9 +87,13 @@ function PostCard({ post }) {
           </span>
         </div>
         <div className="flex items-center space-x-4">
+          <span className="text-xs text-gray-400 flex items-center">
+            <span className="mr-1">👁️</span> {/* 조회수 아이콘 */}
+            {post.viewCount || 0} {/* 조회수 표시 */}
+          </span>
           <div className="flex items-center space-x-1">
             <span>💬</span>
-            <span>{commentCount}</span>
+            <span>{commentCount}</span> {/* 댓글 수 표시 */}
           </div>
           <div 
             onClick={e => e.stopPropagation()}
@@ -100,7 +104,7 @@ function PostCard({ post }) {
               className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
             >
               <span>{isLiked ? '❤️' : '🤍'}</span>
-              <span>{likes}</span>
+              <span>{likes}</span> {/* 좋아요 수 표시 */}
             </button>
           </div>
         </div>

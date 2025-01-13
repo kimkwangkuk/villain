@@ -2,7 +2,7 @@ import { db, auth } from '../firebase';
 import { 
   collection, getDocs, getDoc, addDoc, doc,
   query, orderBy, serverTimestamp, updateDoc,
-  arrayUnion 
+  arrayUnion, where
 } from 'firebase/firestore';
 import { 
   signInWithEmailAndPassword,
@@ -58,6 +58,25 @@ export const createPost = async (postData) => {
     console.error('게시글 생성 실패:', error);
     throw error;
   }
+};
+
+// 사용자 상호작용 게시글 가져오기
+export const getUserInteractions = async (userId) => {
+  const interactions = []; // 댓글 및 좋아요를 저장할 배열
+
+  // 댓글이 있는 게시글 가져오기
+  const commentsSnapshot = await getDocs(query(collection(db, 'comments'), where('authorId', '==', userId)));
+  commentsSnapshot.forEach(commentDoc => {
+    interactions.push({ postId: commentDoc.data().postId, type: 'comment' });
+  });
+
+  // 좋아요가 있는 게시글 가져오기
+  const postsSnapshot = await getDocs(query(collection(db, 'posts'), where('likedBy', 'array-contains', userId)));
+  postsSnapshot.forEach(postDoc => {
+    interactions.push({ postId: postDoc.id, type: 'like' });
+  });
+
+  return interactions;
 };
 
 // Comments
@@ -242,4 +261,18 @@ export const createNotification = async (type, postId, recipientId, senderId, se
   } catch (error) {
     console.error('알림 생성 실패:', error);
   }
+};
+
+// 사용자의 게시글 가져오기
+export const getMyPosts = async (userId) => {
+  const q = query(
+    collection(db, 'posts'),
+    where('authorId', '==', userId), // 현재 사용자의 ID와 일치하는 게시글만 가져오기
+    orderBy('createdAt', 'desc') // 생성일 기준으로 정렬
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
 };

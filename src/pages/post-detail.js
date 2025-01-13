@@ -19,11 +19,18 @@ function PostDetail() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const postDoc = await getDoc(doc(db, 'posts', id));
+        const postRef = doc(db, 'posts', id);
+        const postDoc = await getDoc(postRef);
         
         if (postDoc.exists()) {
           const postData = { id: postDoc.id, ...postDoc.data() };
           setPost(postData);
+          
+          // 조회 수 증가
+          await updateDoc(postRef, {
+            viewCount: (postData.viewCount || 0) + 1 // 조회 수 증가
+          });
+
           // 사용자의 좋아요 상태 확인
           if (user && postData.likedBy) {
             setIsLiked(postData.likedBy.includes(user.uid));

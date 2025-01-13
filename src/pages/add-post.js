@@ -87,6 +87,10 @@ function AddPostPage() {
       <div className="max-w-2xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">새 게시글 작성</h1>
 
+        <p className="text-lg text-gray-700 mb-4">
+          당신을 힘들게 하는 빌런을 제보하세요. 우리가 많은 이들에게 알릴게요.
+        </p>
+
         <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
