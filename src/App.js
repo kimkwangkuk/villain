@@ -8,6 +8,7 @@ import SignupPage from './pages/signup';
 import AddPostPage from './pages/add-post';
 import MyPage from './pages/MyPage';
 import NotificationsPage from './pages/notifications';
+import AboutVillains from './pages/AboutVillains';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/posts/:id" element={<PostDetail />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/about" element={<AboutVillains />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

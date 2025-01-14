@@ -31,32 +31,35 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-gray-800 text-white">
-      <div className="max-w-6xl mx-auto px-4">
+    <nav className="bg-white text-black w-full">
+      <div className="px-4">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="text-xl font-bold">
-            빌런 스토리
+            빌런
           </Link>
 
           <div className="flex items-center space-x-4">
-            <Link to="/" className="hover:text-gray-300">
+            <Link to="/" className="hover:text-gray-600">
               홈
+            </Link>
+            <Link to="/about" className="hover:text-gray-600">
+              빌런 소개
             </Link>
             {isLoggedIn ? (
               <>
                 <Link 
                   to="/mypage" 
-                  className="hover:text-gray-300"
+                  className="hover:text-gray-600"
                 >
                   마이페이지
                 </Link>
                 <button 
-                  className="hover:text-gray-300"
+                  className="hover:text-gray-600"
                   onClick={handleLogout}
                 >
                   로그아웃
                 </button>
-                <span className="text-gray-300">
+                <span className="text-gray-800">
                   {user?.username}님
                 </span>
               </>
@@ -64,13 +67,13 @@ function Navbar() {
               <>
                 <Link 
                   to="/login" 
-                  className="hover:text-gray-300"
+                  className="hover:text-gray-600"
                 >
                   로그인
                 </Link>
                 <Link 
                   to="/signup" 
-                  className="bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                 >
                   회원가입
                 </Link>
@@ -79,7 +82,7 @@ function Navbar() {
             {isLoggedIn && (
               <Link 
                 to="/posts/new" 
-                className="bg-green-500 px-4 py-2 rounded-md hover:bg-green-600"
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
               >
                 글쓰기
               </Link>
