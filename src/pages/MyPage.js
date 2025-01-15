@@ -3,14 +3,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getMyPosts, getUserInteractions, getPost } from '../api/firebase';
 import PostCard from '../components/PostCard';
+import { query, collection, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
+import dayjs from 'dayjs';
 
 function MyPage() {
   const navigate = useNavigate();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, logout } = useAuth();
   const [myPosts, setMyPosts] = useState([]);
   const [interestedPosts, setInterestedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('myPosts');
+  const [notifications, setNotifications] = useState([]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   useEffect(() => {
     // 로그인 상태 체크
@@ -19,6 +28,8 @@ function MyPage() {
       navigate('/login');
       return;
     }
+
+    console.log('현재 로그인된 사용자:', user);
 
     const fetchMyPosts = async () => {
       try {
@@ -35,21 +46,57 @@ function MyPage() {
       try {
         console.log('내 관심 포스트를 가져오는 중...');
         const interactions = await getUserInteractions(user?.uid);
+        console.log('가져온 상호작용:', interactions);
         const filteredPosts = await Promise.all(interactions.map(async (interaction) => {
           const post = await getPost(interaction.postId);
           return post;
         }));
+        console.log('가져온 관심 포스트:', filteredPosts);
         setInterestedPosts(filteredPosts);
       } catch (error) {
         console.error('내 관심 포스트 로딩 실패:', error);
       }
     };
 
-    fetchMyPosts();
-    fetchUserInteractions().then(() => {
-      setLoading(false);
-    });
+    // 알림 데이터 가져오기
+    if (user) {
+      console.log('알림 데이터 가져오기 시작...');
+      const notificationsQuery = query(
+        collection(db, 'notifications'),
+        where('recipientId', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+
+      const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
+        console.log('알림 스냅샷 받음:', snapshot.size, '개의 알림');
+        const notificationsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate()
+        }));
+        console.log('처리된 알림 데이터:', notificationsData);
+        setNotifications(notificationsData);
+      }, (error) => {
+        console.error('알림 구독 에러:', error);
+      });
+
+      fetchMyPosts();
+      fetchUserInteractions().then(() => {
+        console.log('모든 데이터 로딩 완료');
+        setLoading(false);
+      });
+
+      return () => {
+        console.log('알림 구독 해제');
+        unsubscribe();
+      };
+    }
   }, [user, isLoggedIn, navigate]);
+
+  // loading 상태 변경 시 로그
+  useEffect(() => {
+    console.log('현재 로딩 상태:', loading);
+  }, [loading]);
 
   if (!isLoggedIn) return null;
   if (loading) return <div>로딩중...</div>;
@@ -57,20 +104,67 @@ function MyPage() {
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">내 포스트</h1>
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center space-x-4">
+              <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
+                {user?.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt="프로필" 
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl text-gray-600">
+                    {user?.email?.charAt(0)?.toUpperCase() || '?'}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {user?.displayName || user?.email}
+                </h2>
+                <p className="text-gray-500">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              로그아웃
+            </button>
+          </div>
+        </div>
 
-        <div className="mb-4">
+        <div className="mb-6 flex space-x-4">
           <button
             onClick={() => setActiveTab('myPosts')}
-            className={`px-4 py-2 rounded-md ${activeTab === 'myPosts' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`px-4 py-2 rounded-md transition-colors
+              ${activeTab === 'myPosts' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
           >
-            내 포스트
+            내 포스트 ({myPosts.length})
           </button>
           <button
             onClick={() => setActiveTab('interestedPosts')}
-            className={`px-4 py-2 rounded-md ${activeTab === 'interestedPosts' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`px-4 py-2 rounded-md transition-colors
+              ${activeTab === 'interestedPosts' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
           >
-            내 관심 포스트
+            관심 포스트 ({interestedPosts.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`px-4 py-2 rounded-md transition-colors
+              ${activeTab === 'notifications' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+          >
+            알림 ({notifications.length})
           </button>
         </div>
 
@@ -92,7 +186,7 @@ function MyPage() {
               ))}
             </div>
           )
-        ) : (
+        ) : activeTab === 'interestedPosts' ? (
           interestedPosts.length === 0 ? (
             <p className="text-center py-8 text-gray-500">아직 관심 포스트가 없습니다.</p>
           ) : (
@@ -102,6 +196,36 @@ function MyPage() {
               ))}
             </div>
           )
+        ) : (
+          <div className="space-y-4">
+            {notifications.length === 0 ? (
+              <p className="text-center py-8 text-gray-500">새로운 알림이 없습니다.</p>
+            ) : (
+              notifications.map(notification => (
+                <Link
+                  key={notification.id}
+                  to={`/posts/${notification.postId}`}
+                  className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-grow">
+                      <p className="text-gray-800">
+                        <span className="font-medium">{notification.senderName}</span>
+                        {notification.type === 'comment' && '님이 회원님의 게시글에 댓글을 남겼습니다:'}
+                        {notification.type === 'like' && '님이 회원님의 게시글을 좋아합니다.'}
+                      </p>
+                      {notification.content && (
+                        <p className="text-gray-600 mt-1">{notification.content}</p>
+                      )}
+                      <span className="text-sm text-gray-500">
+                        {dayjs(notification.createdAt).fromNow()}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
         )}
       </div>
     </div>

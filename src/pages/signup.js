@@ -35,12 +35,18 @@ function SignupPage() {
         username: formData.username
       });
 
+      if (!response.displayName) {
+        console.error('사용자 이름이 설정되지 않았습니다.');
+        setError('사용자 이름 설정에 실패했습니다.');
+        return;
+      }
+
       console.log('회원가입 성공:', response);
       alert('회원가입이 완료되었습니다.');
       navigate('/login');
     } catch (error) {
       console.error('회원가입 실패:', error);
-      setError(error.response?.data?.message || '회원가입에 실패했습니다.');
+      setError(error.message || '회원가입에 실패했습니다.');
     }
   };
 

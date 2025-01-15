@@ -2,11 +2,12 @@ import { db, auth } from '../firebase';
 import { 
   collection, getDocs, getDoc, addDoc, doc,
   query, orderBy, serverTimestamp, updateDoc,
-  arrayUnion, where
+  arrayUnion, where, arrayRemove
 } from 'firebase/firestore';
 import { 
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword 
+  createUserWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
 
 // Posts
@@ -109,34 +110,32 @@ export const getCategories = async () => {
 };
 // Likes
 export const updateLikes = async (postId, userId) => {
-  const postRef = doc(db, 'posts', postId);
-  const postSnap = await getDoc(postRef);
+  console.log('updateLikes 호출:', { postId, userId });
   
-  if (!postSnap.exists()) {
+  const postRef = doc(db, 'posts', postId);
+  const postDoc = await getDoc(postRef);
+  
+  if (!postDoc.exists()) {
+    console.error('포스트를 찾을 수 없음');
     throw new Error('Post not found');
   }
 
-  const post = postSnap.data();
+  const post = postDoc.data();
   const likedBy = post.likedBy || [];
   const isLiked = likedBy.includes(userId);
 
-  // 좋아요 토글
   await updateDoc(postRef, {
-    likes: isLiked ? post.likes - 1 : post.likes + 1,
-    likedBy: isLiked 
-      ? likedBy.filter(id => id !== userId) 
-      : [...likedBy, userId]
+    likes: isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1,
+    likedBy: isLiked ? arrayRemove(userId) : arrayUnion(userId)
   });
 
   return {
     ...post,
     id: postId,
-    likes: isLiked ? post.likes - 1 : post.likes + 1,
-    likedBy: isLiked 
-      ? likedBy.filter(id => id !== userId) 
-      : [...likedBy, userId]
+    likes: isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1,
+    likedBy: isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId]
   };
-}; 
+};
 
 // 테스트 데이터 생성 함수
 export const createTestData = async () => {
@@ -186,8 +185,14 @@ export const login = async (email, password) => {
 };
 
 // 회원가입
-export const signup = async ({ email, password }) => {
+export const signup = async ({ email, password, username }) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  
+  // 사용자 프로필 업데이트
+  await updateProfile(auth.currentUser, {
+    displayName: username
+  });
+  
   return userCredential.user;
 }; 
 

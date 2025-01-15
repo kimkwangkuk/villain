@@ -8,12 +8,26 @@ function AddPostPage() {
   const { isLoggedIn, user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     category: ''
   });
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const originalPadding = document.body.style.paddingTop;
+    
+    document.body.style.paddingTop = '0';
+    const navbar = document.querySelector('nav');
+    if (navbar) navbar.style.display = 'none';
+
+    return () => {
+      document.body.style.paddingTop = originalPadding || '0';
+      if (navbar) navbar.style.display = 'block';
+    };
+  }, []);
 
   useEffect(() => {
     if (!isLoggedIn || !user) {
@@ -72,6 +86,18 @@ function AddPostPage() {
     }
   };
 
+  const handleCancel = () => {
+    setShowDialog(true);
+  };
+
+  const handleConfirmCancel = () => {
+    document.body.style.paddingTop = '0';
+    const navbar = document.querySelector('nav');
+    if (navbar) navbar.style.display = 'block';
+    
+    navigate('/');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 py-8">
@@ -83,15 +109,9 @@ function AddPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">새 게시글 작성</h1>
-
-        <p className="text-lg text-gray-700 mb-4">
-          당신을 힘들게 하는 빌런을 제보하세요. 우리가 많은 이들에게 알릴게요.
-        </p>
-
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="max-w-2xl w-full mx-4">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6">
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
               <p className="text-red-700">{error}</p>
@@ -149,16 +169,50 @@ function AddPostPage() {
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end space-x-4">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none"
+            >
+              취소
+            </button>
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               게시글 작성
             </button>
           </div>
         </form>
       </div>
+
+      {showDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              작성을 취소하시겠습니까?
+            </h3>
+            <p className="text-gray-500 mb-4">
+              작성 중인 내용은 저장되지 않습니다.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowDialog(false)}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 focus:outline-none"
+              >
+                아니오
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 focus:outline-none"
+              >
+                네
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

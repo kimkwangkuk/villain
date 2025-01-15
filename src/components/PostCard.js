@@ -69,10 +69,14 @@ function PostCard({ post }) {
     return dayjs(date).fromNow();
   };
 
+  const getDefaultProfileImage = () => {
+    return 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=' + post.authorId + '&backgroundColor=e8f5e9';
+  };
+
   return (
     <Link 
       to={`/posts/${post.id}`}
-      className="block bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+      className="block bg-white rounded-xl p-6 cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-200"
     >
       <div className="text-sm text-blue-600 mb-2">
         {categoryName}
@@ -80,20 +84,32 @@ function PostCard({ post }) {
       <h2 className="text-xl font-semibold text-gray-800 mb-2">{post.title}</h2>
       <p className="text-gray-600 mb-4">{post.content}</p>
       <div className="flex justify-between text-sm text-gray-500">
-        <div className="flex flex-col">
-          <span>작성자: {post.authorName}</span>
-          <span className="text-xs text-gray-400">
-            {getRelativeTime(post.createdAt?.toDate())}
-          </span>
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+            <img
+              src={post.authorPhotoURL || getDefaultProfileImage()}
+              alt={`${post.authorName}의 프로필`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.src = getDefaultProfileImage();
+              }}
+            />
+          </div>
+          <div className="flex flex-col">
+            <span>{post.authorName}</span>
+            <span className="text-xs text-gray-400">
+              {getRelativeTime(post.createdAt?.toDate())}
+            </span>
+          </div>
         </div>
         <div className="flex items-center space-x-4">
           <span className="text-xs text-gray-400 flex items-center">
-            <span className="mr-1">👁️</span> {/* 조회수 아이콘 */}
-            {post.viewCount || 0} {/* 조회수 표시 */}
+            <span className="mr-1">👁️</span>
+            {post.viewCount || 0}
           </span>
           <div className="flex items-center space-x-1">
             <span>💬</span>
-            <span>{commentCount}</span> {/* 댓글 수 표시 */}
+            <span>{commentCount}</span>
           </div>
           <div 
             onClick={e => e.stopPropagation()}
@@ -104,7 +120,7 @@ function PostCard({ post }) {
               className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
             >
               <span>{isLiked ? '❤️' : '🤍'}</span>
-              <span>{likes}</span> {/* 좋아요 수 표시 */}
+              <span>{likes}</span>
             </button>
           </div>
         </div>
