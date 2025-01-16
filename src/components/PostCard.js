@@ -33,14 +33,6 @@ function PostCard({ post }) {
     'bg-[#EDEEF0]'  // 블루그레이
   ];
 
-  // 고유한 postId를 사용하여 일관된 배경색 선택
-  const getBgColor = () => {
-    const index = post.id.split('').reduce((acc, char) => {
-      return acc + char.charCodeAt(0);
-    }, 0) % bgColors.length;
-    return bgColors[index];
-  };
-
   useEffect(() => {
     const fetchCategoryName = async () => {
       try {

@@ -1,11 +1,11 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import { HomeIcon, UserIcon } from './Icons';
 import { PrimaryButton } from './Button';
 
 function Navbar() {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {

@@ -55,6 +55,10 @@ function AddPostPage() {
     fetchCategories();
   }, [isLoggedIn, user, navigate]);
 
+  useEffect(() => {
+    // errors를 의존성 배열에 추가
+  }, [errors]);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
