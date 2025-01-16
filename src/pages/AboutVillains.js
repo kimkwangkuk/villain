@@ -22,25 +22,15 @@ function AboutVillains() {
         const currentIndex = villains.indexOf(prev);
         return villains[(currentIndex + 1) % villains.length];
       });
-    }, 2000); // 3초마다 변경
+    }, 2000); // 2초마다 변경
 
-    return () => clearInterval(interval); // 컴포넌트 언마운트 시 interval 정리
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="max-w-7xl mx-auto px-4 text-center">
         <h1 className="text-7xl font-bold text-gray-900 mb-6">{currentVillain}을 제보하세요.</h1>
-       
-        
-        <div className="text-center">
-          <a 
-            href="/posts/new" 
-            className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition duration-300"
-          >
-            빌런 제보하기
-          </a>
-        </div>
       </div>
     </div>
   );

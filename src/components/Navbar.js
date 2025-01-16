@@ -3,60 +3,53 @@ import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { HomeIcon, UserIcon } from './Icons';
+import { PrimaryButton } from './Button';
 
 function Navbar() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <nav className="bg-white text-black w-full">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200
+      ${isScrolled 
+        ? 'bg-white/80 backdrop-blur-md shadow-sm' 
+        : 'bg-white'}`}
+    >
       <div className="px-4">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="text-xl font-bold">
+          <Link to="/about" className="text-xl font-bold hover:text-gray-600">
             빌런
           </Link>
 
           <div className="flex items-center space-x-4">
             <Link to="/" className="hover:text-gray-600">
-              홈
+              <HomeIcon />
             </Link>
-            <Link to="/about" className="hover:text-gray-600">
-              빌런 소개
-            </Link>
-            {isLoggedIn ? (
-              <>
-                <Link 
-                  to="/mypage" 
-                  className="hover:text-gray-600"
-                >
-                  마이페이지
-                </Link>
-                <span className="text-gray-800">
-                  {user?.username}님
-                </span>
-                <Link 
-                  to="/posts/new" 
-                  className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800"
-                >
-                  빌런 제보
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link 
-                  to="/login" 
-                  className="hover:text-gray-600"
-                >
-                  로그인
-                </Link>
-                <Link 
-                  to="/signup" 
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                >
-                  회원가입
-                </Link>
-              </>
+            
+            {isLoggedIn && (
+              <Link to="/mypage" className="hover:text-gray-600">
+                <UserIcon />
+              </Link>
             )}
+            
+            <Link to="/posts/new">
+              <PrimaryButton>빌런 제보</PrimaryButton>
+            </Link>
           </div>
         </div>
       </div>

@@ -37,15 +37,13 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="bg-white border-b">
+      <div className="bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="flex overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black 
-                ${!selectedCategory 
-                  ? 'border-b-2 border-black' 
-                  : 'hover:text-gray-800'}`}
+              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
+                ${!selectedCategory ? 'border-b-2 border-black' : ''}`}
             >
               전체
             </button>
@@ -53,10 +51,8 @@ function HomePage() {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black 
-                  ${selectedCategory === category.id 
-                    ? 'border-b-2 border-black' 
-                    : 'hover:text-gray-800'}`}
+                className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
+                  ${selectedCategory === category.id ? 'border-b-2 border-black' : ''}`}
               >
                 {category.name}
               </button>
@@ -67,13 +63,6 @@ function HomePage() {
 
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div
-            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white cursor-pointer hover:ring-2 hover:ring-blue-500 transition mb-4 text-gray-400"
-            onClick={() => navigate('/posts/new')}
-          >
-            빌런을 제보하세요. 우리가 많은 이들에게 알리고 공감을 얻어올게요.
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPosts.map(post => (
               <PostCard key={post.id} post={post} />

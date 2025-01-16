@@ -76,7 +76,9 @@ function PostCard({ post }) {
   return (
     <Link 
       to={`/posts/${post.id}`}
-      className="block bg-white rounded-xl p-6 cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-200"
+      className="block bg-white rounded-xl p-6 cursor-pointer 
+        hover:shadow-[0_15px_30px_-10px_rgba(51,65,85,0.1),0_25px_25px_-15px_rgba(79,70,229,0.1),0_-6px_15px_-10px_rgba(51,65,85,0.08)] 
+        hover:scale-[1.02] transition-all duration-200"
     >
       <div className="text-sm text-blue-600 mb-2">
         {categoryName}

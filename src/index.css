@@ -15,3 +15,9 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* React DevTools 경고 배너 숨기기 */
+iframe[style*="background-color: rgb(0, 0, 0)"],
+iframe[style*="z-index: 2147483647"] {
+  display: none !important;
+}

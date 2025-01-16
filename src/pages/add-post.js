@@ -14,7 +14,11 @@ function AddPostPage() {
     content: '',
     category: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({
+    title: '',
+    content: '',
+    category: ''
+  });
 
   useEffect(() => {
     const originalPadding = document.body.style.paddingTop;
@@ -42,7 +46,7 @@ function AddPostPage() {
         setCategories(categoriesData || []);
       } catch (error) {
         console.error('카테고리 로딩 실패:', error);
-        setError('카테고리를 불러오는데 실패했습니다.');
+        setErrors({ ...errors, general: '카테고리를 불러오는데 실패했습니다.' });
       } finally {
         setLoading(false);
       }
@@ -56,20 +60,39 @@ function AddPostPage() {
       ...formData,
       [e.target.name]: e.target.value
     });
+    setErrors({});
+  };
+
+  const validateForm = () => {
+    if (!formData.category) {
+      setErrors({ category: '카테고리를 선택해주세요.' });
+      return false;
+    }
+
+    if (!formData.title.trim()) {
+      setErrors({ title: '제목을 입력해주세요.' });
+      return false;
+    }
+
+    if (!formData.content.trim()) {
+      setErrors({ content: '내용을 입력해주세요.' });
+      return false;
+    }
+
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    if (!user) {
-      setError('로그인이 필요합니다.');
-      navigate('/login');
+    
+    if (!validateForm()) {
       return;
     }
 
-    if (!formData.category) {
-      setError('카테고리를 선택해주세요.');
+    if (!user) {
+      setErrors({ ...errors, general: '로그인이 필요합니다.' });
+      navigate('/login');
       return;
     }
 
@@ -82,7 +105,7 @@ function AddPostPage() {
       navigate('/');
     } catch (error) {
       console.error('게시글 작성 실패:', error);
-      setError(error.message || '게시글 작성에 실패했습니다.');
+      setErrors({ ...errors, general: error.message || '게시글 작성에 실패했습니다.' });
     }
   };
 
@@ -110,87 +133,91 @@ function AddPostPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="max-w-2xl w-full mx-4">
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6">
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-              <p className="text-red-700">{error}</p>
+      <div className="max-w-xl w-full bg-white rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.1)] relative before:absolute before:inset-0 before:-z-10 before:blur-xl before:bg-gradient-to-b before:from-white/25 before:to-transparent before:rounded-2xl">
+        <div className="border-b border-gray-100">
+          <div className="px-6">
+            <div className="flex justify-between items-center h-14">
+              <h1 className="text-base font-medium">빌런 종류</h1>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="text-right border-none bg-transparent focus:outline-none focus:ring-0 text-gray-500 cursor-pointer appearance-none pr-8 text-base"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right center',
+                  backgroundSize: '1.5em 1.5em'
+                }}
+              >
+                <option value="">카테고리 선택</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
-
-          <div className="mb-4">
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-              빌런 카테고리
-            </label>
-            <select
-              id="category"
-              name="category"
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={formData.category}
-              onChange={handleChange}
-            >
-              <option value="">카테고리 선택</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
           </div>
+        </div>
 
-          <div className="mb-4">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-              제목
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={formData.title}
-              onChange={handleChange}
-            />
+        <div className="border-b border-gray-100">
+          <div className="px-6">
+            <div className="flex justify-between items-center h-14">
+              <h1 className="text-base font-medium">빌런 네임</h1>
+              <input
+                type="text"
+                name="title"
+                placeholder="제목을 입력하세요"
+                className="text-right border-none focus:outline-none focus:ring-0 text-gray-500 text-base"
+                value={formData.title}
+                onChange={handleChange}
+              />
+            </div>
           </div>
+        </div>
 
-          <div className="mb-6">
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-              내용
-            </label>
-            <textarea
-              id="content"
-              name="content"
-              required
-              rows="6"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={formData.content}
-              onChange={handleChange}
-            />
+        <div className="px-6 py-4">
+          <div className="space-y-4">
+            <div>
+              <textarea
+                name="content"
+                placeholder="빌런 경험을 모두에게 공유해주세요."
+                className="w-full h-[300px] resize-none border-none focus:outline-none focus:ring-0 text-base"
+                value={formData.content}
+                onChange={handleChange}
+              />
+            </div>
           </div>
+        </div>
 
-          <div className="flex justify-end space-x-4">
+        <div className="px-6 pb-6 flex justify-between items-center">
+          <div className="text-red-500 text-sm">
+            {errors.category || errors.title || errors.content || errors.general}
+          </div>
+          <div className="flex space-x-4">
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none"
+              className="px-4 py-2 text-gray-700 hover:text-gray-900"
             >
               취소
             </button>
             <button
-              type="submit"
-              className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              type="button"
+              onClick={handleSubmit}
+              className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800"
             >
-              게시글 작성
+              올리기
             </button>
           </div>
-        </form>
+        </div>
       </div>
 
       {showDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <h3 className="text-lg font-medium mb-4">
               작성을 취소하시겠습니까?
             </h3>
             <p className="text-gray-500 mb-4">
@@ -199,13 +226,13 @@ function AddPostPage() {
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setShowDialog(false)}
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 focus:outline-none"
+                className="text-gray-700 hover:text-gray-900"
               >
                 아니오
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 focus:outline-none"
+                className="bg-black text-white px-4 py-2 rounded-md"
               >
                 네
               </button>

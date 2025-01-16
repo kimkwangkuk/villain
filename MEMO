@@ -7,3 +7,17 @@ firebase emulators:start
 await createCategories()
 await createTestPosts()
 
+
+
+
+# 원격 저장소의 변경사항 가져오기
+git fetch origin
+
+# 원격 저장소의 변경사항을 현재 브랜치에 적용
+git pull origin main
+
+
+
+git add .
+git commit -m "feat: Add profile images to PostCard and improve user registration"
+git push origin main

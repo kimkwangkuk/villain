@@ -102,131 +102,135 @@ function MyPage() {
   if (loading) return <div>로딩중...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-                {user?.photoURL ? (
-                  <img 
-                    src={user.photoURL} 
-                    alt="프로필" 
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-2xl text-gray-600">
-                    {user?.email?.charAt(0)?.toUpperCase() || '?'}
-                  </span>
-                )}
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="py-8">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center space-x-4">
+                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
+                  {user?.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt="프로필" 
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl text-gray-600">
+                      {user?.email?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {user?.displayName || user?.email}
+                  </h2>
+                  <p className="text-gray-500">
+                    {user?.email}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {user?.displayName || user?.email}
-                </h2>
-                <p className="text-gray-500">
-                  {user?.email}
-                </p>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
+              >
+                로그아웃
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">
             <button
-              onClick={handleLogout}
-              className="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
+              onClick={() => setActiveTab('myPosts')}
+              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
+                ${activeTab === 'myPosts' ? 'border-b-2 border-black' : ''}`}
             >
-              로그아웃
+              내 포스트 ({myPosts.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('interestedPosts')}
+              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
+                ${activeTab === 'interestedPosts' ? 'border-b-2 border-black' : ''}`}
+            >
+              관심 포스트 ({interestedPosts.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('notifications')}
+              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
+                ${activeTab === 'notifications' ? 'border-b-2 border-black' : ''}`}
+            >
+              알림 ({notifications.length})
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="mb-6 flex space-x-4">
-          <button
-            onClick={() => setActiveTab('myPosts')}
-            className={`px-4 py-2 rounded-md transition-colors
-              ${activeTab === 'myPosts' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-          >
-            내 포스트 ({myPosts.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('interestedPosts')}
-            className={`px-4 py-2 rounded-md transition-colors
-              ${activeTab === 'interestedPosts' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-          >
-            관심 포스트 ({interestedPosts.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('notifications')}
-            className={`px-4 py-2 rounded-md transition-colors
-              ${activeTab === 'notifications' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-          >
-            알림 ({notifications.length})
-          </button>
-        </div>
-
-        {activeTab === 'myPosts' ? (
-          myPosts.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">아직 작성한 게시글이 없습니다.</p>
-              <Link 
-                to="/posts/new" 
-                className="inline-block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-              >
-                첫 게시글 작성하기
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myPosts.map(post => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
-          )
-        ) : activeTab === 'interestedPosts' ? (
-          interestedPosts.length === 0 ? (
-            <p className="text-center py-8 text-gray-500">아직 관심 포스트가 없습니다.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {interestedPosts.map(post => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
-          )
-        ) : (
-          <div className="space-y-4">
-            {notifications.length === 0 ? (
-              <p className="text-center py-8 text-gray-500">새로운 알림이 없습니다.</p>
-            ) : (
-              notifications.map(notification => (
-                <Link
-                  key={notification.id}
-                  to={`/posts/${notification.postId}`}
-                  className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
+      <div className="py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          {activeTab === 'myPosts' ? (
+            myPosts.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">아직 작성한 게시글이 없습니다.</p>
+                <Link 
+                  to="/posts/new" 
+                  className="inline-block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-grow">
-                      <p className="text-gray-800">
-                        <span className="font-medium">{notification.senderName}</span>
-                        {notification.type === 'comment' && '님이 회원님의 게시글에 댓글을 남겼습니다:'}
-                        {notification.type === 'like' && '님이 회원님의 게시글을 좋아합니다.'}
-                      </p>
-                      {notification.content && (
-                        <p className="text-gray-600 mt-1">{notification.content}</p>
-                      )}
-                      <span className="text-sm text-gray-500">
-                        {dayjs(notification.createdAt).fromNow()}
-                      </span>
-                    </div>
-                  </div>
+                  첫 게시글 작성하기
                 </Link>
-              ))
-            )}
-          </div>
-        )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myPosts.map(post => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            )
+          ) : activeTab === 'interestedPosts' ? (
+            interestedPosts.length === 0 ? (
+              <p className="text-center py-8 text-gray-500">아직 관심 포스트가 없습니다.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {interestedPosts.map(post => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            )
+          ) : (
+            <div className="space-y-4">
+              {notifications.length === 0 ? (
+                <p className="text-center py-8 text-gray-500">새로운 알림이 없습니다.</p>
+              ) : (
+                notifications.map(notification => (
+                  <Link
+                    key={notification.id}
+                    to={`/posts/${notification.postId}`}
+                    className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-grow">
+                        <p className="text-gray-800">
+                          <span className="font-medium">{notification.senderName}</span>
+                          {notification.type === 'comment' && '님이 회원님의 게시글에 댓글을 남겼습니다:'}
+                          {notification.type === 'like' && '님이 회원님의 게시글을 좋아합니다.'}
+                        </p>
+                        {notification.content && (
+                          <p className="text-gray-600 mt-1">{notification.content}</p>
+                        )}
+                        <span className="text-sm text-gray-500">
+                          {dayjs(notification.createdAt).fromNow()}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
