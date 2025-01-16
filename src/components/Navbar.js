@@ -1,13 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { HomeIcon, UserIcon } from './Icons';
 import { PrimaryButton } from './Button';
 
 function Navbar() {
-  const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
