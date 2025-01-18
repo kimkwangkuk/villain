@@ -29,7 +29,7 @@ function Navbar() {
     >
       <div className="px-4">
         <div className="flex justify-between items-center h-16">
-          <Link to="/about" className="text-xl font-bold hover:text-gray-600">
+          <Link to="/about" className="text-2xl font-bold hover:text-gray-900">
             빌런
           </Link>
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPost, getCategories } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
+import { PrimaryButton, LineButton } from '../components/Button';
 
 function AddPostPage() {
   const navigate = useNavigate();
@@ -145,85 +146,99 @@ function AddPostPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
-      <div className="max-w-[520px] w-full bg-white rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] relative 
+      <div className="max-w-[820px] w-full bg-white rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] relative 
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 before:to-transparent before:rounded-2xl"
       >
-        <div className="border-b border-gray-100">
-          <div className="px-6">
-            <div className="flex justify-between items-center h-[72px]">
-              <h1 className="text-base font-medium">빌런 종류</h1>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="text-right border-none bg-transparent focus:outline-none focus:ring-0 text-gray-500 cursor-pointer appearance-none pr-8 text-base"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right center',
-                  backgroundSize: '1.5em 1.5em'
-                }}
-              >
-                <option value="">카테고리 선택</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+        <div className="flex">
+          <div className="w-[340px] p-6 border-r border-gray-100">
+            <div className="flex flex-col items-start space-y-6">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <span className="text-xl">⚡</span>
+              </div>
+              <div>
+                <p className="text-lg font-semibold">더 이상 비슷한 일이 일어나지 않도록.</p>
+                <p className="text-lg font-semibold">빌런의 행태를 세상에 알리세요.</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="border-b border-gray-100">
-          <div className="px-6">
-            <div className="flex justify-between items-center h-[72px]">
-              <h1 className="text-base font-medium">빌런 네임</h1>
-              <input
-                type="text"
-                name="title"
-                placeholder="제목을 입력하세요"
-                className="text-right border-none focus:outline-none focus:ring-0 text-gray-500 text-base"
-                value={formData.title}
-                onChange={handleChange}
-              />
+          <div className="flex-1">
+            <div className="border-b border-gray-100">
+              <div className="px-6">
+                <div className="flex justify-between items-center h-[72px]">
+                  <h1 className="text-base font-medium">빌런 종류</h1>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="text-right border-none bg-transparent focus:outline-none focus:ring-0 text-gray-500 cursor-pointer appearance-none pr-8 text-base"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right center',
+                      backgroundSize: '1.5em 1.5em'
+                    }}
+                  >
+                    <option value="">카테고리 선택</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="px-6 py-4">
-          <div className="space-y-4">
-            <div>
-              <textarea
-                name="content"
-                placeholder="빌런 경험을 모두에게 공유해주세요."
-                className="w-full h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-base"
-                value={formData.content}
-                onChange={handleChange}
-              />
+            <div className="border-b border-gray-100">
+              <div className="px-6">
+                <div className="flex justify-between items-center h-[72px]">
+                  <h1 className="text-base font-medium">빌런 네임</h1>
+                  <input
+                    type="text"
+                    name="title"
+                    placeholder="제목을 입력하세요"
+                    className="text-right border-none focus:outline-none focus:ring-0 text-gray-500 text-base"
+                    value={formData.title}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="px-6 pb-6 flex justify-between items-center">
-          <div className="text-red-500 text-sm">
-            {errors.category || errors.title || errors.content || errors.general}
-          </div>
-          <div className="flex space-x-4">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="bg-black text-white px-3 py-2 rounded-xl font-semibold hover:bg-gray-800"
-            >
-              올리기
-            </button>
+            <div className="px-6 py-4">
+              <div className="space-y-4">
+                <div>
+                  <textarea
+                    name="content"
+                    placeholder="빌런 경험을 모두에게 공유해주세요."
+                    className="w-full h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-base"
+                    value={formData.content}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 pb-6 flex justify-between items-center">
+              <div className="text-red-500 text-sm">
+                {errors.category || errors.title || errors.content || errors.general}
+              </div>
+              <div className="flex space-x-2">
+                <LineButton
+                  type="button"
+                  onClick={handleCancel}
+                >
+                  취소
+                </LineButton>
+                <PrimaryButton 
+                  type="button"
+                  onClick={handleSubmit}
+                >
+                  올리기
+                </PrimaryButton>
+              </div>
+            </div>
           </div>
         </div>
       </div>

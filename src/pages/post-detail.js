@@ -194,7 +194,7 @@ function PostDetail() {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-900">{post.authorName}</span>
+                <span className="text-[14px] font-semibold text-gray-900">{post.authorName}</span>
                 <span className="text-xs text-gray-400">
                   {post.createdAt?.toDate().toLocaleDateString()}
                 </span>
@@ -206,7 +206,7 @@ function PostDetail() {
                 {post.categoryName}
               </div>
               <h1 className="text-xl font-semibold text-gray-800 mb-3">{post.title}</h1>
-              <p className="text-gray-600">{post.content}</p>
+              <p className="text-gray-900">{post.content}</p>
             </div>
 
             <div className="flex items-center justify-between">
@@ -238,7 +238,7 @@ function PostDetail() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl border border-gray-100 p-6">
+        <div className="bg-white rounded-3xl border border-gray-100 py-6">
           {isLoggedIn ? (
             <form onSubmit={handleCommentSubmit}>
               <div className="mb-4 bg-white rounded-[28px] border border-gray-100">
@@ -260,13 +260,51 @@ function PostDetail() {
           )}
 
           {comments.length > 0 ? (
-            <div className="space-y-4">
-              {comments.map(comment => (
-                <CommentCard 
+            <div className="space-y-0 pt-4">
+              {comments.map((comment, index) => (
+                <div 
                   key={comment.id} 
-                  comment={comment} 
-                  postAuthorId={post.authorId}
-                />
+                  className={`flex space-x-3 py-4 px-6 ${
+                    index !== comments.length - 1 ? 'border-b border-gray-100' : ''
+                  }`}
+                >
+                  {/* 프로필 이미지 그룹 */}
+                  <div className="flex-shrink-0 pt-1">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center overflow-hidden
+                      ${comment.userId === post.authorId ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                      <span className={`text-sm ${comment.userId === post.authorId ? 'text-blue-600' : 'text-gray-600'}`}>
+                        {comment.author?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 이름, 시간, 내용 그룹 */}
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-1">
+                      <span className="text-[15px] font-semibold text-gray-900">
+                        {comment.author || '익명'}
+                      </span>
+                      <span className="text-[15px] text-gray-300">•</span>
+                      <span className="text-[15px] text-gray-400">
+                        {comment.createdAt?.toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    
+                    <div className="text-[15px] text-gray-900 mb-2">
+                      {comment.content}
+                    </div>
+                    
+                    <button className="text-[13px] text-gray-500 hover:text-gray-700">
+                      답글
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
