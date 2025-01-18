@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getCategories, updateLikes } from '../api/firebase';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../firebase';
@@ -13,11 +13,64 @@ dayjs.locale('ko');
 dayjs.extend(relativeTime);
 
 function PostCard({ post }) {
-  const navigate = useNavigate();
-  const { categoryName, title, content, authorName, createdAt } = post;
+  const [categoryName, setCategoryName] = useState('');
+  const [likes, setLikes] = useState(post.likes || 0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
+  const { isLoggedIn, user } = useAuth();
 
-  const handleClick = () => {
-    navigate(`/posts/${post.id}`);
+  useEffect(() => {
+    const fetchCategoryName = async () => {
+      try {
+        const categories = await getCategories();
+        const category = categories.find(cat => cat.id === post.categoryId);
+        if (category) {
+          setCategoryName(category.name);
+        }
+      } catch (error) {
+        console.error('카테고리 로딩 실패:', error);
+      }
+    };
+
+    // 댓글 수 실시간 업데이트
+    const commentsQuery = query(collection(db, 'posts', post.id, 'comments'));
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+      setCommentCount(snapshot.size);
+    });
+
+    if (user && post.likedBy) {
+      setIsLiked(post.likedBy.includes(user.uid));
+    }
+
+    fetchCategoryName();
+    return () => unsubscribe();  // cleanup
+  }, [post.categoryId, post.likedBy, post.id, user]);
+
+  const handleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isLoggedIn || !user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      const updatedPost = await updateLikes(post.id, user.uid);
+      setLikes(updatedPost.likes);
+      setIsLiked(!isLiked);
+    } catch (error) {
+      console.error('좋아요 실패:', error);
+      alert('좋아요 처리에 실패했습니다.');
+    }
+  };
+
+  const getRelativeTime = (date) => {
+    return dayjs(date).fromNow();
+  };
+
+  const getDefaultProfileImage = () => {
+    return 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=' + post.authorId + '&backgroundColor=e8f5e9';
   };
 
   return (
@@ -32,8 +85,8 @@ function PostCard({ post }) {
           <div className="text-sm font-semibold text-gray-800 mb-3">
             {categoryName}
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-3">{title}</h2>
-          <p className="text-gray-600 mb-6">{content}</p>
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">{post.title}</h2>
+          <p className="text-gray-600 mb-6">{post.content}</p>
         </div>
 
         <div className="flex justify-between text-sm text-gray-500">
@@ -49,31 +102,32 @@ function PostCard({ post }) {
               />
             </div>
             <div className="flex flex-col">
-              <span>{authorName}</span>
+              <span>{post.authorName}</span>
               <span className="text-xs text-gray-400">
-                {getRelativeTime(createdAt?.toDate())}
+                {getRelativeTime(post.createdAt?.toDate())}
               </span>
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-xs text-gray-400 flex items-center">
+            <span className="text-xs text-gray-400 flex items-center hover:bg-gray-100 p-2 rounded-full cursor-pointer">
               <span className="mr-1">👁️</span>
               {post.viewCount || 0}
             </span>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1 hover:bg-gray-100 p-2 rounded-full cursor-pointer">
               <span>💬</span>
-              <span>{post.commentCount}</span>
+              <span>{commentCount}</span>
             </div>
             <div 
               onClick={e => e.stopPropagation()}
               onMouseDown={e => e.preventDefault()}
+              className="hover:bg-gray-100 p-2 rounded-full transition-colors"
             >
               <button 
                 onClick={handleLike}
-                className={`flex items-center space-x-1 ${post.isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+                className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
               >
-                <span>{post.isLiked ? '❤️' : '🤍'}</span>
-                <span>{post.likes}</span>
+                <span>{isLiked ? '❤️' : '🤍'}</span>
+                <span>{likes}</span>
               </button>
             </div>
           </div>

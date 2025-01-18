@@ -24,40 +24,42 @@ function CommentCard({ comment, postAuthorId, isCommentInput = false }) {
       )}
 
       {/* 댓글 카드 */}
-      <div className="bg-gray-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="rounded-lg py-0">
         <div className="flex items-start space-x-3">
           {/* 프로필 이미지 */}
           <div className="flex-shrink-0">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center
               ${isPostAuthor ? 'bg-blue-100' : 'bg-gray-300'}`}>
               <span className={`text-sm ${isPostAuthor ? 'text-blue-600' : 'text-gray-600'}`}>
-                {comment.author?.charAt(0)?.toUpperCase() || '?'}
+                {comment.authorName?.charAt(0)?.toUpperCase() || '?'}
               </span>
             </div>
           </div>
 
-          {/* 댓글 내용 */}
           <div className="flex-grow">
-            {/* 작성자 이름 */}
-            <div className="flex items-center mb-1">
-              <span className="font-medium text-gray-900">{comment.author || '익명'}</span>
+            {/* 작성자 정보를 가로로 배치하도록 수정 */}
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="font-medium text-gray-900">{comment.authorName || '익명'}</span>
+              <span className="text-sm text-gray-500">•</span>
+              <span className="text-sm text-gray-500">
+                {comment.createdAt?.toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
             </div>
             
             {/* 댓글 텍스트 */}
-            <p className="text-gray-700 mb-2">
-              {comment.content}
-            </p>
-
-            {/* 하단 액션 영역 */}
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <span>{comment.createdAt?.toLocaleDateString('ko-KR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}</span>
-              <button className="hover:text-gray-700">답글</button>
+            <div className="pl-0">
+              <p className="text-gray-700">
+                {comment.content}
+              </p>
+              <div className="mt-2">
+                <button className="text-gray-700 text-sm">답글</button>
+              </div>
             </div>
           </div>
         </div>

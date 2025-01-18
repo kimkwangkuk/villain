@@ -183,10 +183,10 @@ function PostDetail() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl p-6 border border-gray-100 mb-6">
+        <div className="bg-white rounded-3xl p-6 border border-gray-100 mb-4">
           <div className="flex flex-col h-full">
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="flex items-center space-x-2 mb-3">
+              <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                 <img
                   src={post.authorPhotoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post.authorId}&backgroundColor=e8f5e9`}
                   alt={`${post.authorName}의 프로필`}
