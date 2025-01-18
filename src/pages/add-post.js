@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPost, getCategories } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
-import { PrimaryButton } from '../components/Button';
 
 function AddPostPage() {
   const navigate = useNavigate();
@@ -41,9 +40,11 @@ function AddPostPage() {
     }
 
     const fetchCategories = async () => {
+      console.log('카테고리 불러오기 시도');
       try {
         setLoading(true);
         const categoriesData = await getCategories();
+        console.log('카테고리 로드 완료:', categoriesData);
         setCategories(categoriesData || []);
       } catch (error) {
         console.error('카테고리 로딩 실패:', error);
@@ -54,14 +55,24 @@ function AddPostPage() {
     };
 
     fetchCategories();
-  }, [isLoggedIn, user, navigate, errors]);
+  }, [isLoggedIn, user, navigate]);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+    const fieldName = e.target.name;
+    
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: e.target.value
+    }));
+
+    setErrors(prev => {
+      if (prev[fieldName]) {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      }
+      return prev;
     });
-    setErrors({});
   };
 
   const validateForm = () => {
@@ -134,12 +145,12 @@ function AddPostPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
-      <div className="max-w-xl w-full bg-white rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] relative 
+      <div className="max-w-[520px] w-full bg-white rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] relative 
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 before:to-transparent before:rounded-2xl"
       >
         <div className="border-b border-gray-100">
           <div className="px-6">
-            <div className="flex justify-between items-center h-14">
+            <div className="flex justify-between items-center h-[72px]">
               <h1 className="text-base font-medium">빌런 종류</h1>
               <select
                 name="category"
@@ -166,7 +177,7 @@ function AddPostPage() {
 
         <div className="border-b border-gray-100">
           <div className="px-6">
-            <div className="flex justify-between items-center h-14">
+            <div className="flex justify-between items-center h-[72px]">
               <h1 className="text-base font-medium">빌런 네임</h1>
               <input
                 type="text"
@@ -186,7 +197,7 @@ function AddPostPage() {
               <textarea
                 name="content"
                 placeholder="빌런 경험을 모두에게 공유해주세요."
-                className="w-full h-[300px] resize-none border-none focus:outline-none focus:ring-0 text-base"
+                className="w-full h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-base"
                 value={formData.content}
                 onChange={handleChange}
               />
@@ -206,9 +217,13 @@ function AddPostPage() {
             >
               취소
             </button>
-            <PrimaryButton type="button" onClick={handleSubmit}>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="bg-black text-white px-3 py-2 rounded-xl font-semibold hover:bg-gray-800"
+            >
               올리기
-            </PrimaryButton>
+            </button>
           </div>
         </div>
       </div>

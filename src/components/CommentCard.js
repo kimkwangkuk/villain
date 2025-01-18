@@ -13,7 +13,7 @@ function CommentCard({ comment, postAuthorId, isCommentInput = false }) {
         <div className="mb-4 bg-white rounded-[28px] border border-gray-100">
           <textarea
             placeholder="댓글을 입력해주세요."
-            className="w-full h-[180px] resize-none border-none focus:outline-none focus:ring-0 text-gray-400 text-[17px] p-7"
+            className="w-full h-[180px] resize-none border-none focus:outline-none focus:ring-0 text-gray-400 text-[15px] p-7"
           />
           <div className="px-7 pb-7 flex justify-end">
             <button className="bg-black text-white px-6 py-3 rounded-[14px] text-[15px]">
@@ -24,11 +24,12 @@ function CommentCard({ comment, postAuthorId, isCommentInput = false }) {
       )}
 
       {/* 댓글 카드 */}
-      <div className="rounded-lg py-0">
-        <div className="flex items-start space-x-3">
+      <div className="rounded-lg">
+        {/* 프로필 정보 그룹 */}
+        <div className="flex items-center space-x-2 mb-3">
           {/* 프로필 이미지 */}
           <div className="flex-shrink-0">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center
               ${isPostAuthor ? 'bg-blue-100' : 'bg-gray-300'}`}>
               <span className={`text-sm ${isPostAuthor ? 'text-blue-600' : 'text-gray-600'}`}>
                 {comment.authorName?.charAt(0)?.toUpperCase() || '?'}
@@ -36,30 +37,30 @@ function CommentCard({ comment, postAuthorId, isCommentInput = false }) {
             </div>
           </div>
 
-          <div className="flex-grow">
-            {/* 작성자 정보를 가로로 배치하도록 수정 */}
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="font-medium text-gray-900">{comment.authorName || '익명'}</span>
-              <span className="text-sm text-gray-500">•</span>
-              <span className="text-sm text-gray-500">
-                {comment.createdAt?.toLocaleDateString('ko-KR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </span>
-            </div>
+          {/* 작성자 정보 */}
+          <div className="flex items-center space-x-1">
+            <span className="text-[13px] font-semibold text-gray-900">{comment.authorName || '익명'}</span>
+            <span className="text-[13px] text-gray-300">•</span>
+            <span className="text-[13px] text-gray-400">
+              {comment.createdAt?.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          </div>
+        </div>
             
-            {/* 댓글 텍스트 */}
-            <div className="pl-0">
-              <p className="text-gray-700">
-                {comment.content}
-              </p>
-              <div className="mt-2">
-                <button className="text-gray-700 text-sm">답글</button>
-              </div>
+        {/* 댓글 내용 */}
+        <div className="border-b border-gray-100">
+          <div className="pb-4">
+            <p className="text-sm text-gray-700">
+              {comment.content}
+            </p>
+            <div className="mt-2">
+              <button className="text-gray-700 text-sm">답글</button>
             </div>
           </div>
         </div>

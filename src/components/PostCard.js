@@ -78,12 +78,23 @@ function PostCard({ post }) {
       to={`/posts/${post.id}`}
       className="block bg-white rounded-xl p-6 cursor-pointer min-h-[320px] border border-gray-100
         hover:shadow-[0_15px_30px_-10px_rgba(51,65,85,0.1),0_25px_25px_-15px_rgba(79,70,229,0.1),0_-6px_15px_-10px_rgba(51,65,85,0.08)] 
-        hover:scale-[1.02] transition-all duration-200"
+        hover:scale-[1.02] transition-all duration-200 relative"
     >
       <div className="flex flex-col h-full justify-between">
         <div>
-          <div className="text-sm font-semibold text-gray-800 mb-3">
-            {categoryName}
+          <div className="mb-3">
+            <div className="text-sm font-semibold text-gray-800">
+              {categoryName}
+            </div>
+            <button 
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <span className="text-gray-400">⋮</span>
+            </button>
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-3">{post.title}</h2>
           <p className="text-gray-600 mb-6">{post.content}</p>
@@ -109,10 +120,6 @@ function PostCard({ post }) {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-xs text-gray-400 flex items-center hover:bg-gray-100 p-2 rounded-full cursor-pointer">
-              <span className="mr-1">👁️</span>
-              {post.viewCount || 0}
-            </span>
             <div className="flex items-center space-x-1 hover:bg-gray-100 p-2 rounded-full cursor-pointer">
               <span>💬</span>
               <span>{commentCount}</span>
@@ -127,7 +134,7 @@ function PostCard({ post }) {
                 className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
               >
                 <span>{isLiked ? '❤️' : '🤍'}</span>
-                <span>{likes}</span>
+                <span>{(post.viewCount || 0) + (likes || 0)}</span>
               </button>
             </div>
           </div>
