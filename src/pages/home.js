@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getPosts, getCategories } from '../api/firebase';
 import PostCard from '../components/PostCard';
+import { Link } from 'react-router-dom';
 
 function HomePage() {
   const [posts, setPosts] = useState([]);
@@ -31,6 +32,17 @@ function HomePage() {
     ? posts.filter(post => post.categoryId === selectedCategory)
     : posts;
 
+  const authors = filteredPosts.reduce((acc, post) => {
+    if (!acc.some(author => author.id === post.authorId)) {
+      acc.push({ id: post.authorId, name: post.authorName, profile: post.authorProfile });
+    }
+    return acc;
+  }, []);
+
+  const getDefaultProfileImage = (authorId) => {
+    return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${authorId}&backgroundColor=e8f5e9`;
+  };
+
   if (loading) return <div>로딩중...</div>;
 
   return (
@@ -54,6 +66,32 @@ function HomePage() {
               >
                 {category.name}
               </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="py-4">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex overflow-x-auto whitespace-nowrap py-2 gap-6">
+            {authors.map(author => (
+              <Link
+                key={author.id}
+                to={`/user/${author.id}`}
+                className="flex flex-col items-center space-y-2 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={author.profile || getDefaultProfileImage(author.id)}
+                    alt={`${author.name}의 프로필`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = getDefaultProfileImage(author.id);
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-gray-700">{author.name}</span>
+              </Link>
             ))}
           </div>
         </div>

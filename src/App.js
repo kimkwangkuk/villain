@@ -10,6 +10,7 @@ import NotificationsPage from './pages/notifications';
 import AboutVillains from './pages/AboutVillains';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
+import UserPage from './pages/UserPage';
 
 // 네비게이션바를 표시하지 않을 라우트 목록
 const noNavbarRoutes = ['/login', '/signup'];
@@ -48,6 +49,7 @@ function App() {
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/about" element={<AboutVillains />} />
+            <Route path="/user/:userId" element={<UserPage />} />
           </Routes>
         </AppLayout>
       </AuthProvider>
