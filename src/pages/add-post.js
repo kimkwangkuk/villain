@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPost, getCategories } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
+import { PrimaryButton } from '../components/Button';
 
 function AddPostPage() {
   const navigate = useNavigate();
@@ -127,7 +128,7 @@ function AddPostPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 py-8">
+      <div className="min-h-screen bg-[#F5F5F5] py-8">
         <div className="max-w-2xl mx-auto px-4">
           <p className="text-center">카테고리 로딩중...</p>
         </div>
@@ -136,8 +137,10 @@ function AddPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="max-w-xl w-full bg-white rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.1)] relative before:absolute before:inset-0 before:-z-10 before:blur-xl before:bg-gradient-to-b before:from-white/25 before:to-transparent before:rounded-2xl">
+    <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+      <div className="max-w-xl w-full bg-white rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] relative 
+        before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 before:to-transparent before:rounded-2xl"
+      >
         <div className="border-b border-gray-100">
           <div className="px-6">
             <div className="flex justify-between items-center h-14">
@@ -207,13 +210,9 @@ function AddPostPage() {
             >
               취소
             </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800"
-            >
+            <PrimaryButton type="button" onClick={handleSubmit}>
               올리기
-            </button>
+            </PrimaryButton>
           </div>
         </div>
       </div>

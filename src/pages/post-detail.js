@@ -15,6 +15,7 @@ function PostDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -154,6 +155,16 @@ function PostDetail() {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000); // 2초 후 토스트 메시지 숨김
+    } catch (error) {
+      console.error('클립보드 복사 실패:', error);
+    }
+  };
+
   if (loading) return <div className="text-center py-8">로딩중...</div>;
   
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
@@ -161,50 +172,87 @@ function PostDetail() {
   if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
-          <p className="text-gray-600 mb-6">{post.content}</p>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>작성자: {post.authorName}</span>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-1">
-                <span>💬</span>
-                <span>{comments.length}</span>
+    <div className="min-h-screen bg-[#F5F5F5] py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        {/* 토스트 메시지 */}
+        {showToast && (
+          <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="bg-black text-white px-4 py-2 rounded-lg text-[14px]">
+              클립보드에 복사되었습니다
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl p-6 border border-gray-100 mb-6">
+          <div className="flex flex-col h-full">
+            <div className="flex items-center space-x-2 mb-6">
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                <img
+                  src={post.authorPhotoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post.authorId}&backgroundColor=e8f5e9`}
+                  alt={`${post.authorName}의 프로필`}
+                  className="w-full h-full object-cover"
+                />
               </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-gray-900">{post.authorName}</span>
+                <span className="text-xs text-gray-400">
+                  {post.createdAt?.toDate().toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="text-sm font-semibold text-gray-800 mb-3">
+                {post.categoryName}
+              </div>
+              <h1 className="text-xl font-semibold text-gray-800 mb-3">{post.title}</h1>
+              <p className="text-gray-600">{post.content}</p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <span className="text-xs text-gray-400 flex items-center">
+                  <span className="mr-1">👁️</span>
+                  {post.viewCount || 0}
+                </span>
+                <div className="flex items-center space-x-1">
+                  <span>💬</span>
+                  <span>{comments.length}</span>
+                </div>
+                <button 
+                  onClick={handleLike}
+                  className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+                >
+                  <span>{isLiked ? '❤️' : '🤍'}</span>
+                  <span>{post.likes || 0}</span>
+                </button>
+              </div>
+              
               <button 
-                onClick={handleLike}
-                className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+                onClick={handleShare}
+                className="text-gray-500 hover:text-gray-700"
               >
-                <span>{isLiked ? '❤️' : '🤍'}</span>
-                <span>{post.likes || 0}</span>
+                <span>🔗</span>
               </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">
-            댓글 <span className="text-gray-500">({comments.length})</span>
-          </h2>
+        <div className="bg-white rounded-3xl border border-gray-100 p-6">
           {isLoggedIn ? (
-            <form onSubmit={handleCommentSubmit} className="mb-6">
-              <div className="flex flex-col space-y-2">
+            <form onSubmit={handleCommentSubmit}>
+              <div className="mb-4 bg-white rounded-[28px] border border-gray-100">
                 <textarea
                   value={commentContent}
                   onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="댓글을 작성해주세요"
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows="3"
+                  placeholder="댓글을 입력해주세요."
+                  className="w-full h-[60px] resize-none border-none focus:outline-none focus:ring-0 text-gray-400 text-[16px] p-7"
                 />
-                <button
-                  type="submit"
-                  className="self-end px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  disabled={!commentContent.trim()}
-                >
-                  댓글 작성
-                </button>
+                <div className="px-7 pb-7 flex justify-end">
+                  <button className="bg-black text-white px-6 py-3 rounded-[14px] text-[15px]">
+                    등록
+                  </button>
+                </div>
               </div>
             </form>
           ) : (

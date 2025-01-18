@@ -34,7 +34,7 @@ function HomePage() {
   if (loading) return <div>로딩중...</div>;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-[#F5F5F5]">
       <div className="bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="flex overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">

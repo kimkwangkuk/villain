@@ -19,5 +19,5 @@ git pull origin main
 
 
 git add .
-git commit -m "feat: Add profile images to PostCard and improve user registration"
+git commit -m "카드 수정"
 git push origin main
