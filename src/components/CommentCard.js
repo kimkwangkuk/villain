@@ -1,4 +1,7 @@
-import { PrimaryButton } from './Button';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 function CommentCard({ comment, postAuthorId, isCommentInput = false }) {
   const isPostAuthor = comment.userId === postAuthorId;
