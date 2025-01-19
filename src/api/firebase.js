@@ -2,7 +2,7 @@ import { db, auth } from '../firebase';
 import { 
   collection, getDocs, getDoc, addDoc, doc,
   query, orderBy, serverTimestamp, updateDoc,
-  arrayUnion, where, arrayRemove
+  arrayUnion, where, arrayRemove, setDoc
 } from 'firebase/firestore';
 import { 
   signInWithEmailAndPassword,
@@ -186,15 +186,31 @@ export const login = async (email, password) => {
 
 // 회원가입
 export const signup = async ({ email, password, username }) => {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  
-  // 사용자 프로필 업데이트
-  await updateProfile(auth.currentUser, {
-    displayName: username
-  });
-  
-  return userCredential.user;
-}; 
+  try {
+    // 1. Firebase Auth에 사용자 생성
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // 2. 사용자 프로필 업데이트
+    await updateProfile(auth.currentUser, {
+      displayName: username
+    });
+    
+    // 3. Firestore에 사용자 정보 저장
+    const userRef = doc(db, 'users', userCredential.user.uid);
+    await setDoc(userRef, {
+      email: email,
+      username: username,
+      createdAt: new Date(),
+      bio: '',  // 기본 자기소개는 빈 문자열
+      userId: userCredential.user.uid
+    });
+    
+    return userCredential.user;
+  } catch (error) {
+    console.error('회원가입 실패:', error);
+    throw error;
+  }
+};
 
 export const createCategories = async () => {
   const categories = [
@@ -280,4 +296,52 @@ export const getMyPosts = async (userId) => {
     id: doc.id,
     ...doc.data()
   }));
+};
+
+export const updateUserBio = async (userId, bio) => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      // 사용자 문서가 없으면 새로 생성
+      await setDoc(userRef, {
+        bio: bio,
+        userId: userId,
+        createdAt: new Date()
+      });
+    } else {
+      // 기존 문서가 있으면 업데이트
+      await updateDoc(userRef, {
+        bio: bio
+      });
+    }
+    return true;
+  } catch (error) {
+    console.error('자기소개 업데이트 실패:', error);
+    throw error;
+  }
+};
+
+export const getUserDoc = async (userId) => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      // 사용자 문서가 없으면 기본값으로 생성
+      const defaultUserData = {
+        userId: userId,
+        bio: '',
+        createdAt: new Date()
+      };
+      await setDoc(userRef, defaultUserData);
+      return defaultUserData;
+    }
+    
+    return userSnap.data();
+  } catch (error) {
+    console.error('사용자 정보 가져오기 실패:', error);
+    throw error;
+  }
 };

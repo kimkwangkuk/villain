@@ -35,6 +35,30 @@ function AuthPage() {
     });
   };
 
+  const getErrorMessage = (error) => {
+    const errorCode = error.code;
+    switch (errorCode) {
+      case 'auth/email-already-in-use':
+        return '이미 사용 중인 이메일 주소입니다.';
+      case 'auth/invalid-email':
+        return '유효하지 않은 이메일 주소입니다.';
+      case 'auth/operation-not-allowed':
+        return '이메일/비밀번호 로그인이 비활성화되어 있습니다.';
+      case 'auth/weak-password':
+        return '비밀번호는 6자 이상이어야 합니다.';
+      case 'auth/user-disabled':
+        return '해당 사용자 계정이 비활성화되었습니다.';
+      case 'auth/user-not-found':
+        return '등록되지 않은 이메일입니다.';
+      case 'auth/wrong-password':
+        return '잘못된 비밀번호입니다.';
+      case 'auth/too-many-requests':
+        return '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
+      default:
+        return '로그인 중 오류가 발생했습니다. 다시 시도해주세요.';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -64,11 +88,11 @@ function AuthPage() {
         }
 
         alert('회원가입이 완료되었습니다.');
-        setIsLogin(true); // 회원가입 후 로그인 폼으로 전환
+        setIsLogin(true);
       }
     } catch (error) {
       console.error(isLogin ? '로그인 실패:' : '회원가입 실패:', error);
-      setError(error.message || (isLogin ? '로그인에 실패했습니다.' : '회원가입에 실패했습니다.'));
+      setError(getErrorMessage(error));
     }
   };
 
@@ -96,16 +120,30 @@ function AuthPage() {
 
         <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-8">
+            <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
               {isLogin ? '로그인' : '회원가입'}
             </h2>
+            {!isLogin && (
+              <p className="text-center text-gray-600 mb-8">
+                빌런을 세상에 알리세요.
+              </p>
+            )}
           </div>
 
           <div className="w-full">
             <form className="space-y-4" onSubmit={handleSubmit}>
               {error && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-                  <p className="text-red-700">{error}</p>
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                  </div>
                 </div>
               )}
               
