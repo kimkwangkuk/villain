@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { signup, login } from '../api/firebase';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
 function AuthPage() {
   const location = useLocation();
@@ -59,6 +60,20 @@ function AuthPage() {
     }
   };
 
+  // 랜덤 프로필 이미지 가져오기
+  const getRandomProfileImage = async () => {
+    const storage = getStorage();
+    const imageNumber = Math.floor(Math.random() * 2) + 1; // woman1.png 또는 woman2.png
+    const imageRef = ref(storage, `profile_images/woman${imageNumber}.webp`);
+    try {
+      const url = await getDownloadURL(imageRef);
+      return url;
+    } catch (error) {
+      console.error('프로필 이미지 가져오기 실패:', error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -76,22 +91,39 @@ function AuthPage() {
           return;
         }
 
+        const profileImageUrl = await getRandomProfileImage();
+        console.log('선택된 프로필 이미지:', profileImageUrl); // 디버깅용
+
+        if (!profileImageUrl) {
+          console.error('프로필 이미지를 가져오는데 실패했습니다.');
+          return;
+        }
+
         const response = await signup({
           email: formData.email,
           password: formData.password,
-          username: formData.username
+          username: formData.username,
+          photoURL: profileImageUrl
         });
+
+        console.log('회원가입 응답:', response); // 디버깅용
 
         if (!response.displayName) {
           setError('사용자 이름 설정에 실패했습니다.');
           return;
         }
 
+        // 프로필 이미지가 제대로 설정되었는지 확인
+        if (!response.photoURL) {
+          console.error('프로필 이미지 설정 실패');
+        }
+
         alert('회원가입이 완료되었습니다.');
+        // 로그인 페이지로 이동
         setIsLogin(true);
       }
     } catch (error) {
-      console.error(isLogin ? '로그인 실패:' : '회원가입 실패:', error);
+      console.error('회원가입/로그인 실패:', error);
       setError(getErrorMessage(error));
     }
   };

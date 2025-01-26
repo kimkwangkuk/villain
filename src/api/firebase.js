@@ -185,14 +185,15 @@ export const login = async (email, password) => {
 };
 
 // 회원가입
-export const signup = async ({ email, password, username }) => {
+export const signup = async ({ email, password, username, photoURL }) => {
   try {
     // 1. Firebase Auth에 사용자 생성
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
-    // 2. 사용자 프로필 업데이트
+    // 2. 사용자 프로필 업데이트 (displayName과 photoURL 모두 설정)
     await updateProfile(auth.currentUser, {
-      displayName: username
+      displayName: username,
+      photoURL: photoURL
     });
     
     // 3. Firestore에 사용자 정보 저장
@@ -200,8 +201,9 @@ export const signup = async ({ email, password, username }) => {
     await setDoc(userRef, {
       email: email,
       username: username,
+      photoURL: photoURL,
       createdAt: new Date(),
-      bio: '',  // 기본 자기소개는 빈 문자열
+      bio: '',
       userId: userCredential.user.uid
     });
     

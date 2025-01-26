@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyPosts, getUserInteractions, getPost, getUserDoc, updateUserBio } from '../api/firebase';
-import { updateProfile } from 'firebase/auth';
+import { getMyPosts, getUserInteractions, getPost } from '../api/firebase';
 import PostCard from '../components/PostCard';
-import { query, collection, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { query, collection, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import dayjs from 'dayjs';
-import { EditNameModal, EditBioModal } from '../components/Modal';
+import { ProfileImageModal } from '../components/Modal';
+import { updateProfile } from 'firebase/auth';
 
 function MyPage() {
   const navigate = useNavigate();
@@ -17,12 +17,7 @@ function MyPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('myPosts');
   const [notifications, setNotifications] = useState([]);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [newDisplayName, setNewDisplayName] = useState('');
-  const [updateError, setUpdateError] = useState('');
-  const [isEditingBio, setIsEditingBio] = useState(false);
-  const [bio, setBio] = useState('');
-  const [bioError, setBioError] = useState('');
+  const [isProfileImageModalOpen, setIsProfileImageModalOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -38,6 +33,7 @@ function MyPage() {
     }
 
     console.log('현재 로그인된 사용자:', user);
+    console.log('프로필 이미지 URL:', user?.photoURL); // 디버깅용
 
     const fetchMyPosts = async () => {
       try {
@@ -94,18 +90,6 @@ function MyPage() {
         setLoading(false);
       });
 
-      // 사용자 자기소개 가져오기
-      const fetchUserBio = async () => {
-        try {
-          const userDoc = await getUserDoc(user.uid); // getUserDoc 함수는 Firebase에서 사용자 문서를 가져오는 함수입니다
-          setBio(userDoc?.bio || '');
-        } catch (error) {
-          console.error('자기소개 로딩 실패:', error);
-        }
-      };
-
-      fetchUserBio();
-
       return () => {
         console.log('알림 구독 해제');
         unsubscribe();
@@ -118,47 +102,15 @@ function MyPage() {
     console.log('현재 로딩 상태:', loading);
   }, [loading]);
 
-  const handleUpdateDisplayName = async (newName) => {
-    if (!newName.trim()) {
-      setUpdateError('이름을 입력해주세요.');
-      return;
-    }
-
+  // 프로필 이미지 업데이트 함수
+  const handleProfileImageUpdate = async (newImageUrl) => {
     try {
-      // Firebase Authentication 업데이트
       await updateProfile(user, {
-        displayName: newName
+        photoURL: newImageUrl
       });
-
-      // Firestore users 컬렉션 업데이트
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        username: newName  // schema.js에 정의된 필드명인 username으로 업데이트
-      });
-
-      setIsEditingName(false);
-      setUpdateError('');
+      setIsProfileImageModalOpen(false);
     } catch (error) {
-      console.error('이름 업데이트 실패:', error);
-      setUpdateError('이름 업데이트에 실패했습니다. 다시 시도해주세요.');
-    }
-  };
-
-  const startEditing = () => {
-    setNewDisplayName(user?.displayName || '');
-    setIsEditingName(true);
-    setUpdateError('');
-  };
-
-  const handleUpdateBio = async (newBio) => {
-    try {
-      await updateUserBio(user.uid, newBio); // updateUserBio 함수는 Firebase에 자기소개를 업데이트하는 함수입니다
-      setBio(newBio);
-      setIsEditingBio(false);
-      setBioError('');
-    } catch (error) {
-      console.error('자기소개 업데이트 실패:', error);
-      setBioError('자기소개 업데이트에 실패했습니다. 다시 시도해주세요.');
+      console.error('프로필 이미지 업데이트 실패:', error);
     }
   };
 
@@ -172,32 +124,33 @@ function MyPage() {
           <div className="py-8">
             <div className="flex justify-between items-start">
               <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
+                <button 
+                  onClick={() => setIsProfileImageModalOpen(true)}
+                  className="relative w-20 h-20 rounded-full overflow-hidden group"
+                >
                   {user?.photoURL ? (
-                    <img 
-                      src={user.photoURL} 
-                      alt="프로필" 
-                      className="w-full h-full rounded-full object-cover"
-                    />
+                    <>
+                      <img 
+                        src={user.photoURL} 
+                        alt="프로필" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="text-white text-sm">변경</span>
+                      </div>
+                    </>
                   ) : (
-                    <span className="text-2xl text-gray-600">
-                      {user?.email?.charAt(0)?.toUpperCase() || '?'}
-                    </span>
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-2xl text-gray-600">
+                        {user?.email?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    </div>
                   )}
-                </div>
+                </button>
                 <div>
-                  <div className="flex items-center space-x-2">
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {user?.displayName || user?.email}
-                    </h2>
-                    <button
-                      onClick={startEditing}
-                      className="text-gray-500 hover:text-gray-700"
-                      title="이름 수정"
-                    >
-                      ✏️
-                    </button>
-                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {user?.displayName || user?.email}
+                  </h2>
                   <p className="text-gray-500">
                     {user?.email}
                   </p>
@@ -210,41 +163,16 @@ function MyPage() {
                 로그아웃
               </button>
             </div>
-
-            {/* 자기소개 섹션 */}
-            <div className="mt-6 bg-gray-50 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-medium text-gray-900">자기소개</h3>
-                <button
-                  onClick={() => setIsEditingBio(true)}
-                  className="text-gray-500 hover:text-gray-700"
-                  title="자기소개 수정"
-                >
-                  ✏️
-                </button>
-              </div>
-              <p className="text-gray-600 whitespace-pre-wrap">
-                {bio || '자기소개를 입력해주세요.'}
-              </p>
-            </div>
           </div>
         </div>
       </div>
 
-      <EditNameModal
-        isOpen={isEditingName}
-        onClose={() => setIsEditingName(false)}
-        onSubmit={handleUpdateDisplayName}
-        initialValue={user?.displayName || ''}
-        error={updateError}
-      />
-
-      <EditBioModal
-        isOpen={isEditingBio}
-        onClose={() => setIsEditingBio(false)}
-        onSubmit={handleUpdateBio}
-        initialValue={bio}
-        error={bioError}
+      {/* 프로필 이미지 선택 모달 */}
+      <ProfileImageModal
+        isOpen={isProfileImageModalOpen}
+        onClose={() => setIsProfileImageModalOpen(false)}
+        onSelect={handleProfileImageUpdate}
+        currentImage={user?.photoURL}
       />
 
       <div className="bg-white">

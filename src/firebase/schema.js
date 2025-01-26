@@ -30,5 +30,6 @@
  * @typedef {Object} User
  * @property {string} email - 이메일
  * @property {string} username - 사용자 이름
+ * @property {string} photoURL - 프로필 이미지 URL
  * @property {Date} createdAt - 가입일
  */ 

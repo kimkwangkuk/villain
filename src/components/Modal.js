@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
 // 기본 모달 컴포넌트
 function BaseModal({ isOpen, onClose, title, children }) {
@@ -184,6 +185,77 @@ export function EditBioModal({ isOpen, onClose, onSubmit, initialValue = '', err
           </button>
         </div>
       </form>
+    </BaseModal>
+  );
+}
+
+// 프로필 이미지 선택 모달
+export function ProfileImageModal({ isOpen, onClose, onSelect, currentImage }) {
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfileImages = async () => {
+      const storage = getStorage();
+      const imageUrls = [];
+      
+      try {
+        // woman1.webp와 woman2.webp 가져오기
+        for (let i = 1; i <= 2; i++) {
+          const imageRef = ref(storage, `profile_images/woman${i}.webp`);
+          const url = await getDownloadURL(imageRef);
+          imageUrls.push(url);
+        }
+        setImages(imageUrls);
+      } catch (error) {
+        console.error('이미지 로딩 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      loadProfileImages();
+    }
+  }, [isOpen]);
+
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="프로필 이미지 선택"
+    >
+      {loading ? (
+        <div className="text-center py-4">로딩중...</div>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {images.map((imageUrl, index) => (
+              <button
+                key={index}
+                onClick={() => onSelect(imageUrl)}
+                className={`relative rounded-lg overflow-hidden aspect-square ${
+                  currentImage === imageUrl ? 'ring-2 ring-blue-500' : ''
+                }`}
+              >
+                <img
+                  src={imageUrl}
+                  alt={`프로필 이미지 ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
     </BaseModal>
   );
 }

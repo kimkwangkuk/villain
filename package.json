@@ -7,11 +7,13 @@
     "bcryptjs": "^2.4.3",
     "cra-template": "1.2.0",
     "dayjs": "^1.11.13",
-    "firebase": "^11.1.0",
+    "firebase": "^11.2.0",
+    "firebase-admin": "^13.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17"
   },
   "scripts": {
@@ -19,7 +21,8 @@
     "build": "react-scripts build",
     "dev": "firebase emulators:start",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "upload-images": "node --no-deprecation scripts/uploadImages.js"
   },
   "eslintConfig": {
     "extends": [
