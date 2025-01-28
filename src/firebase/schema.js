@@ -4,10 +4,12 @@
  * @property {string} content - 게시글 내용
  * @property {string} authorId - 작성자 ID (Firebase Auth uid)
  * @property {string} authorName - 작성자 이름
+ * @property {string} authorPhotoURL - 작성자 프로필 이미지 URL
  * @property {string} categoryId - 카테고리 ID
  * @property {Date} createdAt - 생성일
  * @property {Date} updatedAt - 수정일
  * @property {number} likes - 좋아요 수
+ * @property {string[]} likedBy - 좋아요한 사용자 ID 목록
  * @property {Comment[]} comments - 댓글 목록
  */
 
@@ -31,5 +33,6 @@
  * @property {string} email - 이메일
  * @property {string} username - 사용자 이름
  * @property {string} photoURL - 프로필 이미지 URL
+ * @property {string} bio - 자기소개
  * @property {Date} createdAt - 가입일
  */ 

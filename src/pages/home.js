@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPosts, getCategories } from '../api/firebase';
+import { getPosts, getCategories, getUserDoc } from '../api/firebase';
 import PostCard from '../components/PostCard';
 import { Link } from 'react-router-dom';
 
@@ -8,6 +8,7 @@ function HomePage() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authors, setAuthors] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -18,6 +19,16 @@ function HomePage() {
         ]);
         setPosts(postsData);
         setCategories(categoriesData);
+
+        const uniqueAuthorIds = [...new Set(postsData.map(post => post.authorId))];
+        const authorPromises = uniqueAuthorIds.map(id => getUserDoc(id));
+        const authorData = await Promise.all(authorPromises);
+
+        setAuthors(authorData.map((data, index) => ({
+          id: uniqueAuthorIds[index],
+          name: data.username || '이름 없음',
+          profile: data.photoURL
+        })));
       } catch (error) {
         console.error('데이터 로딩 실패:', error);
       } finally {
@@ -31,13 +42,6 @@ function HomePage() {
   const filteredPosts = selectedCategory
     ? posts.filter(post => post.categoryId === selectedCategory)
     : posts;
-
-  const authors = filteredPosts.reduce((acc, post) => {
-    if (!acc.some(author => author.id === post.authorId)) {
-      acc.push({ id: post.authorId, name: post.authorName, profile: post.authorProfile });
-    }
-    return acc;
-  }, []);
 
   const getDefaultProfileImage = (authorId) => {
     return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${authorId}&backgroundColor=e8f5e9`;

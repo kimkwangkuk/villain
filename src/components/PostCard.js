@@ -18,6 +18,7 @@ function PostCard({ post }) {
   const [isLiked, setIsLiked] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const { isLoggedIn, user } = useAuth();
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchCategoryName = async () => {
@@ -70,7 +71,7 @@ function PostCard({ post }) {
   };
 
   const getDefaultProfileImage = () => {
-    return 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=' + post.authorId + '&backgroundColor=e8f5e9';
+    return 'https://via.placeholder.com/40x40';  // 또는 다른 기본 이미지
   };
 
   return (
@@ -104,11 +105,13 @@ function PostCard({ post }) {
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
               <img
-                src={post.authorPhotoURL || getDefaultProfileImage()}
+                src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
                 alt={`${post.authorName}의 프로필`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.target.src = getDefaultProfileImage();
+                  if (!imageError) {
+                    setImageError(true);
+                  }
                 }}
               />
             </div>

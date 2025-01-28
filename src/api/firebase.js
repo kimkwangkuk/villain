@@ -39,10 +39,14 @@ export const createPost = async (postData) => {
   const user = auth.currentUser;
   if (!user) throw new Error('Must be logged in');
 
+  // Firestore에서 사용자 정보 가져오기
+  const userDoc = await getUserDoc(user.uid);
+  
   const post = {
     ...postData,
     authorId: user.uid,
     authorName: user.displayName || user.email,
+    authorPhotoURL: userDoc.photoURL,  // Firestore에서 가져오기
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     likes: 0,

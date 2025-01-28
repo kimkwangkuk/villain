@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyPosts, getUserInteractions, getPost } from '../api/firebase';
+import { getMyPosts, getUserInteractions, getPost, getUserDoc, updateUserBio } from '../api/firebase';
 import PostCard from '../components/PostCard';
-import { query, collection, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { query, collection, where, orderBy, onSnapshot, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import dayjs from 'dayjs';
-import { ProfileImageModal } from '../components/Modal';
+import { ProfileImageModal, EditNameModal, EditBioModal } from '../components/Modal';
 import { updateProfile } from 'firebase/auth';
 
 function MyPage() {
@@ -18,6 +18,12 @@ function MyPage() {
   const [activeTab, setActiveTab] = useState('myPosts');
   const [notifications, setNotifications] = useState([]);
   const [isProfileImageModalOpen, setIsProfileImageModalOpen] = useState(false);
+  const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [bio, setBio] = useState('');
+  const [isEditBioModalOpen, setIsEditBioModalOpen] = useState(false);
+  const [bioError, setBioError] = useState('');
+  const [userData, setUserData] = useState(null);
 
   const handleLogout = () => {
     logout();
@@ -105,12 +111,98 @@ function MyPage() {
   // 프로필 이미지 업데이트 함수
   const handleProfileImageUpdate = async (newImageUrl) => {
     try {
+      // Firebase Auth 프로필 업데이트
       await updateProfile(user, {
         photoURL: newImageUrl
       });
+
+      // Firestore users 컬렉션 업데이트
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        photoURL: newImageUrl
+      });
+
+      // 사용자가 작성한 모든 포스트의 authorPhotoURL 업데이트
+      const postsQuery = query(
+        collection(db, 'posts'),
+        where('authorId', '==', user.uid)
+      );
+      const postsSnapshot = await getDocs(postsQuery);
+      
+      const updatePromises = postsSnapshot.docs.map(postDoc => 
+        updateDoc(doc(db, 'posts', postDoc.id), {
+          authorPhotoURL: newImageUrl
+        })
+      );
+      await Promise.all(updatePromises);
+
       setIsProfileImageModalOpen(false);
     } catch (error) {
       console.error('프로필 이미지 업데이트 실패:', error);
+    }
+  };
+
+  // 이름 업데이트 함수
+  const handleNameUpdate = async (newName) => {
+    try {
+      // Firestore users 컬렉션 업데이트
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        username: newName
+      });
+
+      // 사용자가 작성한 모든 포스트의 authorName 업데이트
+      const postsQuery = query(
+        collection(db, 'posts'),
+        where('authorId', '==', user.uid)
+      );
+      const postsSnapshot = await getDocs(postsQuery);
+      
+      const updatePromises = postsSnapshot.docs.map(postDoc => 
+        updateDoc(doc(db, 'posts', postDoc.id), {
+          authorName: newName
+        })
+      );
+      await Promise.all(updatePromises);
+
+      setIsEditNameModalOpen(false);
+      setNameError('');
+      
+      // 페이지 새로고침
+      window.location.reload();
+    } catch (error) {
+      console.error('이름 업데이트 실패:', error);
+      setNameError('이름 업데이트에 실패했습니다.');
+    }
+  };
+
+  // 사용자 정보 로드
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          const userData = await getUserDoc(user.uid);
+          setUserData(userData);
+          setBio(userData.bio || '');
+        } catch (error) {
+          console.error('사용자 정보 로딩 실패:', error);
+        }
+      }
+    };
+
+    loadUserData();
+  }, [user]);
+
+  // 자기소개 업데이트 함수
+  const handleBioUpdate = async (newBio) => {
+    try {
+      await updateUserBio(user.uid, newBio);
+      setBio(newBio);
+      setIsEditBioModalOpen(false);
+      setBioError('');
+    } catch (error) {
+      console.error('자기소개 업데이트 실패:', error);
+      setBioError('자기소개 업데이트에 실패했습니다.');
     }
   };
 
@@ -148,9 +240,18 @@ function MyPage() {
                   )}
                 </button>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {user?.displayName || user?.email}
-                  </h2>
+                  <div className="flex items-center space-x-2">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {userData?.username || user?.email}
+                    </h2>
+                    <button
+                      onClick={() => setIsEditNameModalOpen(true)}
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      <span className="sr-only">이름 수정</span>
+                      ✎
+                    </button>
+                  </div>
                   <p className="text-gray-500">
                     {user?.email}
                   </p>
@@ -163,6 +264,23 @@ function MyPage() {
                 로그아웃
               </button>
             </div>
+
+            {/* 자기소개 섹션 추가 */}
+            <div className="mt-6 border-t pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-medium text-gray-900">자기소개</h3>
+                <button
+                  onClick={() => setIsEditBioModalOpen(true)}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  <span className="sr-only">자기소개 수정</span>
+                  ✎
+                </button>
+              </div>
+              <p className="text-gray-600">
+                {bio || '자기소개가 없습니다.'}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -173,6 +291,30 @@ function MyPage() {
         onClose={() => setIsProfileImageModalOpen(false)}
         onSelect={handleProfileImageUpdate}
         currentImage={user?.photoURL}
+      />
+
+      {/* 이름 수정 모달 추가 */}
+      <EditNameModal
+        isOpen={isEditNameModalOpen}
+        onClose={() => {
+          setIsEditNameModalOpen(false);
+          setNameError('');
+        }}
+        onSubmit={handleNameUpdate}
+        initialValue={userData?.username || ''}
+        error={nameError}
+      />
+
+      {/* 자기소개 수정 모달 */}
+      <EditBioModal
+        isOpen={isEditBioModalOpen}
+        onClose={() => {
+          setIsEditBioModalOpen(false);
+          setBioError('');
+        }}
+        onSubmit={handleBioUpdate}
+        initialValue={bio}
+        error={bioError}
       />
 
       <div className="bg-white">
