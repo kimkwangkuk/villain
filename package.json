@@ -22,7 +22,8 @@
     "dev": "firebase emulators:start",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "upload-images": "node --no-deprecation scripts/uploadImages.js"
+    "upload-images": "node --no-deprecation scripts/uploadImages.js",
+    "lint": "eslint . --max-warnings 50"
   },
   "eslintConfig": {
     "extends": [

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
@@ -179,7 +179,7 @@ function PostDetail() {
   if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="max-w-2xl mx-auto px-4">
         {/* 토스트 메시지 */}
         {showToast && (
@@ -190,7 +190,7 @@ function PostDetail() {
           </div>
         )}
 
-        <div className="bg-white rounded-3xl p-6 border border-gray-100 mb-4">
+        <div className="bg-white rounded-3xl p-6 mb-4">
           <div className="flex flex-col h-full">
             <div className="flex items-center space-x-2 mb-3">
               <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
@@ -245,126 +245,72 @@ function PostDetail() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl border border-gray-100 py-6">
+        <div className="bg-white rounded-3xl py-6">
           {isLoggedIn ? (
-            <form onSubmit={handleCommentSubmit}>
-              <div className="mb-4 bg-white rounded-[28px] border border-gray-100">
-                <textarea
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="댓글을 입력해주세요."
-                  className="w-full h-[60px] resize-none border-none focus:outline-none focus:ring-0 text-gray-400 text-[16px] p-7"
-                />
-                <div className="px-7 pb-7 flex justify-end">
-                  <button className="bg-black text-white px-6 py-3 rounded-[14px] text-[15px]">
-                    등록
-                  </button>
+            <form onSubmit={handleCommentSubmit} className="px-6">
+              <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="flex items-start space-x-2">
+                  {/* 프로필 이미지 */}
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                    <img
+                      src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
+                      alt="프로필"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  {/* 댓글 입력 영역 */}
+                  <div className="flex-1">
+                    <textarea
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      placeholder="댓글을 달아주세요."
+                      className="w-full min-h-[60px] bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400"
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button 
+                        type="submit"
+                        className="bg-black text-white px-4 py-2 rounded-xl text-[14px]"
+                      >
+                        올리기
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </form>
           ) : (
-            <p className="text-gray-500 mb-4">댓글을 작성하려면 로그인이 필요합니다.</p>
+            <div className="px-6 mb-4 flex items-center justify-between">
+              <p className="text-gray-500">댓글을 작성하려면 로그인이 필요합니다.</p>
+              <Link 
+                to="/login" 
+                className="bg-black text-white px-4 py-2 rounded-xl text-[14px] hover:bg-gray-800"
+              >
+                로그인
+              </Link>
+            </div>
           )}
 
+          {/* 댓글 목록 */}
           {comments.length > 0 ? (
-            <div className="space-y-0 pt-4">
-              {comments.map((comment, index) => (
-                <div 
-                  key={comment.id} 
-                  className={`flex space-x-3 py-4 px-6 ${
-                    index !== comments.length - 1 ? 'border-b border-gray-100' : ''
-                  }`}
-                >
-                  {/* 프로필 이미지 그룹 */}
-                  <div className="flex-shrink-0 pt-1">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center overflow-hidden
-                      ${comment.userId === post.authorId ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                      <span className={`text-sm ${comment.userId === post.authorId ? 'text-blue-600' : 'text-gray-600'}`}>
-                        {comment.author?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 이름, 시간, 내용 그룹 */}
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-[15px] font-semibold text-gray-900">
-                        {comment.author || '익명'}
-                      </span>
-                      <span className="text-[15px] text-gray-300">•</span>
-                      <span className="text-[15px] text-gray-400">
-                        {comment.createdAt?.toLocaleDateString('ko-KR', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                    
-                    {editingCommentId === comment.id ? (
-                      <div className="mt-2">
-                        <textarea
-                          value={editingContent}
-                          onChange={(e) => setEditingContent(e.target.value)}
-                          className="w-full p-2 border rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-gray-400"
-                          rows="2"
-                        />
-                        <div className="flex justify-end space-x-2 mt-2">
-                          <button
-                            onClick={() => {
-                              setEditingCommentId(null);
-                              setEditingContent('');
-                            }}
-                            className="text-[13px] text-gray-500 hover:text-gray-700"
-                          >
-                            취소
-                          </button>
-                          <button
-                            onClick={() => handleEditComment(comment.id, editingContent)}
-                            className="text-[13px] text-blue-500 hover:text-blue-700"
-                          >
-                            저장
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-[15px] text-gray-900 mb-2">
-                        {comment.content}
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center space-x-3">
-                      <button className="text-[13px] text-gray-500 hover:text-gray-700">
-                        답글
-                      </button>
-                      {user && comment.userId === user.uid && (
-                        <>
-                          <button 
-                            onClick={() => {
-                              setEditingCommentId(comment.id);
-                              setEditingContent(comment.content);
-                            }}
-                            className="text-[13px] text-gray-500 hover:text-gray-700"
-                          >
-                            수정
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="text-[13px] text-gray-500 hover:text-gray-700"
-                          >
-                            삭제
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
+            <div className="space-y-4 pt-6">
+              {comments.map((comment) => (
+                <CommentCard
+                  key={comment.id}
+                  comment={{
+                    ...comment,
+                    authorName: comment.author,
+                    authorPhotoURL: comment.photoURL,
+                    userId: comment.userId,
+                  }}
+                  postAuthorId={post.authorId}
+                  onEdit={(newContent) => handleEditComment(comment.id, newContent)}
+                  onDelete={() => handleDeleteComment(comment.id)}
+                />
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">아직 댓글이 없습니다.</p>
+            <p className="text-gray-500 px-6">아직 댓글이 없습니다.</p>
           )}
         </div>
       </div>

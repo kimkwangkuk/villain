@@ -50,8 +50,8 @@ function HomePage() {
   if (loading) return <div>로딩중...</div>;
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
-      <div className="bg-white">
+    <div className="min-h-screen bg-white">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">
             <button
@@ -103,7 +103,7 @@ function HomePage() {
 
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
             {filteredPosts.map(post => (
               <PostCard key={post.id} post={post} />
             ))}

@@ -77,33 +77,32 @@ function PostCard({ post }) {
   return (
     <Link 
       to={`/posts/${post.id}`}
-      className="block bg-white rounded-xl p-6 cursor-pointer min-h-[320px] border border-gray-100
-        hover:shadow-[0_15px_30px_-10px_rgba(51,65,85,0.1),0_25px_25px_-15px_rgba(79,70,229,0.1),0_-6px_15px_-10px_rgba(51,65,85,0.08)] 
-        hover:scale-[1.02] transition-all duration-200 relative"
+      className="block px-1 pb-1 rounded-[20px] overflow-hidden bg-[#F0F0F0] hover:shadow-md transition-shadow duration-200 h-[360px] flex flex-col"
     >
-      <div className="flex flex-col h-full justify-between">
-        <div>
-          <div className="mb-3">
-            <div className="text-sm font-semibold text-gray-800">
-              {categoryName}
-            </div>
-            <button 
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <span className="text-gray-400">⋮</span>
-            </button>
-          </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-3">{post.title}</h2>
-          <p className="text-gray-600 mb-6">{post.content}</p>
+      {/* 카테고리 영역 */}
+      <div className="px-5 pt-[16px] pb-[12px]">
+        <div className="text-[15px] font-medium text-gray-500">
+          {categoryName}
         </div>
+      </div>
 
-        <div className="flex justify-between text-sm text-gray-500">
+      {/* 메인 컨텐츠 영역 */}
+      <div className="bg-white rounded-2xl p-5 flex-1 flex flex-col">
+        {/* 게시글 제목 */}
+        <h2 className="text-[20px] font-semibold text-gray-900 mb-2">
+          {post.title}
+        </h2>
+
+        {/* 게시글 내용 */}
+        <p className="text-[16px] text-gray-500 mb-4 flex-1 line-clamp-3">
+          {post.content}
+        </p>
+
+        {/* 하단 프로필 및 상호작용 영역 */}
+        <div className="flex items-center justify-between mt-auto">
+          {/* 프로필 영역 */}
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="w-[36px] h-[36px] rounded-full overflow-hidden">
               <img
                 src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
                 alt={`${post.authorName}의 프로필`}
@@ -115,30 +114,32 @@ function PostCard({ post }) {
                 }}
               />
             </div>
-            <div className="flex flex-col">
-              <span>{post.authorName}</span>
-              <span className="text-xs text-gray-400">
+            <div>
+              <div className="text-[15px] font-medium text-gray-900">
+                {post.authorName}
+              </div>
+              <div className="text-xs text-gray-500">
                 {getRelativeTime(post.createdAt?.toDate())}
-              </span>
+              </div>
             </div>
           </div>
+
+          {/* 좋아요 및 댓글 카운트 */}
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1 hover:bg-gray-100 p-2 rounded-full cursor-pointer">
-              <span>💬</span>
-              <span>{commentCount}</span>
-            </div>
-            <div 
-              onClick={e => e.stopPropagation()}
-              onMouseDown={e => e.preventDefault()}
-              className="hover:bg-gray-100 p-2 rounded-full transition-colors"
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleLike(e);
+              }}
+              className="flex items-center space-x-1"
             >
-              <button 
-                onClick={handleLike}
-                className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
-              >
-                <span>{isLiked ? '❤️' : '🤍'}</span>
-                <span>{(post.viewCount || 0) + (likes || 0)}</span>
-              </button>
+              <span>{isLiked ? '❤️' : '🤍'}</span>
+              <span className="text-[14px] font-medium">{likes || 0}</span>
+            </button>
+            <div className="flex items-center space-x-1">
+              <span>💬</span>
+              <span className="text-[14px] font-medium">{commentCount}</span>
             </div>
           </div>
         </div>

@@ -90,11 +90,15 @@ export const addComment = async (postId, commentContent) => {
   const user = auth.currentUser;
   if (!user) throw new Error('Must be logged in');
 
+  // 사용자 정보 가져오기
+  const userDoc = await getUserDoc(user.uid);
+
   const comment = {
     content: commentContent,
     postId: postId,
     userId: user.uid,
-    author: user.email,
+    author: userDoc.username || user.email,
+    photoURL: userDoc.photoURL || user.photoURL,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
