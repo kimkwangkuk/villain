@@ -16,8 +16,6 @@ function PostDetail() {
   const [error, setError] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [editingCommentId, setEditingCommentId] = useState(null);
-  const [editingContent, setEditingContent] = useState('');
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -152,8 +150,6 @@ function PostDetail() {
     
     try {
       await updateComment(commentId, newContent);
-      setEditingCommentId(null);
-      setEditingContent('');
     } catch (error) {
       console.error('댓글 수정 실패:', error);
       alert('댓글 수정에 실패했습니다.');
