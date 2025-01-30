@@ -19,7 +19,7 @@ git pull origin main
 
 
 git add .
-git commit -m "프로필 이미지 스토리지 업데이트 기능 및 프로필 이미지 설정 기능 추가"
+git commit -m "이름처리방법수정자기소개이름변경유아이추가"
 git push origin main
 
 

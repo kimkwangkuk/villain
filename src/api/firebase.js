@@ -2,7 +2,8 @@ import { db, auth } from '../firebase';
 import { 
   collection, getDocs, getDoc, addDoc, doc,
   query, orderBy, serverTimestamp, updateDoc,
-  arrayUnion, where, arrayRemove, setDoc
+  arrayUnion, where, arrayRemove, setDoc,
+  increment, deleteDoc
 } from 'firebase/firestore';
 import { 
   signInWithEmailAndPassword,
@@ -85,23 +86,84 @@ export const getUserInteractions = async (userId) => {
 };
 
 // Comments
-export const addComment = async (postId, commentData) => {
+export const addComment = async (postId, commentContent) => {
   const user = auth.currentUser;
   if (!user) throw new Error('Must be logged in');
 
   const comment = {
-    ...commentData,
-    authorId: user.uid,
-    authorName: user.displayName || user.email,
-    createdAt: serverTimestamp()
+    content: commentContent,
+    postId: postId,
+    userId: user.uid,
+    author: user.email,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
   };
 
-  const postRef = doc(db, 'posts', postId);
-  await updateDoc(postRef, {
-    comments: arrayUnion(comment)
-  });
+  try {
+    // comments 컬렉션에 댓글 추가
+    const commentRef = await addDoc(collection(db, 'comments'), comment);
+    
+    // posts 컬렉션의 댓글 수 업데이트
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, {
+      commentCount: increment(1)
+    });
 
-  return comment;
+    return {
+      id: commentRef.id,
+      ...comment
+    };
+  } catch (error) {
+    console.error('댓글 작성 실패:', error);
+    throw error;
+  }
+};
+
+// 댓글 수정 함수
+export const updateComment = async (commentId, newContent) => {
+  try {
+    const commentRef = doc(db, 'comments', commentId);
+    await updateDoc(commentRef, {
+      content: newContent,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('댓글 수정 실패:', error);
+    throw error;
+  }
+};
+
+// 댓글 삭제 함수
+export const deleteComment = async (postId, commentId) => {
+  try {
+    // comments 컬렉션에서 댓글 삭제
+    const commentRef = doc(db, 'comments', commentId);
+    await deleteDoc(commentRef);
+    
+    // posts 컬렉션의 댓글 수 감소
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, {
+      commentCount: increment(-1)
+    });
+  } catch (error) {
+    console.error('댓글 삭제 실패:', error);
+    throw error;
+  }
+};
+
+// 특정 게시글의 댓글 목록 가져오기
+export const getPostComments = async (postId) => {
+  const q = query(
+    collection(db, 'comments'),
+    where('postId', '==', postId),
+    orderBy('createdAt', 'desc')
+  );
+  
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
 };
 
 // Categories

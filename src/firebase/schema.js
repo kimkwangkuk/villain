@@ -10,15 +10,18 @@
  * @property {Date} updatedAt - 수정일
  * @property {number} likes - 좋아요 수
  * @property {string[]} likedBy - 좋아요한 사용자 ID 목록
- * @property {Comment[]} comments - 댓글 목록
+ * @property {number} commentCount - 댓글 수
  */
 
 /**
  * @typedef {Object} Comment
+ * @property {string} id - 댓글 ID
  * @property {string} content - 댓글 내용
- * @property {string} authorId - 작성자 ID
- * @property {string} authorName - 작성자 이름
+ * @property {string} postId - 게시글 ID
+ * @property {string} userId - 작성자 ID
+ * @property {string} author - 작성자 이메일 또는 이름
  * @property {Date} createdAt - 작성일
+ * @property {Date} updatedAt - 수정일
  */
 
 /**

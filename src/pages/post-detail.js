@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
-import { doc, getDoc, collection, addDoc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
-import { createNotification } from '../api/firebase';
+import { doc, getDoc, collection, addDoc, onSnapshot, orderBy, query, updateDoc, deleteDoc, where } from 'firebase/firestore';
+import { createNotification, getPostComments, addComment, updateComment, deleteComment } from '../api/firebase';
 
 function PostDetail() {
   const { id } = useParams();
@@ -16,6 +16,8 @@ function PostDetail() {
   const [error, setError] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingContent, setEditingContent] = useState('');
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -47,8 +49,10 @@ function PostDetail() {
       }
     };
 
+    // comments 컬렉션에서 댓글을 가져오도록 수정
     const commentsQuery = query(
-      collection(db, 'posts', id, 'comments'),
+      collection(db, 'comments'),
+      where('postId', '==', id),
       orderBy('createdAt', 'desc')
     );
 
@@ -74,37 +78,14 @@ function PostDetail() {
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    
-    // 1. 먼저 user 객체가 실제로 존재하는지 확인
-    console.log('Current user:', user); // 디버깅용
-    
-    if (!user?.uid) {  // user가 undefined이거나 uid가 없는 경우
+    if (!user?.uid) {
       alert('로그인이 필요합니다.');
       return;
     }
-
     if (!commentContent.trim()) return;
 
     try {
-      await addDoc(collection(db, 'posts', id, 'comments'), {
-        content: commentContent.trim(),
-        userId: user.uid,
-        author: user.email,
-        createdAt: new Date()
-      });
-      
-      // 게시글 작성자에게 알림 생성
-      if (post.authorId !== user.uid) {  // 자신의 게시글에는 알림 생성 안 함
-        await createNotification(
-          'comment',
-          post.id,
-          post.authorId,
-          user.uid,
-          user.email,
-          commentContent.trim()
-        );
-      }
-      
+      await addComment(id, commentContent);
       setCommentContent('');
     } catch (error) {
       console.error('댓글 작성 실패:', error);
@@ -162,6 +143,32 @@ function PostDetail() {
       setTimeout(() => setShowToast(false), 2000); // 2초 후 토스트 메시지 숨김
     } catch (error) {
       console.error('클립보드 복사 실패:', error);
+    }
+  };
+
+  // 댓글 수정 함수 수정
+  const handleEditComment = async (commentId, newContent) => {
+    if (!newContent.trim()) return;
+    
+    try {
+      await updateComment(commentId, newContent);
+      setEditingCommentId(null);
+      setEditingContent('');
+    } catch (error) {
+      console.error('댓글 수정 실패:', error);
+      alert('댓글 수정에 실패했습니다.');
+    }
+  };
+
+  // 댓글 삭제 함수 수정
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
+
+    try {
+      await deleteComment(id, commentId);
+    } catch (error) {
+      console.error('댓글 삭제 실패:', error);
+      alert('댓글 삭제에 실패했습니다.');
     }
   };
 
@@ -296,13 +303,62 @@ function PostDetail() {
                       </span>
                     </div>
                     
-                    <div className="text-[15px] text-gray-900 mb-2">
-                      {comment.content}
-                    </div>
+                    {editingCommentId === comment.id ? (
+                      <div className="mt-2">
+                        <textarea
+                          value={editingContent}
+                          onChange={(e) => setEditingContent(e.target.value)}
+                          className="w-full p-2 border rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-gray-400"
+                          rows="2"
+                        />
+                        <div className="flex justify-end space-x-2 mt-2">
+                          <button
+                            onClick={() => {
+                              setEditingCommentId(null);
+                              setEditingContent('');
+                            }}
+                            className="text-[13px] text-gray-500 hover:text-gray-700"
+                          >
+                            취소
+                          </button>
+                          <button
+                            onClick={() => handleEditComment(comment.id, editingContent)}
+                            className="text-[13px] text-blue-500 hover:text-blue-700"
+                          >
+                            저장
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-[15px] text-gray-900 mb-2">
+                        {comment.content}
+                      </div>
+                    )}
                     
-                    <button className="text-[13px] text-gray-500 hover:text-gray-700">
-                      답글
-                    </button>
+                    <div className="flex items-center space-x-3">
+                      <button className="text-[13px] text-gray-500 hover:text-gray-700">
+                        답글
+                      </button>
+                      {user && comment.userId === user.uid && (
+                        <>
+                          <button 
+                            onClick={() => {
+                              setEditingCommentId(comment.id);
+                              setEditingContent(comment.content);
+                            }}
+                            className="text-[13px] text-gray-500 hover:text-gray-700"
+                          >
+                            수정
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="text-[13px] text-gray-500 hover:text-gray-700"
+                          >
+                            삭제
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
