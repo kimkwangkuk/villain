@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { doc, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import dayjs from 'dayjs';
 
 function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   const { user } = useAuth();
-  const isPostAuthor = comment.userId === postAuthorId;
   const [showMenu, setShowMenu] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
