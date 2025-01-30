@@ -3,8 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
-import { doc, getDoc, collection, addDoc, onSnapshot, orderBy, query, updateDoc, deleteDoc, where } from 'firebase/firestore';
-import { createNotification, getPostComments, addComment, updateComment, deleteComment } from '../api/firebase';
+import { doc, getDoc, collection, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
+import { addComment, updateComment, deleteComment } from '../api/firebase';
 
 function PostDetail() {
   const { id } = useParams();
