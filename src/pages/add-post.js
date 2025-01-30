@@ -58,6 +58,7 @@ function AddPostPage() {
     fetchCategories();
   }, [isLoggedIn, user, navigate]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
       const firstErrorField = Object.keys(errors)[0];
@@ -66,7 +67,7 @@ function AddPostPage() {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [errors]); // errors를 의존성 배열에 추가
+  }, []);
 
   const handleChange = (e) => {
     const fieldName = e.target.name;
