@@ -69,6 +69,14 @@ function AddPostPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // 제목이나 내용이 변경되면 에러 메시지 초기화
+    if (Object.keys(errors).length > 0) {
+      setErrors({});
+    }
+  }, [formData.title, formData.content]);
+
   const handleChange = (e) => {
     const fieldName = e.target.name;
     

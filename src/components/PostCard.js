@@ -115,7 +115,7 @@ function PostCard({ post }) {
               />
             </div>
             <div>
-              <div className="text-[15px] font-medium text-gray-900">
+              <div className="text-[14px] font-medium text-gray-900">
                 {post.authorName}
               </div>
               <div className="text-xs text-gray-500">
