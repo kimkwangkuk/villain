@@ -77,6 +77,14 @@ function AddPostPage() {
     }
   }, [formData.title, formData.content]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // 카테고리가 변경되면 에러 메시지 초기화
+    if (Object.keys(errors).length > 0) {
+      setErrors({});
+    }
+  }, [formData.category]);
+
   const handleChange = (e) => {
     const fieldName = e.target.name;
     
