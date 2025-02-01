@@ -33,7 +33,7 @@
     ],
     "rules": {
       "react-hooks/exhaustive-deps": "off",
-      "no-unused-vars": "warn"
+      "no-unused-vars": "off"
     }
   },
   "browserslist": {
