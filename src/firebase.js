@@ -1,8 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getAuth, connectAuthEmulator, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator, doc, getDoc, setDoc } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -33,6 +33,36 @@ if (process.env.NODE_ENV === 'development') {
   connectFirestoreEmulator(db, 'localhost', 8080);
   connectAuthEmulator(auth, 'http://localhost:9099');
 }
+
+// Google Provider 인스턴스 생성
+const googleProvider = new GoogleAuthProvider();
+
+// Google 로그인 함수
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    
+    // Firestore에 사용자 정보 저장 (선택사항)
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        userId: user.uid,
+        email: user.email,
+        username: user.displayName,
+        photoURL: user.photoURL,
+        createdAt: new Date()
+      });
+    }
+    
+    return user;
+  } catch (error) {
+    console.error('Google 로그인 실패:', error);
+    throw error;
+  }
+};
 
 export { db, auth, storage };
 

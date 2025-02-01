@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
@@ -24,7 +25,11 @@ function LoginPage() {
     
     try {
       await login(formData.email.trim(), formData.password);
-      navigate('/');
+      console.log('로그인 성공');
+      console.log('location.state:', location.state);
+      console.log('이동할 경로:', location.state?.from || '/');
+      
+      navigate(location.state?.from || '/', { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
       setError(error.message || '로그인에 실패했습니다.');

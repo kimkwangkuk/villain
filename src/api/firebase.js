@@ -43,11 +43,17 @@ export const createPost = async (postData) => {
   // Firestore에서 사용자 정보 가져오기
   const userDoc = await getUserDoc(user.uid);
   
+  // 카테고리 정보 가져오기
+  const categoryRef = doc(db, 'categories', postData.categoryId);
+  const categoryDoc = await getDoc(categoryRef);
+  const categoryName = categoryDoc.exists() ? categoryDoc.data().name : '';
+
   const post = {
     ...postData,
     authorId: user.uid,
     authorName: user.displayName || user.email,
-    authorPhotoURL: userDoc.photoURL,  // Firestore에서 가져오기
+    authorPhotoURL: userDoc.photoURL,
+    categoryName: categoryName,  // 카테고리 이름 추가
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     likes: 0,

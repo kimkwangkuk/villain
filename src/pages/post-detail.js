@@ -205,7 +205,7 @@ function PostDetail() {
             </div>
 
             <div className="mb-6">
-              <div className="text-sm font-semibold text-gray-800 mb-3">
+              <div className="text-sm font-semibold text-gray-500 mb-3">
                 {post.categoryName}
               </div>
               <h1 className="text-xl font-semibold text-gray-800 mb-3">{post.title}</h1>
@@ -279,10 +279,11 @@ function PostDetail() {
             <div className="px-6 mb-4 flex items-center justify-between">
               <p className="text-gray-500">댓글을 작성하려면 로그인이 필요합니다.</p>
               <Link 
-                to="/login" 
+                to="/login"
+                state={{ from: `/posts/${id}` }}
                 className="bg-black text-white px-4 py-2 rounded-xl text-[14px] hover:bg-gray-800"
               >
-                로그인
+                <span onClick={() => console.log('전달되는 state:', `/posts/${id}`)}>로그인</span>
               </Link>
             </div>
           )}
