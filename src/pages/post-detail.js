@@ -5,6 +5,8 @@ import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
 import { doc, getDoc, collection, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { addComment, updateComment, deleteComment } from '../api/firebase';
+import { MessageIcon } from '../components/Icons';
+import { PrimaryButton } from '../components/Button';
 
 function PostDetail() {
   const { id } = useParams();
@@ -176,16 +178,8 @@ function PostDetail() {
 
   return (
     <div className="min-h-screen bg-white py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        {/* 토스트 메시지 */}
-        {showToast && (
-          <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50">
-            <div className="bg-black text-white px-4 py-2 rounded-lg text-[14px]">
-              클립보드에 복사되었습니다
-            </div>
-          </div>
-        )}
-
+      {/* 콘텐츠 영역 */}
+      <div className="max-w-[550px] mx-auto px-4">
         <div className="bg-white rounded-3xl p-6 mb-4">
           <div className="flex flex-col h-full">
             <div className="flex items-center space-x-2 mb-3">
@@ -213,13 +207,13 @@ function PostDetail() {
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <span className="text-xs text-gray-400 flex items-center">
+              <div className="flex items-center space-x-4 font-medium text-[14px] text-gray-900">
+                <span className="flex items-center">
                   <span className="mr-1">👁️</span>
                   {post.viewCount || 0}
                 </span>
                 <div className="flex items-center space-x-1">
-                  <span>💬</span>
+                  <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
                   <span>{comments.length}</span>
                 </div>
                 <button 
@@ -240,36 +234,49 @@ function PostDetail() {
             </div>
           </div>
         </div>
+      </div>
 
+      {/* 구분선 - 브라우저 전체 너비 */}
+      <div className="w-full">
+        <div className="h-[1px] bg-gray-100" />
+      </div>
+
+      {/* 댓글 영역 */}
+      <div className="max-w-[550px] mx-auto px-4">
         <div className="bg-white rounded-3xl py-6">
           {isLoggedIn ? (
-            <form onSubmit={handleCommentSubmit} className="px-6">
-              <div className="bg-gray-50 rounded-2xl p-4">
+            <form onSubmit={handleCommentSubmit} className="mb-6">
+              <div className="bg-gray-50 rounded-2xl p-4 w-full">
                 <div className="flex items-start space-x-2">
-                  {/* 프로필 이미지 */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mt-2">
                     <img
                       src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
                       alt="프로필"
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  
-                  {/* 댓글 입력 영역 */}
                   <div className="flex-1">
-                    <textarea
-                      value={commentContent}
-                      onChange={(e) => setCommentContent(e.target.value)}
-                      placeholder="댓글을 달아주세요."
-                      className="w-full min-h-[60px] bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400"
-                    />
-                    <div className="flex justify-end mt-2">
-                      <button 
-                        type="submit"
-                        className="bg-black text-white px-4 py-2 rounded-xl text-[14px]"
-                      >
-                        올리기
-                      </button>
+                    <div className="flex items-start space-x-2 w-full">
+                      <textarea
+                        value={commentContent}
+                        onChange={(e) => setCommentContent(e.target.value)}
+                        placeholder="댓글을 달아주세요."
+                        rows="1"
+                        className="flex-1 py-2 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
+                        style={{
+                          minHeight: '24px',
+                          height: 'auto'
+                        }}
+                        onInput={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
+                      />
+                      <div className="flex-shrink-0 mb-2">
+                        <PrimaryButton type="submit">
+                          올리기
+                        </PrimaryButton>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -283,14 +290,13 @@ function PostDetail() {
                 state={{ from: `/posts/${id}` }}
                 className="bg-black text-white px-4 py-2 rounded-xl text-[14px] hover:bg-gray-800"
               >
-                <span onClick={() => console.log('전달되는 state:', `/posts/${id}`)}>로그인</span>
+                로그인
               </Link>
             </div>
           )}
 
-          {/* 댓글 목록 */}
           {comments.length > 0 ? (
-            <div className="space-y-4 pt-6">
+            <div className="space-y-4">
               {comments.map((comment) => (
                 <CommentCard
                   key={comment.id}
@@ -309,6 +315,7 @@ function PostDetail() {
           ) : (
             <p className="text-gray-500 px-6">아직 댓글이 없습니다.</p>
           )}
+          
         </div>
       </div>
     </div>

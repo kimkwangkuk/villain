@@ -7,6 +7,7 @@ import { collection, query, onSnapshot } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';  // 한국어 로케일
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { MessageIcon } from './Icons';  // 상단에 import 추가
 
 // dayjs 설정
 dayjs.locale('ko');
@@ -138,7 +139,7 @@ function PostCard({ post }) {
               <span className="text-[14px] font-medium">{likes || 0}</span>
             </button>
             <div className="flex items-center space-x-1">
-              <span>💬</span>
+              <MessageIcon className="w-5 h-5 text-gray-500" />
               <span className="text-[14px] font-medium">{commentCount}</span>
             </div>
           </div>

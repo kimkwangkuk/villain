@@ -56,12 +56,12 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   };
 
   return (
-    <div className="rounded-lg p-5 bg-gray-50">
+    <div className="rounded-[16px] p-5 bg-gray-50">
       {/* 상단 영역: 프로필 정보와 더보기 버튼 */}
-      <div className="flex justify-between items-start mb-3">
+      <div className="flex justify-between items-start mb-[12px]">
         {/* 프로필 정보 그룹 */}
         <div className="flex items-center space-x-2">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+          <div className="w-[26px] h-[26px] rounded-full overflow-hidden bg-gray-200">
             <img
               src={imageError ? getDefaultProfileImage() : (comment.authorPhotoURL || getDefaultProfileImage())}
               alt={comment.authorName}
