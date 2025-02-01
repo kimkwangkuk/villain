@@ -5,8 +5,9 @@ import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
 import { doc, getDoc, collection, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { addComment, updateComment, deleteComment } from '../api/firebase';
-import { MessageIcon } from '../components/Icons';
+import { MessageIcon, LikeIcon } from '../components/Icons';
 import { PrimaryButton } from '../components/Button';
+import { EllipsisIcon } from '../components/Icons';
 
 function PostDetail() {
   const { id } = useParams();
@@ -178,60 +179,43 @@ function PostDetail() {
 
   return (
     <div className="min-h-screen bg-white py-8">
-      {/* 콘텐츠 영역 */}
-      <div className="max-w-[550px] mx-auto px-4">
-        <div className="bg-white rounded-3xl p-6 mb-4">
-          <div className="flex flex-col h-full">
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+      {/* 프로필 영역 */}
+      <div className="max-w-[560px] mx-auto px-4">
+        <div className="bg-white rounded-3xl pb-[16px]">
+          <div className="flex items-center justify-between">
+            {/* 프로필 정보 */}
+            <div className="flex items-center space-x-2">
+              <div className="w-[36px] h-[36px] rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                 <img
-                  src={post.authorPhotoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post.authorId}&backgroundColor=e8f5e9`}
+                  src={
+                    post.authorPhotoURL ||
+                    `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post.authorId}&backgroundColor=e8f5e9`
+                  }
                   alt={`${post.authorName}의 프로필`}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-[14px] font-semibold text-gray-900">{post.authorName}</span>
-                <span className="text-xs text-gray-400">
-                  {post.createdAt?.toDate().toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <div className="text-sm font-semibold text-gray-500 mb-3">
-                {post.categoryName}
-              </div>
-              <h1 className="text-xl font-semibold text-gray-800 mb-3">{post.title}</h1>
-              <p className="text-gray-900">{post.content}</p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 font-medium text-[14px] text-gray-900">
-                <span className="flex items-center">
-                  <span className="mr-1">👁️</span>
-                  {post.viewCount || 0}
+                <span className="text-[14px] font-bold text-gray-900">
+                  {post.authorName}
                 </span>
                 <div className="flex items-center space-x-1">
-                  <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
-                  <span>{comments.length}</span>
+                  <span className="text-[13px] text-gray-900">
+                    #{post.categoryName}
+                  </span>
+                  <span className="text-[13px] text-gray-500">
+                    에 쓴 글
+                  </span>
+                  <span className="text-[13px] text-gray-400">
+                    {post.createdAt?.toDate().toLocaleTimeString()}
+                  </span>
                 </div>
-                <button 
-                  onClick={handleLike}
-                  className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
-                >
-                  <span>{isLiked ? '❤️' : '🤍'}</span>
-                  <span>{post.likes || 0}</span>
-                </button>
               </div>
-              
-              <button 
-                onClick={handleShare}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <span>🔗</span>
-              </button>
             </div>
+            {/* 우측 더보기 버튼 */}
+            <button className="hover:bg-gray-100 rounded-full p-1">
+              <EllipsisIcon className="w-5 h-5 text-gray-500" />
+            </button>
           </div>
         </div>
       </div>
@@ -241,65 +225,115 @@ function PostDetail() {
         <div className="h-[1px] bg-gray-100" />
       </div>
 
-      {/* 댓글 영역 */}
-      <div className="max-w-[550px] mx-auto px-4">
-        <div className="bg-white rounded-3xl py-6">
-          {isLoggedIn ? (
-            <form onSubmit={handleCommentSubmit} className="mb-6">
-              <div className="bg-gray-50 rounded-2xl p-4 w-full">
-                <div className="flex items-start space-x-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mt-2">
-                    <img
-                      src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
-                      alt="프로필"
-                      className="w-full h-full object-cover"
+      {/* 콘텐츠 영역 (카테고리 텍스트 제거) */}
+      <div className="max-w-[560px] mx-auto px-4">
+        <div className="pt-[26px] pb-[40px]">
+          <h1 className="text-[22px] font-semibold text-gray-900 mb-[6px]">{post.title}</h1>
+          <p className="text-[17px] text-gray-900">{post.content}</p>
+        </div>
+      </div>
+
+      {/* 좋아요, 댓글, 조회 수 등 하단 액션 버튼 */}
+      <div className="max-w-[560px] mx-auto px-4 ">
+        <div className="bg-white rounded-3xl pb-[26px]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 font-medium text-[14px] text-gray-900">
+              <button 
+                onClick={handleLike}
+                className="flex items-center space-x-1"
+              >
+                <LikeIcon 
+                  className={`w-[24px] h-[24px] ${isLiked ? 'text-red-500' : 'text-gray-900 hover:text-red-500'}`} 
+                />
+                <span>{post.likes || 0}</span>
+              </button>
+              <div className="flex items-center space-x-1">
+                <MessageIcon className="w-[24px] h-[24px] text-gray-900" />
+                <span>{comments.length}</span>
+              </div>
+              <span className="flex items-center">
+                <span className="mr-1">
+                  <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
+                </span>
+                {post.viewCount || 0}
+              </span>
+            </div>
+            <button 
+              onClick={handleShare}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <span>🔗</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 구분선 - 좋아요 버튼들 아래쪽, 브라우저 전체 너비 */}
+      <div className="w-full">
+        <div className="h-[1px] bg-gray-100" />
+      </div>
+
+      {/* 댓글 입력창 영역 */}
+      <div className="max-w-[560px] rounded-[20px] mx-auto mt-4 bg-gray-50">
+        {isLoggedIn ? (
+          <form onSubmit={handleCommentSubmit} className="mb-6">
+            <div className="bg-gray-50 rounded-2xl p-[12px] w-full">
+              <div className="flex items-center space-x-2">
+                <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                  <img
+                    src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
+                    alt="프로필"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 w-full">
+                    <textarea
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      placeholder="댓글을 달아주세요."
+                      rows="1"
+                      className="flex-1 py-2 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
+                      style={{
+                        minHeight: '24px',
+                        height: 'auto'
+                      }}
+                      onInput={(e) => {
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+                      }}
                     />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start space-x-2 w-full">
-                      <textarea
-                        value={commentContent}
-                        onChange={(e) => setCommentContent(e.target.value)}
-                        placeholder="댓글을 달아주세요."
-                        rows="1"
-                        className="flex-1 py-2 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
-                        style={{
-                          minHeight: '24px',
-                          height: 'auto'
-                        }}
-                        onInput={(e) => {
-                          e.target.style.height = 'auto';
-                          e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
-                      />
-                      <div className="flex-shrink-0 mb-2">
-                        <PrimaryButton type="submit">
-                          올리기
-                        </PrimaryButton>
-                      </div>
+                    <div className="flex-shrink-0">
+                      <PrimaryButton type="submit">
+                        올리기
+                      </PrimaryButton>
                     </div>
                   </div>
                 </div>
               </div>
-            </form>
-          ) : (
-            <div className="px-6 mb-4 flex items-center justify-between">
-              <p className="text-gray-500">댓글을 작성하려면 로그인이 필요합니다.</p>
-              <Link 
-                to="/login"
-                state={{ from: `/posts/${id}` }}
-                className="bg-black text-white px-4 py-2 rounded-xl text-[14px] hover:bg-gray-800"
-              >
-                로그인
-              </Link>
             </div>
-          )}
+          </form>
+        ) : (
+          <div className="px-6 mb-4 flex items-center justify-between">
+            <p className="text-gray-500">댓글을 작성하려면 로그인이 필요합니다.</p>
+            <Link 
+              to="/login"
+              state={{ from: `/posts/${id}` }}
+              className="bg-black text-white px-4 py-2 rounded-xl text-[14px] hover:bg-gray-800"
+            >
+              로그인
+            </Link>
+          </div>
+        )}
+      </div>
 
-          {comments.length > 0 ? (
-            <div className="space-y-4">
-              {comments.map((comment) => (
+      {/* 댓글 리스트 영역 */}
+      <div className="max-w-[560px] mx-auto mt-4 bg-gray-50 rounded-2xl">
+        {comments.length > 0 && (
+          <div>
+            {comments.map((comment, index) => (
+              <div key={comment.id}>
                 <CommentCard
-                  key={comment.id}
                   comment={{
                     ...comment,
                     authorName: comment.author,
@@ -310,13 +344,14 @@ function PostDetail() {
                   onEdit={(newContent) => handleEditComment(comment.id, newContent)}
                   onDelete={() => handleDeleteComment(comment.id)}
                 />
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 px-6">아직 댓글이 없습니다.</p>
-          )}
-          
-        </div>
+                {/* 구분선: 마지막 요소가 아니면 구분선 추가 */}
+                {index !== comments.length - 1 && (
+                  <div className="h-[1px] bg-gray-100" />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

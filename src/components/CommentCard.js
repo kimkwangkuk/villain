@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import dayjs from 'dayjs';
+import { updateCommentLikes } from '../api/firebase';
+import { LikeIcon, MessageIcon, EllipsisIcon } from '../components/Icons';
 
 function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   const { user } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
+  const [commentLikes, setCommentLikes] = useState(comment.likes || 0);
+  const [liked, setLiked] = useState(user && comment.likedBy ? comment.likedBy.includes(user.uid) : false);
   const menuRef = useRef(null);
 
   // 바깥 영역 클릭 감지
@@ -55,12 +58,27 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
     return dayjs(date).format('YYYY.MM.DD');
   };
 
+  // 댓글 좋아요 버튼 클릭 시 호출할 함수
+  const handleLike = async () => {
+    if (!user?.uid) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    try {
+      const updatedComment = await updateCommentLikes(comment.id, user.uid);
+      setCommentLikes(updatedComment.likes);
+      setLiked(updatedComment.likedBy.includes(user.uid));
+    } catch (error) {
+      console.error('댓글 좋아요 업데이트 실패:', error);
+    }
+  };
+
   return (
-    <div className="rounded-[16px] p-5 bg-gray-50">
+    <div className=" p-[20px]">
       {/* 상단 영역: 프로필 정보와 더보기 버튼 */}
       <div className="flex justify-between items-start mb-[12px]">
         {/* 프로필 정보 그룹 */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-[6px]">
           <div className="w-[26px] h-[26px] rounded-full overflow-hidden bg-gray-200">
             <img
               src={imageError ? getDefaultProfileImage() : (comment.authorPhotoURL || getDefaultProfileImage())}
@@ -75,7 +93,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-[15px] font-medium text-gray-900">
+              <span className="text-[14px] font-semibold text-gray-900">
                 {comment.authorName || '익명'}
               </span>
               <span className="text-[13px] text-gray-500">
@@ -90,9 +108,9 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           <div className="relative" ref={menuRef}>
             <button 
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1 hover:bg-gray-100 rounded-full"
+              className="hover:bg-gray-100 rounded-full p-1"
             >
-              ⋮
+              <EllipsisIcon className="w-5 h-5" />
             </button>
             {showMenu && (
               <div className="absolute right-0 mt-1 py-2 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10">
@@ -141,7 +159,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           </div>
         </div>
       ) : (
-        <div className="text-[15px] text-gray-900 mb-3">
+        <div className="text-[15px] text-gray-900 mb-[12px]">
           {comment.content}
         </div>
       )}
@@ -149,14 +167,14 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       {/* 하단 액션 버튼들 */}
       <div className="flex items-center space-x-4">
         <button 
-          onClick={() => setIsLiked(!isLiked)}
+          onClick={handleLike}
           className="flex items-center space-x-1 text-gray-500 hover:text-gray-700"
         >
-          <span>{isLiked ? '❤️' : '🤍'}</span>
-          <span className="text-[13px]">24</span>
+          <LikeIcon className={`w-[24px] h-[24px] ${liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`} />
+          <span className="text-[13px]">{commentLikes}</span>
         </button>
         <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700">
-          <span>💬</span>
+          <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
           <span className="text-[13px]">답글달기</span>
         </button>
       </div>

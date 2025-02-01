@@ -423,3 +423,30 @@ export const getUserDoc = async (userId) => {
     throw error;
   }
 };
+
+// 댓글 좋아요 업데이트 함수
+export const updateCommentLikes = async (commentId, userId) => {
+  const commentRef = doc(db, 'comments', commentId);
+  const commentSnap = await getDoc(commentRef);
+  
+  if (!commentSnap.exists()) {
+    console.error('댓글을 찾을 수 없음');
+    throw new Error('Comment not found');
+  }
+  
+  const data = commentSnap.data();
+  const likedBy = data.likedBy || [];
+  const isLiked = likedBy.includes(userId);
+  
+  await updateDoc(commentRef, {
+    likes: isLiked ? (data.likes || 0) - 1 : (data.likes || 0) + 1,
+    likedBy: isLiked ? arrayRemove(userId) : arrayUnion(userId)
+  });
+  
+  return {
+    ...data,
+    id: commentId,
+    likes: isLiked ? (data.likes || 0) - 1 : (data.likes || 0) + 1,
+    likedBy: isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId]
+  };
+};

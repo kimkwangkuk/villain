@@ -7,7 +7,7 @@ import { collection, query, onSnapshot } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';  // 한국어 로케일
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { MessageIcon } from './Icons';  // 상단에 import 추가
+import { MessageIcon, LikeIcon } from './Icons';  // 상단에 import 추가
 
 // dayjs 설정
 dayjs.locale('ko');
@@ -78,7 +78,7 @@ function PostCard({ post }) {
   return (
     <Link 
       to={`/posts/${post.id}`}
-      className="block px-1 pb-1 rounded-[20px] overflow-hidden bg-[#F0F0F0] hover:shadow-md transition-shadow duration-200 h-[360px] flex flex-col"
+      className="block px-1 pb-1 rounded-[20px] overflow-hidden bg-[#F0F0F0] hover:bg-gray-100 transition-colors duration-200 h-[360px] flex flex-col"
     >
       {/* 카테고리 영역 */}
       <div className="px-5 pt-[16px] pb-[12px]">
@@ -94,8 +94,15 @@ function PostCard({ post }) {
           {post.title}
         </h2>
 
-        {/* 게시글 내용 */}
-        <p className="text-[16px] text-gray-500 mb-4 flex-1 line-clamp-3">
+        {/* 게시글 내용 (영역을 넘어갈 경우 말줄임표 처리) */}
+        <p 
+          className="overflow-hidden text-gray-600" 
+          style={{
+            display: '-webkit-box',
+            WebkitLineClamp: '7',
+            WebkitBoxOrient: 'vertical'
+          }}
+        >
           {post.content}
         </p>
 
@@ -133,15 +140,17 @@ function PostCard({ post }) {
                 e.stopPropagation();
                 handleLike(e);
               }}
-              className="flex items-center space-x-1"
+              className="flex items-center space-x-1 hover:bg-gray-100 cursor-pointer transition-colors duration-200 rounded-full p-1"
             >
-              <span>{isLiked ? '❤️' : '🤍'}</span>
+              <LikeIcon className="w-6 h-6 text-gray-500" />
               <span className="text-[14px] font-medium">{likes || 0}</span>
             </button>
-            <div className="flex items-center space-x-1">
-              <MessageIcon className="w-5 h-5 text-gray-500" />
+            <button
+              className="flex items-center space-x-1 hover:bg-gray-100 cursor-pointer transition-colors duration-200 rounded-full p-1"
+            >
+              <MessageIcon className="w-6 h-6 text-gray-500" />
               <span className="text-[14px] font-medium">{commentCount}</span>
-            </div>
+            </button>
           </div>
         </div>
       </div>

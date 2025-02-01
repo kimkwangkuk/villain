@@ -20,8 +20,11 @@
  * @property {string} postId - 게시글 ID
  * @property {string} userId - 작성자 ID
  * @property {string} author - 작성자 이메일 또는 이름
+ * @property {string} authorPhotoURL - 작성자 프로필 이미지 URL
  * @property {Date} createdAt - 작성일
  * @property {Date} updatedAt - 수정일
+ * @property {number} likes - 좋아요 수
+ * @property {string[]} likedBy - 좋아요한 사용자 ID 목록
  */
 
 /**
