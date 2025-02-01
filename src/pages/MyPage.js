@@ -145,34 +145,62 @@ function MyPage() {
   // 이름 업데이트 함수
   const handleNameUpdate = async (newName) => {
     try {
-      // Firestore users 컬렉션 업데이트
+      // 1. 모달 닫고 UI 즉시 업데이트
+      setIsEditNameModalOpen(false);
+      setNameError('');
+      
+      // 2. 로컬 상태 업데이트 (UI에 즉시 반영)
+      setUserData(prev => ({
+        ...prev,
+        username: newName
+      }));
+      
+      setMyPosts(prev => prev.map(post => ({
+        ...post,
+        authorName: newName
+      })));
+
+      // 3. Firestore users 컬렉션 업데이트
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         username: newName
       });
 
-      // 사용자가 작성한 모든 포스트의 authorName 업데이트
-      const postsQuery = query(
-        collection(db, 'posts'),
-        where('authorId', '==', user.uid)
-      );
-      const postsSnapshot = await getDocs(postsQuery);
-      
-      const updatePromises = postsSnapshot.docs.map(postDoc => 
-        updateDoc(doc(db, 'posts', postDoc.id), {
-          authorName: newName
-        })
-      );
-      await Promise.all(updatePromises);
+      // 4. 백그라운드에서 posts 업데이트
+      const updatePosts = async () => {
+        try {
+          const postsQuery = query(
+            collection(db, 'posts'),
+            where('authorId', '==', user.uid)
+          );
+          const postsSnapshot = await getDocs(postsQuery);
+          
+          const updatePromises = postsSnapshot.docs.map(postDoc => 
+            updateDoc(doc(db, 'posts', postDoc.id), {
+              authorName: newName
+            })
+          );
+          await Promise.all(updatePromises);
+          console.log('모든 포스트 업데이트 완료');
+        } catch (error) {
+          console.error('포스트 업데이트 중 오류:', error);
+          // 에러 발생시 사용자에게 알림 (선택사항)
+          // toast.error('일부 데이터 업데이트에 실패했습니다');
+        }
+      };
 
-      setIsEditNameModalOpen(false);
-      setNameError('');
-      
-      // 페이지 새로고침
-      window.location.reload();
+      // 백그라운드에서 포스트 업데이트 실행
+      updatePosts();
+
     } catch (error) {
       console.error('이름 업데이트 실패:', error);
       setNameError('이름 업데이트에 실패했습니다.');
+      
+      // 에러 발생 시 UI 롤백
+      setUserData(prev => ({
+        ...prev,
+        username: prev.username
+      }));
     }
   };
 
