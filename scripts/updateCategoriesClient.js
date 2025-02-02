@@ -18,9 +18,14 @@ const db = getFirestore(app);
 
 // 업데이트하거나 추가할 카테고리 데이터를 배열로 정의
 const categories = [
-  { id: 'tech', name: 'Technology', description: '기술 관련 글' },
-  { id: 'life', name: 'Lifestyle', description: '라이프 스타일 및 취미 관련 글' },
-  { id: 'news', name: 'News', description: '최신 뉴스 및 시사' }
+    { "id": "workplace", "name": "직장 빌런", "description": "직장에서 만나는 빌런들, 동료, 상사, 부하 직원 등의 사례" },
+    { "id": "customer", "name": "진상 빌런", "description": "악성 민원인, 진상 손님 등 고객 관련 빌런 사례" },
+    { "id": "neighborhood", "name": "이웃 빌런", "description": "층간 소음, 공동 공간 무단 점유, 쓰레기 무단 투기 등" },
+    { "id": "public_transport", "name": "대중교통 빌런", "description": "지하철, 버스에서 자리 독점, 큰 소리로 통화, 새치기하는 사람들" },
+    { "id": "parking", "name": "주차 빌런", "description": "주차장에서 남의 자리에 불법 주차, 이중 주차, 경적 시비 등" },
+    { "id": "online", "name": "온라인 빌런", "description": "온라인에서 만나는 빌런들, 악플러, 사기꾼, 트롤 등" },
+    { "id": "gym", "name": "운동 빌런", "description": "헬스장에서 기구 독점, 소리 크게 내기, 매너 없는 행동 등" }
+  
 ];
 
 /**

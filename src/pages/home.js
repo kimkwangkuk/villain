@@ -53,7 +53,7 @@ function HomePage() {
     <div className="min-h-screen bg-white">
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto">
-          <div className="flex overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">
+          <div className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8">
             <button
               onClick={() => setSelectedCategory(null)}
               className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black

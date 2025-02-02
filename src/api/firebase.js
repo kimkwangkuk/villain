@@ -8,8 +8,11 @@ import {
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
 // Posts
 export const getPosts = async () => {
@@ -449,4 +452,57 @@ export const updateCommentLikes = async (commentId, userId) => {
     likes: isLiked ? (data.likes || 0) - 1 : (data.likes || 0) + 1,
     likedBy: isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId]
   };
+};
+
+/**
+ * 랜덤 프로필 이미지 가져오기
+ * Firebase Storage에 등록된 프로필 이미지(예: woman1.webp, woman2.webp 등) 중 하나를 랜덤으로 가져옵니다.
+ */
+const getRandomProfileImage = async () => {
+  try {
+    const storage = getStorage();
+    const imageNumber = Math.floor(Math.random() * 2) + 1; // 예: 1 또는 2 선택
+    const imageRef = ref(storage, `profile_images/woman${imageNumber}.webp`);
+    const url = await getDownloadURL(imageRef);
+    return url;
+  } catch (error) {
+    console.error('프로필 이미지 가져오기 실패:', error);
+    return null;
+  }
+};
+
+/**
+ * Google 로그인: 기본으로 구글에서 제공하는 이미지 대신 랜덤 프로필 이미지를 적용
+ */
+export const googleLogin = async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    
+    // 이메일 가입 시와 동일하게 랜덤 프로필 이미지 적용
+    const randomProfileUrl = await getRandomProfileImage();
+    if (randomProfileUrl) {
+      await updateProfile(userCredential.user, { photoURL: randomProfileUrl });
+    }
+    
+    // Firestore에 사용자 정보 저장 (업데이트)
+    const userRef = doc(db, 'users', userCredential.user.uid);
+    await setDoc(
+      userRef,
+      {
+        email: userCredential.user.email,
+        username: userCredential.user.displayName || userCredential.user.email,
+        photoURL: randomProfileUrl || userCredential.user.photoURL,
+        createdAt: new Date(),
+        bio: '',
+        userId: userCredential.user.uid
+      },
+      { merge: true }
+    );
+    
+    return userCredential.user;
+  } catch (error) {
+    console.error('Google 로그인 실패:', error);
+    throw error;
+  }
 };
