@@ -181,7 +181,6 @@ export const getPostComments = async (postId) => {
 
 // Categories
 export const getCategories = async () => {
-  // 'order' 필드를 기준으로 오름차순 정렬
   const q = query(
     collection(db, 'categories'),
     orderBy('order')
