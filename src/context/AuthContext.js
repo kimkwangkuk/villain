@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import { authService } from '../services/auth.service';
-import { signInWithGoogle } from '../firebase';
+import { googleLogin } from '../firebase';
 
 export const AuthContext = createContext(null);
 
@@ -63,9 +63,9 @@ export function AuthProvider({ children }) {
   };
 
   // Google 로그인 함수
-  const googleLogin = async () => {
+  const googleLoginHandler = async () => {
     try {
-      const user = await signInWithGoogle();
+      const user = await googleLogin();
       // 로그인 성공 처리
       return user;
     } catch (error) {
@@ -86,9 +86,9 @@ export function AuthProvider({ children }) {
         setIsLoggedIn, 
         user, 
         setUser,
-        login,  // login 함수 추가
+        login,
         logout,
-        googleLogin
+        googleLogin: googleLoginHandler
       }}
     >
       {children}
