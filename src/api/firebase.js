@@ -181,7 +181,12 @@ export const getPostComments = async (postId) => {
 
 // Categories
 export const getCategories = async () => {
-  const snapshot = await getDocs(collection(db, 'categories'));
+  // 'order' 필드를 기준으로 오름차순 정렬
+  const q = query(
+    collection(db, 'categories'),
+    orderBy('order')
+  );
+  const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()

@@ -213,7 +213,7 @@ function PostDetail() {
               </div>
             </div>
             {/* 우측 더보기 버튼 */}
-            <button className="hover:bg-gray-100 rounded-full p-1">
+            <button className="hover:bg-gray-100 rounded-full p-1 cursor-pointer transition-colors duration-200">
               <EllipsisIcon className="w-5 h-5 text-gray-500" />
             </button>
           </div>
@@ -293,7 +293,7 @@ function PostDetail() {
                       onChange={(e) => setCommentContent(e.target.value)}
                       placeholder="댓글을 달아주세요."
                       rows="1"
-                      className="flex-1 py-2 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
+                      className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
                       style={{
                         minHeight: '24px',
                         height: 'auto'

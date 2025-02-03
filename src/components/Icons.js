@@ -81,6 +81,143 @@ export const EllipsisIcon = ({ className = "w-6 h-6" }) => (
   </svg>
 );
 
+/* --- 새로운 아이콘 추가 --- */
+
+/* '전체' 카테고리 전용 아이콘 */
+export const AllCategoryIcon = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className} 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    stroke="currentColor"
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeWidth="2" />
+  </svg>
+);
+
+/* 임의의 카테고리 아이콘 1: 별 모양 */
+export const CategoryIcon1 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    width="31" 
+    height="30" 
+    viewBox="0 0 31 30" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <g clipPath="url(#clip0_417_1317)">
+      <rect width="30" height="30" transform="translate(0.5)" fill="white"/>
+      <path d="M22.7141 13.9286C25.5545 13.9286 27.857 11.0504 27.857 7.49998C27.857 3.94958 25.5545 1.07141 22.7141 1.07141C19.8738 1.07141 17.5713 3.94958 17.5713 7.49998C17.5713 11.0504 19.8738 13.9286 22.7141 13.9286Z" stroke="#000001" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M22.7129 13.9286V28.9286" stroke="#000001" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M7.49902 1.07141V28.9286" stroke="#000001" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12.8569 1.07141V6.42855C12.8569 7.13206 12.7183 7.82869 12.4491 8.47864C12.1799 9.1286 11.7852 9.71917 11.2878 10.2166C10.7903 10.7141 10.1998 11.1087 9.54981 11.3779C8.89985 11.6471 8.20323 11.7857 7.49972 11.7857V11.7857C6.07892 11.7857 4.71631 11.2213 3.71165 10.2166C2.70699 9.21197 2.14258 7.84936 2.14258 6.42855V1.07141" stroke="#000001" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </g>
+    <defs>
+      <clipPath id="clip0_417_1317">
+        <rect width="30" height="30" fill="white" transform="translate(0.5)"/>
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+/* 임의의 카테고리 아이콘 2: 원 모양 */
+export const CategoryIcon2 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+  >
+    <circle cx="12" cy="12" r="10" />
+  </svg>
+);
+
+/* 임의의 카테고리 아이콘 3: 삼각형 모양 */
+export const CategoryIcon3 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+  >
+    <polygon points="12,2 22,22 2,22" />
+  </svg>
+);
+
+export const CategoryIcon4 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+  >
+    <rect x="4" y="4" width="16" height="16" />
+  </svg>
+);
+
+export const CategoryIcon5 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+  >
+    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
+             2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
+             C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5
+             c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+  </svg>
+);
+
+export const CategoryIcon6 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+  >
+    <polygon points="12,2 19,7 19,17 12,22 5,17 5,7" />
+  </svg>
+);
+
+export const CategoryIcon7 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+  >
+    <path d="M19 16.58A5.002 5.002 0 0 0 15 8h-1a7 7 0 0 0-13 3.8A4.992 4.992 0 0 0 5 18h14a4 4 0 0 0 0-5.42z"/>
+  </svg>
+);
+
+export const CategoryIcon8 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    className={className}
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor"
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+
+export const CategoryIcon9 = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    className={className}
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+  >
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
+
 
 
 

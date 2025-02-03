@@ -81,14 +81,14 @@ function PostCard({ post }) {
       className="block px-1 pb-1 rounded-[20px] overflow-hidden bg-[#F0F0F0] hover:bg-gray-100 transition-colors duration-200 h-[360px] flex flex-col"
     >
       {/* 카테고리 영역 */}
-      <div className="px-5 pt-[16px] pb-[12px]">
-        <div className="text-[15px] font-medium text-gray-500">
+      <div className="px-5 pt-[12px] pb-[9px]">
+        <div className="text-[14px] font-medium text-gray-500">
           {categoryName}
         </div>
       </div>
 
       {/* 메인 컨텐츠 영역 */}
-      <div className="bg-white rounded-2xl p-5 flex-1 flex flex-col">
+      <div className="bg-white rounded-2xl pt-[17px] p-5 flex-1 flex flex-col">
         {/* 게시글 제목 */}
         <h2 className="text-[20px] font-semibold text-gray-900 mb-2">
           {post.title}
@@ -133,20 +133,20 @@ function PostCard({ post }) {
           </div>
 
           {/* 좋아요 및 댓글 카운트 */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <button 
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleLike(e);
               }}
-              className="flex items-center space-x-1 hover:bg-gray-100 cursor-pointer transition-colors duration-200 rounded-full p-1"
+              className="flex items-center space-x-1 hover:bg-gray-100 cursor-pointer transition-colors duration-200 rounded-full p-2"
             >
               <LikeIcon className="w-6 h-6 text-gray-500" />
               <span className="text-[14px] font-medium">{likes || 0}</span>
             </button>
             <button
-              className="flex items-center space-x-1 hover:bg-gray-100 cursor-pointer transition-colors duration-200 rounded-full p-1"
+              className="flex items-center space-x-1 hover:bg-gray-100 cursor-pointer transition-colors duration-200 rounded-full p-2"
             >
               <MessageIcon className="w-6 h-6 text-gray-500" />
               <span className="text-[14px] font-medium">{commentCount}</span>

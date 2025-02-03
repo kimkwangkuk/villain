@@ -1,7 +1,7 @@
 export const PrimaryButton = ({ children, ...props }) => (
   <button
     {...props}
-    className="bg-black text-white px-3 py-2 rounded-[8px] font-semibold hover:bg-gray-800"
+    className="text-[15px] bg-black text-white px-[9px] py-[6px] rounded-[8px] font-semibold hover:bg-gray-800"
   >
     {children}
   </button>
