@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import { authService } from '../services/auth.service';
-import { googleLogin } from '../firebase';
+import { googleLogin } from '../api/firebase';
 
 export const AuthContext = createContext(null);
 
