@@ -5,7 +5,7 @@ import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
 import { doc, getDoc, collection, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { addComment, updateComment, deleteComment, updateLikes } from '../api/firebase';
-import { MessageIcon, LikeIcon } from '../components/Icons';
+import { MessageIcon, LikeIcon, ShareIcon } from '../components/Icons';
 import { PrimaryButton } from '../components/Button';
 import { EllipsisIcon } from '../components/Icons';
 
@@ -32,10 +32,9 @@ function PostDetail() {
           
           // 조회 수 증가
           await updateDoc(postRef, {
-            viewCount: (postData.viewCount || 0) + 1 // 조회 수 증가
+            viewCount: (postData.viewCount || 0) + 1
           });
 
-          // 사용자의 좋아요 상태 확인
           if (user && postData.likedBy) {
             setIsLiked(postData.likedBy.includes(user.uid));
           }
@@ -50,7 +49,6 @@ function PostDetail() {
       }
     };
 
-    // comments 컬렉션에서 댓글을 가져오도록 수정
     const commentsQuery = query(
       collection(db, 'comments'),
       where('postId', '==', id),
@@ -87,7 +85,7 @@ function PostDetail() {
 
     try {
       await addComment(id, commentContent);
-      // 낙관적 업데이트: 댓글 작성 성공 시 post의 commentCount를 즉시 1 증가시킵니다.
+      // 낙관적 업데이트: 댓글 작성 성공 시 post의 commentCount를 1 증가
       setPost(prev => ({
         ...prev,
         commentCount: (prev.commentCount || 0) + 1
@@ -106,9 +104,7 @@ function PostDetail() {
     }
 
     try {
-      // firebase.js에 정의된 updateLikes 함수 호출 (발신자 이름 전달)
       const updatedPost = await updateLikes(post.id, user.uid, user.displayName || '익명');
-      // 상태 업데이트: 좋아요 수와 likedBy 배열을 새로 설정
       setIsLiked(!isLiked);
       setPost(prev => ({
         ...prev,
@@ -131,7 +127,6 @@ function PostDetail() {
     }
   };
 
-  // 댓글 수정 함수 수정
   const handleEditComment = async (commentId, newContent) => {
     if (!newContent.trim()) return;
     
@@ -143,7 +138,6 @@ function PostDetail() {
     }
   };
 
-  // 댓글 삭제 함수 수정
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
 
@@ -167,14 +161,12 @@ function PostDetail() {
   };
 
   if (loading) return <div className="text-center py-8">로딩중...</div>;
-  
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
-  
   if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
 
   return (
     <div className="min-h-screen bg-white py-8">
-      {/* 프로필 영역 */}
+      {/* 프로필 영역 - 기존 560px max-width로 처리 */}
       <div className="max-w-[560px] mx-auto px-4">
         <div className="bg-white rounded-3xl pb-[16px]">
           <div className="flex items-center justify-between">
@@ -215,57 +207,57 @@ function PostDetail() {
         </div>
       </div>
 
-      {/* 구분선 - 브라우저 전체 너비 */}
+      {/* 구분선 */}
       <div className="w-full">
         <div className="h-[1px] bg-gray-100" />
       </div>
 
-      {/* 콘텐츠 영역 (카테고리 텍스트 제거) */}
-      <div className="max-w-[560px] mx-auto px-4">
-        <div className="pt-[24px] pb-[40px]">
-          <h1 className="text-[22px] font-semibold text-gray-900 mb-[6px]">{post.title}</h1>
-          <p className="text-[16px] text-gray-900">{post.content}</p>
-        </div>
-      </div>
-
-      {/* 좋아요, 댓글, 조회 수 등 하단 액션 버튼 */}
-      <div className="max-w-[560px] mx-auto px-4 ">
-        <div className="bg-white rounded-3xl pb-[26px]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 font-medium text-[14px] text-gray-900">
-              <button 
-                onClick={handleLike}
-                className="flex items-center space-x-1"
-              >
-                <LikeIcon 
-                  className={`w-[24px] h-[24px] ${isLiked ? 'text-red-500' : 'text-gray-900 hover:text-red-500'}`} 
-                />
-                <span>{post.likes || 0}</span>
-              </button>
-              <div className="flex items-center space-x-1">
-                <MessageIcon className="w-[24px] h-[24px] text-gray-900" />
-                <span>{post.commentCount || 0}</span>
-              </div>
-              <span className="flex items-center">
-                <span className="mr-1">
-                  <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
-                </span>
-                {post.viewCount || 0}
-              </span>
-            </div>
-            <button 
-              onClick={handleShare}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <span>🔗</span>
-            </button>
+      {/* 콘텐츠 영역 - 배경은 100% 너비, 내부 컨텐츠는 기존 최대 너비로 유지 */}
+      <div className="w-full bg-gray-50 px-4 py-4">
+        <div className="max-w-[560px] mx-auto">
+          <div className="pt-4 pb-6">
+            <h1 className="text-[22px] font-semibold text-gray-900 mb-2">{post.title}</h1>
+            <p className="text-[16px] text-gray-900">{post.content}</p>
           </div>
         </div>
       </div>
 
-      {/* 구분선 - 좋아요 버튼들 아래쪽, 브라우저 전체 너비 */}
-      <div className="w-full">
-        <div className="h-[1px] bg-gray-100" />
+      {/* 좋아요, 댓글, 조회 수 등 하단 액션 버튼 - 배경은 100% 너비, 내부 컨텐츠는 기존 너비로 유지 */}
+      <div className="w-full bg-gray-50 px-4 pb-5">
+        <div className="max-w-[560px] mx-auto">
+          <div className="rounded-3xl bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 font-medium text-[14px] text-gray-900">
+                <button 
+                  onClick={handleLike}
+                  className="flex items-center space-x-1"
+                >
+                  <LikeIcon 
+                    className={`w-[24px] h-[24px] ${isLiked ? 'text-red-500' : 'text-gray-900 hover:text-red-500'}`} 
+                  />
+                  <span>{post.likes || 0}</span>
+                </button>
+                <div className="flex items-center space-x-1">
+                  <MessageIcon className="w-[24px] h-[24px] text-gray-900" />
+                  <span>{post.commentCount || 0}</span>
+                </div>
+                <span className="flex items-center">
+                  <span className="mr-1">
+                    <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
+                  </span>
+                  {post.viewCount || 0}
+                </span>
+              </div>
+              {/* 공유하기 버튼 */}
+              <button 
+                onClick={handleShare}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <ShareIcon className="w-[24px] h-[24px] text-gray-500" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 댓글 입력창 영역 */}
@@ -339,7 +331,6 @@ function PostDetail() {
                   onEdit={(newContent) => handleEditComment(comment.id, newContent)}
                   onDelete={() => handleDeleteComment(comment.id)}
                 />
-                {/* 구분선: 마지막 요소가 아니면 구분선 추가 */}
                 {index !== comments.length - 1 && (
                   <div className="h-[1px] bg-gray-100" />
                 )}
@@ -348,6 +339,13 @@ function PostDetail() {
           </div>
         )}
       </div>
+
+      {/* 토스트 메시지 표시 */}
+      {showToast && (
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg">
+          링크가 복사되었습니다!
+        </div>
+      )}
     </div>
   );
 }

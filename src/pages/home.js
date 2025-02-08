@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPosts, getCategories, getUserDoc } from '../api/firebase';
+import { getCategories, getUserDoc } from '../api/firebase';
 import PostCard from '../components/PostCard';
 import { Link } from 'react-router-dom';
 import { 
@@ -8,7 +8,8 @@ import {
   CategoryIcon2, 
   CategoryIcon3, 
   CategoryIcon4, 
-  CategoryIcon5, 
+  HospitalIcon,
+  SchoolIcon,
   CategoryIcon6, 
   CategoryIcon7, 
   CategoryIcon8, 
@@ -17,6 +18,10 @@ import {
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
+// firestore 쿼리를 위해 추가
+import { db } from '../firebase';
+import { collection, query, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+
 function HomePage() {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -24,7 +29,11 @@ function HomePage() {
   const [loading, setLoading] = useState(true);
   const [authors, setAuthors] = useState([]);
   const [user, setUser] = useState(null);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
+  // 사용자 인증 상태 구독
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -32,17 +41,71 @@ function HomePage() {
     return () => unsubscribe();
   }, []);
 
+  // 카테고리 데이터 불러오기
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCategories = async () => {
       try {
-        const [postsData, categoriesData] = await Promise.all([
-          getPosts(),
-          getCategories()
-        ]);
-        setPosts(postsData);
+        const categoriesData = await getCategories();
         setCategories(categoriesData);
+      } catch (error) {
+        console.error('카테고리 로딩 실패:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
-        const uniqueAuthorIds = [...new Set(postsData.map(post => post.authorId))];
+  // 페이지당 불러올 게시글 수
+  const postsPerPage = 20;
+
+  // 게시글 불러오는 함수 (무한 스크롤용)
+  const loadPosts = async () => {
+    try {
+      let q;
+      if (lastDoc) {
+        q = query(
+          collection(db, 'posts'),
+          orderBy('createdAt', 'desc'),
+          startAfter(lastDoc),
+          limit(postsPerPage)
+        );
+      } else {
+        q = query(
+          collection(db, 'posts'),
+          orderBy('createdAt', 'desc'),
+          limit(postsPerPage)
+        );
+      }
+      const snapshot = await getDocs(q);
+      const newPosts = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setPosts(prevPosts => [...prevPosts, ...newPosts]);
+      if (snapshot.docs.length > 0) {
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+      }
+      if (newPosts.length < postsPerPage) {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('포스트 로딩 실패:', error);
+    }
+  };
+
+  // 처음 한 번 게시글 로드
+  useEffect(() => {
+    const initLoad = async () => {
+      await loadPosts();
+      setLoading(false);
+    };
+    initLoad();
+  }, []);
+
+  // 게시글이 변경될 때 저자 정보 업데이트
+  useEffect(() => {
+    const fetchAuthors = async () => {
+      const uniqueAuthorIds = [...new Set(posts.map(post => post.authorId))];
+      try {
         const authorPromises = uniqueAuthorIds.map(id => getUserDoc(id));
         const authorData = await Promise.all(authorPromises);
         setAuthors(
@@ -53,15 +116,34 @@ function HomePage() {
           }))
         );
       } catch (error) {
-        console.error('데이터 로딩 실패:', error);
-      } finally {
-        setLoading(false);
+        console.error('저자 로딩 실패:', error);
       }
     };
+    if (posts.length > 0) {
+      fetchAuthors();
+    }
+  }, [posts]);
 
-    fetchData();
-  }, []);
+  // 추가 게시글 로드 (무한 스크롤)
+  const loadMorePosts = async () => {
+    setLoadingMore(true);
+    await loadPosts();
+    setLoadingMore(false);
+  };
 
+  // 스크롤 이벤트로 추가 로드 트리거
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!hasMore || loadingMore) return;
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+        loadMorePosts();
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loadingMore, lastDoc]);
+
+  // 선택한 카테고리에 따른 필터링
   const filteredPosts = selectedCategory
     ? posts.filter(post => post.categoryId === selectedCategory)
     : posts;
@@ -77,8 +159,8 @@ function HomePage() {
     CategoryIcon2,
     CategoryIcon3,
     CategoryIcon4,
-    CategoryIcon5,
-    CategoryIcon6,
+    HospitalIcon,
+    SchoolIcon,
     CategoryIcon7,
     CategoryIcon8,
     CategoryIcon9
@@ -152,6 +234,8 @@ function HomePage() {
               <PostCard key={post.id} post={post} />
             ))}
           </div>
+          {loadingMore && <div className="text-center mt-4">Loading more posts...</div>}
+          {!hasMore && <div className="text-center mt-4">더 이상 게시글이 없습니다.</div>}
         </div>
       </div>
     </div>

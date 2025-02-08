@@ -218,6 +218,82 @@ export const CategoryIcon9 = ({ className = "w-6 h-6" }) => (
   </svg>
 );
 
+export const SendIcon = ({ className = "w-6 h-6" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+    <path d="m21.854 2.147-10.94 10.939" />
+  </svg>
+);
+
+export const ShareIcon = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+    <polyline points="16 6 12 2 8 6" />
+    <line x1="12" x2="12" y1="2" y2="15" />
+  </svg>
+);
+
+/* 새 아이콘: HospitalIcon 추가 */
+export const HospitalIcon = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="1.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M12 6v4"/>
+    <path d="M14 14h-4"/>
+    <path d="M14 18h-4"/>
+    <path d="M14 8h-4"/>
+    <path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"/>
+    <path d="M18 22V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v18"/>
+  </svg>
+);
+
+export const SchoolIcon = ({ className = "w-6 h-6" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="1.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M14 22v-4a2 2 0 1 0-4 0v4"/>
+    <path d="m18 10 3.447 1.724a1 1 0 0 1 .553.894V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7.382a1 1 0 0 1 .553-.894L6 10"/>
+    <path d="M18 5v17"/>
+    <path d="m4 6 7.106-3.553a2 2 0 0 1 1.788 0L20 6"/>
+    <path d="M6 5v17"/>
+    <circle cx="12" cy="9" r="2"/>
+  </svg>
+);
+
 
 
 
