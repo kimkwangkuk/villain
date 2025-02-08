@@ -22,13 +22,13 @@ git pull origin main
 
 
 git add .
-git commit -m "UI수정"
+git commit -m "카테고리 변경"
 git push origin main
 
 
 
 
 npm run upload-images
-
+npm run update-categories
 
 https://lucide.dev/icons/align-vertical-justify-start?search=bubble

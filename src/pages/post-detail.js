@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
 import { doc, getDoc, collection, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
-import { addComment, updateComment, deleteComment } from '../api/firebase';
+import { addComment, updateComment, deleteComment, updateLikes } from '../api/firebase';
 import { MessageIcon, LikeIcon } from '../components/Icons';
 import { PrimaryButton } from '../components/Button';
 import { EllipsisIcon } from '../components/Icons';
@@ -87,6 +87,11 @@ function PostDetail() {
 
     try {
       await addComment(id, commentContent);
+      // 낙관적 업데이트: 댓글 작성 성공 시 post의 commentCount를 즉시 1 증가시킵니다.
+      setPost(prev => ({
+        ...prev,
+        commentCount: (prev.commentCount || 0) + 1
+      }));
       setCommentContent('');
     } catch (error) {
       console.error('댓글 작성 실패:', error);
@@ -101,36 +106,15 @@ function PostDetail() {
     }
 
     try {
-      const postRef = doc(db, 'posts', id);
-      const postDoc = await getDoc(postRef);
-      const postData = postDoc.data();
-      const likedBy = postData.likedBy || [];
-      const currentLikes = postData.likes || 0;
-
-      if (isLiked) {
-        // 좋아요 취소
-        await updateDoc(postRef, {
-          likes: currentLikes - 1,
-          likedBy: likedBy.filter(uid => uid !== user.uid)
-        });
-        setPost(prev => ({
-          ...prev,
-          likes: currentLikes - 1,
-          likedBy: likedBy.filter(uid => uid !== user.uid)
-        }));
-      } else {
-        // 좋아요 추가
-        await updateDoc(postRef, {
-          likes: currentLikes + 1,
-          likedBy: [...likedBy, user.uid]
-        });
-        setPost(prev => ({
-          ...prev,
-          likes: currentLikes + 1,
-          likedBy: [...likedBy, user.uid]
-        }));
-      }
+      // firebase.js에 정의된 updateLikes 함수 호출 (발신자 이름 전달)
+      const updatedPost = await updateLikes(post.id, user.uid, user.displayName || '익명');
+      // 상태 업데이트: 좋아요 수와 likedBy 배열을 새로 설정
       setIsLiked(!isLiked);
+      setPost(prev => ({
+        ...prev,
+        likes: updatedPost.likes,
+        likedBy: updatedPost.likedBy
+      }));
     } catch (error) {
       console.error('좋아요 처리 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
@@ -163,11 +147,22 @@ function PostDetail() {
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
 
+    // 낙관적 업데이트: 삭제 직후 local state에서 commentCount를 1 감소
+    setPost(prev => ({
+      ...prev,
+      commentCount: (prev.commentCount || 0) - 1
+    }));
+
     try {
       await deleteComment(id, commentId);
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
       alert('댓글 삭제에 실패했습니다.');
+      // 삭제 실패 시 롤백: commentCount 복구
+      setPost(prev => ({
+        ...prev,
+        commentCount: (prev.commentCount || 0) + 1
+      }));
     }
   };
 
@@ -227,9 +222,9 @@ function PostDetail() {
 
       {/* 콘텐츠 영역 (카테고리 텍스트 제거) */}
       <div className="max-w-[560px] mx-auto px-4">
-        <div className="pt-[26px] pb-[40px]">
+        <div className="pt-[24px] pb-[40px]">
           <h1 className="text-[22px] font-semibold text-gray-900 mb-[6px]">{post.title}</h1>
-          <p className="text-[17px] text-gray-900">{post.content}</p>
+          <p className="text-[16px] text-gray-900">{post.content}</p>
         </div>
       </div>
 
@@ -249,7 +244,7 @@ function PostDetail() {
               </button>
               <div className="flex items-center space-x-1">
                 <MessageIcon className="w-[24px] h-[24px] text-gray-900" />
-                <span>{comments.length}</span>
+                <span>{post.commentCount || 0}</span>
               </div>
               <span className="flex items-center">
                 <span className="mr-1">

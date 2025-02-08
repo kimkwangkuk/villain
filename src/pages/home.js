@@ -14,6 +14,8 @@ import {
   CategoryIcon8, 
   CategoryIcon9 
 } from '../components/Icons';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function HomePage() {
   const [posts, setPosts] = useState([]);
@@ -21,6 +23,14 @@ function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authors, setAuthors] = useState([]);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,8 +72,6 @@ function HomePage() {
 
   if (loading) return <div>로딩중...</div>;
 
-  // '전체' 버튼은 AllCategoryIcon을 사용하고,
-  // 나머지 카테고리 버튼은 순서대로 9개의 아이콘을 할당 (순환 없이 사용)
   const categoryIcons = [
     CategoryIcon1,
     CategoryIcon2,
@@ -81,7 +89,6 @@ function HomePage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8">
-            {/* 전체 버튼 */}
             <button
               onClick={() => setSelectedCategory(null)}
               className={`text-[15px] font-medium pb-2 px-1 transition-colors text-black
@@ -92,9 +99,7 @@ function HomePage() {
                 <span>전체</span>
               </div>
             </button>
-            {/* 동적으로 불러온 카테고리 버튼 (총 9개 아이콘 할당) */}
             {categories.map((category, index) => {
-              // index로 직접 접근 (순환하지 않음)
               const IconComponent = categoryIcons[index];
               return (
                 <button

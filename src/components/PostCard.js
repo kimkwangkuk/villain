@@ -34,19 +34,15 @@ function PostCard({ post }) {
       }
     };
 
-    // 댓글 수 실시간 업데이트
-    const commentsQuery = query(collection(db, 'posts', post.id, 'comments'));
-    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
-      setCommentCount(snapshot.size);
-    });
+    // posts 문서에 저장된 commentCount 값을 사용
+    setCommentCount(post.commentCount || 0);
 
     if (user && post.likedBy) {
       setIsLiked(post.likedBy.includes(user.uid));
     }
 
     fetchCategoryName();
-    return () => unsubscribe();  // cleanup
-  }, [post.categoryId, post.likedBy, post.id, user]);
+  }, [post.categoryId, post.likedBy, post.id, user, post.commentCount]);
 
   const handleLike = async (e) => {
     e.preventDefault();
@@ -58,7 +54,7 @@ function PostCard({ post }) {
     }
 
     try {
-      const updatedPost = await updateLikes(post.id, user.uid);
+      const updatedPost = await updateLikes(post.id, user.uid, user.displayName || '익명');
       setLikes(updatedPost.likes);
       setIsLiked(!isLiked);
     } catch (error) {
@@ -78,79 +74,100 @@ function PostCard({ post }) {
   return (
     <Link 
       to={`/posts/${post.id}`}
-      className="block px-1 pb-1 rounded-[20px] overflow-hidden bg-[#F0F0F0] hover:bg-gray-100 transition-colors duration-200 h-[360px] flex flex-col"
+      className="block rounded-lg transition-colors duration-200"
     >
-      {/* 카테고리 영역 */}
-      <div className="px-5 pt-[12px] pb-[9px]">
-        <div className="text-[14px] font-medium text-gray-500">
-          {categoryName}
-        </div>
-      </div>
-
-      {/* 메인 컨텐츠 영역 */}
-      <div className="bg-white rounded-2xl pt-[17px] p-5 flex-1 flex flex-col">
-        {/* 게시글 제목 */}
-        <h2 className="text-[20px] font-semibold text-gray-900 mb-2">
-          {post.title}
-        </h2>
-
-        {/* 게시글 내용 (영역을 넘어갈 경우 말줄임표 처리) */}
-        <p 
-          className="overflow-hidden text-gray-600" 
-          style={{
-            display: '-webkit-box',
-            WebkitLineClamp: '7',
-            WebkitBoxOrient: 'vertical'
-          }}
-        >
-          {post.content}
-        </p>
-
-        {/* 하단 프로필 및 상호작용 영역 */}
-        <div className="flex items-center justify-between mt-auto">
-          {/* 프로필 영역 */}
-          <div className="flex items-center space-x-2">
-            <div className="w-[36px] h-[36px] rounded-full overflow-hidden">
-              <img
-                src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
-                alt={`${post.authorName}의 프로필`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  if (!imageError) {
-                    setImageError(true);
-                  }
-                }}
-              />
+      <div className="flex flex-col h-full">
+        {/* 말풍선(컨텐츠) 컨테이너: 회색 배경, 고정 높이 300px, 라운드 값을 증가시킴 */}
+        <div className="bg-gray-100 rounded-2xl p-5 flex flex-col h-[300px]">
+          <div>
+            <div className="flex items-center text-sm font-medium text-gray-500 mb-1">
+              {/* 카테고리 레이블 왼쪽에 16px 아이콘 */}
+              <svg 
+                className="w-4 h-4 mr-2" 
+                fill="currentColor" 
+                viewBox="0 0 20 20" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z" />
+              </svg>
+              {categoryName}
             </div>
-            <div>
-              <div className="text-[14px] font-medium text-gray-900">
-                {post.authorName}
-              </div>
-              <div className="text-xs text-gray-500">
-                {getRelativeTime(post.createdAt?.toDate())}
-              </div>
+            {/* 타이틀에 말줄임표 처리 적용 (한 줄) */}
+            <h2 
+              className="text-xl font-semibold text-gray-900 mb-2" 
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: '1',
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {post.title}
+            </h2>
+            {/* 컨텐츠에 말줄임표 처리: 최대 5줄까지 표시 */}
+            <p
+              className="text-gray-600"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: '5',
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {post.content}
+            </p>
+          </div>
+          {/* 좋아요/댓글 버튼 컨테이너 - 왼쪽에는 버튼 아이콘, 오른쪽에는 텍스트로 숫자 표시 */}
+          <div className="mt-auto flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleLike(e);
+                }}
+                className="flex items-center hover:bg-gray-200 transition-colors duration-200 rounded-full p-1"
+              >
+                <LikeIcon className="w-6 h-6 text-gray-500" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="flex items-center hover:bg-gray-200 transition-colors duration-200 rounded-full p-1"
+              >
+                <MessageIcon className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
+            <div className="text-sm text-gray-600">
+              좋아요 {likes || 0} <span className="mx-1">·</span> 댓글 {commentCount || 0}
             </div>
           </div>
-
-          {/* 좋아요 및 댓글 카운트 */}
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleLike(e);
+        </div>
+        {/* 프로필 컨테이너 (배경 컬러 제거, 상단에 10px padding) */}
+        <div className="rounded-b-xl flex items-center bg-transparent pt-[10px]">
+          <div className="w-10 h-10 rounded-full overflow-hidden">
+            <img
+              src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
+              alt={`${post.authorName}의 프로필`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                if (!imageError) {
+                  setImageError(true);
+                }
               }}
-              className="flex items-center space-x-1 hover:bg-gray-100 cursor-pointer transition-colors duration-200 rounded-full p-2"
-            >
-              <LikeIcon className="w-6 h-6 text-gray-500" />
-              <span className="text-[14px] font-medium">{likes || 0}</span>
-            </button>
-            <button
-              className="flex items-center space-x-1 hover:bg-gray-100 cursor-pointer transition-colors duration-200 rounded-full p-2"
-            >
-              <MessageIcon className="w-6 h-6 text-gray-500" />
-              <span className="text-[14px] font-medium">{commentCount}</span>
-            </button>
+            />
+          </div>
+          <div className="ml-3">
+            <div className="text-sm font-medium text-gray-900">
+              {post.authorName}
+            </div>
+            <div className="text-xs text-gray-500">
+              {getRelativeTime(post.createdAt?.toDate())}
+            </div>
           </div>
         </div>
       </div>

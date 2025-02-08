@@ -30,6 +30,17 @@ function MyPage() {
     navigate('/');
   };
 
+  // 알림 클릭 시 read 상태 업데이트 함수 (실제 Firestore 알림 문서 업데이트)
+  const handleNotificationClick = async (notificationId) => {
+    try {
+      const notificationRef = doc(db, 'notifications', notificationId);
+      await updateDoc(notificationRef, { read: true });
+      console.log('알림 read 상태 업데이트 완료');
+    } catch (error) {
+      console.error('알림 read 상태 업데이트 실패:', error);
+    }
+  };
+
   useEffect(() => {
     // 로그인 상태 체크
     if (!isLoggedIn) {
@@ -57,12 +68,22 @@ function MyPage() {
         console.log('내 관심 포스트를 가져오는 중...');
         const interactions = await getUserInteractions(user?.uid);
         console.log('가져온 상호작용:', interactions);
-        const filteredPosts = await Promise.all(interactions.map(async (interaction) => {
-          const post = await getPost(interaction.postId);
-          return post;
-        }));
-        console.log('가져온 관심 포스트:', filteredPosts);
-        setInterestedPosts(filteredPosts);
+        
+        // 모든 상호작용에 해당하는 포스트를 가져옵니다.
+        const postsFromInteractions = await Promise.all(
+          interactions.map(async (interaction) => {
+            const post = await getPost(interaction.postId);
+            return post;
+          })
+        );
+        
+        // 같은 포스트가 여러 번 들어올 경우 중복을 제거합니다.
+        const dedupedPosts = Array.from(new Map(
+          postsFromInteractions.map(post => [post.id, post])
+        ).values());
+        
+        console.log('가져온 관심 포스트 (중복 제거됨):', dedupedPosts);
+        setInterestedPosts(dedupedPosts);
       } catch (error) {
         console.error('내 관심 포스트 로딩 실패:', error);
       }
@@ -412,6 +433,7 @@ function MyPage() {
                   <Link
                     key={notification.id}
                     to={`/posts/${notification.postId}`}
+                    onClick={() => handleNotificationClick(notification.id)}
                     className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start space-x-3">

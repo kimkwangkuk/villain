@@ -60,6 +60,7 @@ export const createPost = async (postData) => {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     likes: 0,
+    commentCount: 0, // 댓글 수 필드 추가
     comments: []
   };
 
@@ -79,8 +80,8 @@ export const createPost = async (postData) => {
 export const getUserInteractions = async (userId) => {
   const interactions = []; // 댓글 및 좋아요를 저장할 배열
 
-  // 댓글이 있는 게시글 가져오기
-  const commentsSnapshot = await getDocs(query(collection(db, 'comments'), where('authorId', '==', userId)));
+  // 댓글이 있는 게시글 가져오기 - 필드명을 'authorId'에서 'userId'로 수정
+  const commentsSnapshot = await getDocs(query(collection(db, 'comments'), where('userId', '==', userId)));
   commentsSnapshot.forEach(commentDoc => {
     interactions.push({ postId: commentDoc.data().postId, type: 'comment' });
   });
@@ -121,6 +122,24 @@ export const addComment = async (postId, commentContent) => {
     await updateDoc(postRef, {
       commentCount: increment(1)
     });
+
+    // (추가) 댓글 작성과 관련한 알림 생성 로직
+    // 게시글의 작성자 정보를 가져오기
+    const postSnap = await getDoc(postRef);
+    if (postSnap.exists()) {
+      const postData = postSnap.data();
+      // 댓글 작성자와 게시글 작성자가 다를 경우 알림 생성
+      if (postData.authorId !== user.uid) {
+        await createNotification(
+          'comment',      // 알림 타입 (예: 'comment')
+          postId,         // 연관된 포스트 ID
+          postData.authorId,  // 알림 수신자 (게시글 작성자)
+          user.uid,       // 댓글 작성자 (알림 발신자)
+          userDoc.username || user.email, // 발신자 이름
+          commentContent  // 추가 내용: 댓글 내용 등
+        );
+      }
+    }
 
     return {
       id: commentRef.id,
@@ -192,7 +211,7 @@ export const getCategories = async () => {
   }));
 };
 // Likes
-export const updateLikes = async (postId, userId) => {
+export const updateLikes = async (postId, userId, senderName = '익명') => {
   console.log('updateLikes 호출:', { postId, userId });
   
   const postRef = doc(db, 'posts', postId);
@@ -207,16 +226,37 @@ export const updateLikes = async (postId, userId) => {
   const likedBy = post.likedBy || [];
   const isLiked = likedBy.includes(userId);
 
+  // 좋아요 상태 업데이트
   await updateDoc(postRef, {
     likes: isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1,
     likedBy: isLiked ? arrayRemove(userId) : arrayUnion(userId)
   });
 
+  // 새로운 좋아요 추가인 경우, 그리고 포스트 작성자와 좋아요 누른 사용자가 다르면 알림 생성
+  if (!isLiked && post.authorId && post.authorId !== userId) {
+    try {
+      await createNotification(
+        'like',                   // 알림 타입
+        postId,                   // 포스트 ID
+        post.authorId,            // 알림 수신자 (포스트 작성자)
+        userId,                   // 알림 발신자 (좋아요 누른 사용자)
+        senderName,               // 발신자 이름
+        '게시글을 좋아합니다.'      // 알림 내용
+      );
+      console.log('좋아요 알림 생성 완료');
+    } catch (error) {
+      console.error('좋아요 알림 생성 실패:', error);
+    }
+  }
+
+  const updatedLikes = isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1;
+  const updatedLikedBy = isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId];
+
   return {
     ...post,
     id: postId,
-    likes: isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1,
-    likedBy: isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId]
+    likes: updatedLikes,
+    likedBy: updatedLikedBy
   };
 };
 
@@ -299,16 +339,16 @@ export const signup = async ({ email, password, username, photoURL }) => {
 
 export const createCategories = async () => {
   const categories = [
-    { name: "직장인 빌런", description: "직장 내 빌런 유형" },
-    { name: "학교 빌런", description: "학교에서 만나는 빌런" },
-    { name: "카페 빌런", description: "카페에서 마주치는 빌런" },
-    { name: "식당 빌런", description: "식당에서 마주치는 빌런" },
-    { name: "대중교통 빌런", description: "대중교통에서 만나는 빌런" },
-    { name: "운동시설 빌런", description: "운동시설에서 마주치는 빌런" },
-    { name: "병원 빌런", description: "병원에서 마주치는 빌런" },
-    { name: "공공장소 빌런", description: "공공장소에서 만나는 빌런" },
-    { name: "온라인 빌런", description: "온라인에서 만나는 빌런" },
-    { name: "이웃 빌런", description: "이웃/아파트에서 만나는 빌런" }
+    { name: "직장인 빌런", description: "직장 내 빌런 유형", order: 1 },
+    { name: "학교 빌런", description: "학교에서 만나는 빌런", order: 2 },
+    { name: "카페 빌런", description: "카페에서 마주치는 빌런", order: 3 },
+    { name: "식당 빌런", description: "식당에서 마주치는 빌런", order: 4 },
+    { name: "대중교통 빌런", description: "대중교통에서 만나는 빌런", order: 5 },
+    { name: "운동시설 빌런", description: "운동시설에서 마주치는 빌런", order: 6 },
+    { name: "병원 빌런", description: "병원에서 마주치는 빌런", order: 7 },
+    { name: "공공장소 빌런", description: "공공장소에서 만나는 빌런", order: 8 },
+    { name: "온라인 빌런", description: "온라인에서 만나는 빌런", order: 9 },
+    { name: "이웃 빌런", description: "이웃/아파트에서 만나는 빌런", order: 10 }
   ];
 
   const createdCategories = [];
@@ -354,7 +394,7 @@ window.createTestPosts = createTestPosts;
 
 export const createNotification = async (type, postId, recipientId, senderId, senderName, content = '') => {
   try {
-    await addDoc(collection(db, 'notifications'), {
+    const docRef = await addDoc(collection(db, 'notifications'), {
       type,
       postId,
       recipientId,
@@ -364,8 +404,19 @@ export const createNotification = async (type, postId, recipientId, senderId, se
       createdAt: new Date(),
       read: false
     });
+    console.log('알림 생성 완료:', {
+      id: docRef.id,
+      type,
+      postId,
+      recipientId,
+      senderId,
+      senderName,
+      content
+    });
+    return docRef;
   } catch (error) {
     console.error('알림 생성 실패:', error);
+    throw error;
   }
 };
 
