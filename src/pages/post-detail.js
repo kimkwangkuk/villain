@@ -8,6 +8,7 @@ import { addComment, updateComment, deleteComment, updateLikes } from '../api/fi
 import { MessageIcon, LikeIcon, ShareIcon } from '../components/Icons';
 import { PrimaryButton } from '../components/Button';
 import { EllipsisIcon } from '../components/Icons';
+import PostDetailSkeleton from '../components/PostDetailSkeleton';
 
 function PostDetail() {
   const { id } = useParams();
@@ -83,15 +84,22 @@ function PostDetail() {
     }
     if (!commentContent.trim()) return;
 
+    // 낙관적 업데이트: 현재 댓글 수를 즉시 1 증가
+    const previousCommentCount = post?.commentCount || 0;
+    setPost((prev) => ({
+      ...prev,
+      commentCount: previousCommentCount + 1
+    }));
+
     try {
       await addComment(id, commentContent);
-      // 낙관적 업데이트: 댓글 작성 성공 시 post의 commentCount를 1 증가
-      setPost(prev => ({
-        ...prev,
-        commentCount: (prev.commentCount || 0) + 1
-      }));
       setCommentContent('');
     } catch (error) {
+      // 에러 시 롤백 처리
+      setPost((prev) => ({
+        ...prev,
+        commentCount: previousCommentCount
+      }));
       console.error('댓글 작성 실패:', error);
       alert('댓글 작성에 실패했습니다.');
     }
@@ -102,16 +110,24 @@ function PostDetail() {
       alert('로그인이 필요합니다.');
       return;
     }
-
+    
+    // 낙관적 업데이트: 현재 상태 바로 변경
+    const previousIsLiked = isLiked;
+    const previousLikes = post.likes;
+    setIsLiked(!previousIsLiked);
+    setPost(prev => ({ ...prev, likes: previousIsLiked ? previousLikes - 1 : previousLikes + 1 }));
+    
     try {
       const updatedPost = await updateLikes(post.id, user.uid, user.displayName || '익명');
-      setIsLiked(!isLiked);
       setPost(prev => ({
         ...prev,
         likes: updatedPost.likes,
         likedBy: updatedPost.likedBy
       }));
     } catch (error) {
+      // 요청 실패 시 롤백
+      setIsLiked(previousIsLiked);
+      setPost(prev => ({ ...prev, likes: previousLikes }));
       console.error('좋아요 처리 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
     }
@@ -160,13 +176,13 @@ function PostDetail() {
     }
   };
 
-  if (loading) return <div className="text-center py-8">로딩중...</div>;
+  if (loading) return <PostDetailSkeleton />;
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
   if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
 
   return (
     <div className="min-h-screen bg-white py-8">
-      {/* 프로필 영역 - 기존 560px max-width로 처리 */}
+      {/* 프로필 영역 */}
       <div className="max-w-[560px] mx-auto px-4">
         <div className="bg-white rounded-3xl pb-[16px]">
           <div className="flex items-center justify-between">
@@ -199,7 +215,7 @@ function PostDetail() {
                 </div>
               </div>
             </div>
-            {/* 우측 더보기 버튼 */}
+            {/* 더보기 버튼 */}
             <button className="hover:bg-gray-100 rounded-full p-1 cursor-pointer transition-colors duration-200">
               <EllipsisIcon className="w-5 h-5 text-gray-500" />
             </button>
@@ -212,7 +228,7 @@ function PostDetail() {
         <div className="h-[1px] bg-gray-100" />
       </div>
 
-      {/* 콘텐츠 영역 - 배경은 100% 너비, 내부 컨텐츠는 기존 최대 너비로 유지 */}
+      {/* 콘텐츠 영역 */}
       <div className="w-full bg-gray-50 px-4 py-4">
         <div className="max-w-[560px] mx-auto">
           <div className="pt-4 pb-6">
@@ -222,7 +238,7 @@ function PostDetail() {
         </div>
       </div>
 
-      {/* 좋아요, 댓글, 조회 수 등 하단 액션 버튼 - 배경은 100% 너비, 내부 컨텐츠는 기존 너비로 유지 */}
+      {/* 액션 버튼 영역 */}
       <div className="w-full bg-gray-50 px-4 pb-5">
         <div className="max-w-[560px] mx-auto">
           <div className="rounded-3xl bg-gray-50">
@@ -248,7 +264,6 @@ function PostDetail() {
                   {post.viewCount || 0}
                 </span>
               </div>
-              {/* 공유하기 버튼 */}
               <button 
                 onClick={handleShare}
                 className="text-gray-500 hover:text-gray-700"
@@ -260,7 +275,7 @@ function PostDetail() {
         </div>
       </div>
 
-      {/* 댓글 입력창 영역 */}
+      {/* 댓글 입력 영역 */}
       <div className="max-w-[560px] rounded-[20px] mx-auto mt-4 bg-gray-50">
         {isLoggedIn ? (
           <form onSubmit={handleCommentSubmit} className="mb-6">
@@ -340,7 +355,7 @@ function PostDetail() {
         )}
       </div>
 
-      {/* 토스트 메시지 표시 */}
+      {/* 토스트 메시지 */}
       {showToast && (
         <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg">
           링크가 복사되었습니다!

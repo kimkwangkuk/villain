@@ -13,7 +13,7 @@ import { MessageIcon, LikeIcon } from './Icons';  // 상단에 import 추가
 dayjs.locale('ko');
 dayjs.extend(relativeTime);
 
-function PostCard({ post }) {
+function PostCard({ post, categories }) {
   const [categoryName, setCategoryName] = useState('');
   const [likes, setLikes] = useState(post.likes || 0);
   const [isLiked, setIsLiked] = useState(false);
@@ -22,17 +22,13 @@ function PostCard({ post }) {
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    const fetchCategoryName = async () => {
-      try {
-        const categories = await getCategories();
-        const category = categories.find(cat => cat.id === post.categoryId);
-        if (category) {
-          setCategoryName(category.name);
-        }
-      } catch (error) {
-        console.error('카테고리 로딩 실패:', error);
+    // prop으로 전달된 categories 배열에서 해당 post의 카테고리를 찾습니다.
+    if (categories && categories.length > 0) {
+      const category = categories.find(cat => cat.id === post.categoryId);
+      if (category) {
+        setCategoryName(category.name);
       }
-    };
+    }
 
     // posts 문서에 저장된 commentCount 값을 사용
     setCommentCount(post.commentCount || 0);
@@ -40,25 +36,33 @@ function PostCard({ post }) {
     if (user && post.likedBy) {
       setIsLiked(post.likedBy.includes(user.uid));
     }
-
-    fetchCategoryName();
-  }, [post.categoryId, post.likedBy, post.id, user, post.commentCount]);
+  }, [categories, post.categoryId, post.likedBy, post.id, user, post.commentCount]);
 
   const handleLike = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!isLoggedIn || !user) {
       alert('로그인이 필요합니다.');
       return;
     }
 
+    // 낙관적 업데이트: 이전 상태 저장
+    const previousIsLiked = isLiked;
+    const previousLikes = likes;
+    // 즉시 UI에 반영 (좋아요 추가/감소)
+    setIsLiked(!previousIsLiked);
+    setLikes(previousIsLiked ? previousLikes - 1 : previousLikes + 1);
+
     try {
       const updatedPost = await updateLikes(post.id, user.uid, user.displayName || '익명');
+      // 서버 응답에 따라 상태 보정
       setLikes(updatedPost.likes);
-      setIsLiked(!isLiked);
     } catch (error) {
-      console.error('좋아요 실패:', error);
+      // 실패 시 롤백
+      setIsLiked(previousIsLiked);
+      setLikes(previousLikes);
+      console.error('좋아요 처리 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
     }
   };

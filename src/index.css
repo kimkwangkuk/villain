@@ -21,3 +21,11 @@ iframe[style*="background-color: rgb(0, 0, 0)"],
 iframe[style*="z-index: 2147483647"] {
   display: none !important;
 }
+
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE와 Edge용 */
+  scrollbar-width: none;  /* Firefox용 */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera용 */
+}

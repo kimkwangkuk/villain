@@ -21,6 +21,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 // firestore 쿼리를 위해 추가
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import PostCardSkeleton from '../components/PostCardSkeleton';
 
 function HomePage() {
   const [posts, setPosts] = useState([]);
@@ -41,17 +42,21 @@ function HomePage() {
     return () => unsubscribe();
   }, []);
 
-  // 카테고리 데이터 불러오기
+  // 기존에 분리되어 있던 "카테고리 불러오기"와 "게시글 초기 로드" useEffect를 하나로 통합하여 동시에 불러옴
   useEffect(() => {
-    const fetchCategories = async () => {
+    const initLoad = async () => {
       try {
-        const categoriesData = await getCategories();
+        const [categoriesData] = await Promise.all([
+          getCategories(), 
+          loadPosts() // posts 불러오기 함수
+        ]);
         setCategories(categoriesData);
       } catch (error) {
-        console.error('카테고리 로딩 실패:', error);
+        console.error('데이터 로딩 실패:', error);
       }
+      setLoading(false);
     };
-    fetchCategories();
+    initLoad();
   }, []);
 
   // 페이지당 불러올 게시글 수
@@ -91,15 +96,6 @@ function HomePage() {
       console.error('포스트 로딩 실패:', error);
     }
   };
-
-  // 처음 한 번 게시글 로드
-  useEffect(() => {
-    const initLoad = async () => {
-      await loadPosts();
-      setLoading(false);
-    };
-    initLoad();
-  }, []);
 
   // 게시글이 변경될 때 저자 정보 업데이트
   useEffect(() => {
@@ -152,7 +148,15 @@ function HomePage() {
     return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${authorId}&backgroundColor=e8f5e9`;
   };
 
-  if (loading) return <div>로딩중...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <PostCardSkeleton key={index} />
+        ))}
+      </div>
+    );
+  }
 
   const categoryIcons = [
     CategoryIcon1,
@@ -170,7 +174,7 @@ function HomePage() {
     <div className="min-h-screen bg-white">
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto">
-          <div className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8">
+          <div className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8 hide-scrollbar">
             <button
               onClick={() => setSelectedCategory(null)}
               className={`text-[15px] font-medium pb-2 px-1 transition-colors text-black
@@ -231,7 +235,7 @@ function HomePage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
             {filteredPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} categories={categories} />
             ))}
           </div>
           {loadingMore && <div className="text-center mt-4">Loading more posts...</div>}
