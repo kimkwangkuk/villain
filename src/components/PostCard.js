@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getCategories, updateLikes } from '../api/firebase';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../firebase';
@@ -20,6 +20,7 @@ function PostCard({ post, categories }) {
   const [commentCount, setCommentCount] = useState(0);
   const { isLoggedIn, user } = useAuth();
   const [imageError, setImageError] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // prop으로 전달된 categories 배열에서 해당 post의 카테고리를 찾습니다.
@@ -138,8 +139,10 @@ function PostCard({ post, categories }) {
               </button>
               <button
                 onClick={(e) => {
+                  // 댓글 버튼 클릭 시 상세 페이지로 이동
                   e.preventDefault();
                   e.stopPropagation();
+                  navigate(`/posts/${post.id}`);
                 }}
                 className="flex items-center hover:bg-gray-200 transition-colors duration-200 rounded-full p-1"
               >

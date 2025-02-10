@@ -183,42 +183,44 @@ function PostDetail() {
   return (
     <div className="min-h-screen bg-white py-8">
       {/* 프로필 영역 */}
-      <div className="max-w-[560px] mx-auto px-4">
-        <div className="bg-white rounded-3xl pb-[16px]">
-          <div className="flex items-center justify-between">
-            {/* 프로필 정보 */}
-            <div className="flex items-center space-x-2">
-              <div className="w-[36px] h-[36px] rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                <img
-                  src={
-                    post.authorPhotoURL ||
-                    `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post.authorId}&backgroundColor=e8f5e9`
-                  }
-                  alt={`${post.authorName}의 프로필`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[14px] font-bold text-gray-900">
-                  {post.authorName}
-                </span>
-                <div className="flex items-center space-x-1">
-                  <span className="text-[13px] text-gray-900">
-                    #{post.categoryName}
+      <div className="w-full px-4">
+        <div className="max-w-[560px] mx-auto">
+          <div className="bg-white rounded-3xl pb-[16px]">
+            <div className="flex items-center justify-between">
+              {/* 프로필 정보 영역 */}
+              <div className="flex items-center space-x-2">
+                <div className="w-[36px] h-[36px] rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={
+                      post.authorPhotoURL ||
+                      `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post.authorId}&backgroundColor=e8f5e9`
+                    }
+                    alt={`${post.authorName}의 프로필`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[14px] font-bold text-gray-900">
+                    {post.authorName}
                   </span>
-                  <span className="text-[13px] text-gray-500">
-                    에 쓴 글
-                  </span>
-                  <span className="text-[13px] text-gray-400">
-                    {post.createdAt?.toDate().toLocaleTimeString()}
-                  </span>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-[13px] text-gray-900">
+                      #{post.categoryName}
+                    </span>
+                    <span className="text-[13px] text-gray-900">
+                      에 쓴 글
+                    </span>
+                    <span className="text-[13px] text-gray-400">
+                      {post.createdAt?.toDate().toLocaleTimeString()}
+                    </span>
+                  </div>
                 </div>
               </div>
+              {/* 더보기 버튼 */}
+              <button className="hover:bg-gray-100 rounded-full p-1 cursor-pointer transition-colors duration-200">
+                <EllipsisIcon className="w-5 h-5 text-gray-500" />
+              </button>
             </div>
-            {/* 더보기 버튼 */}
-            <button className="hover:bg-gray-100 rounded-full p-1 cursor-pointer transition-colors duration-200">
-              <EllipsisIcon className="w-5 h-5 text-gray-500" />
-            </button>
           </div>
         </div>
       </div>

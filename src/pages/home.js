@@ -23,6 +23,19 @@ import { db } from '../firebase';
 import { collection, query, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
 import PostCardSkeleton from '../components/PostCardSkeleton';
 
+// 홈 페이지 상단에 객체로 카테고리 아이콘 매핑
+const categoryIconMapping = {
+  'order1': HospitalIcon,
+  'order2': HospitalIcon,
+  'order3': HospitalIcon,
+  'order4': HospitalIcon,
+  'order5': HospitalIcon,
+  'order6': SchoolIcon,
+  'order7': HospitalIcon,
+  'order8': HospitalIcon,
+  'order9': HospitalIcon,
+};
+
 function HomePage() {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -148,27 +161,46 @@ function HomePage() {
     return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${authorId}&backgroundColor=e8f5e9`;
   };
 
+  // 로딩 상태일 때 스켈레톤 UI 처리
   if (loading) {
     return (
-      <div className="min-h-screen bg-white p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <PostCardSkeleton key={index} />
-        ))}
+      <div className="min-h-screen bg-white">
+        {/* 카테고리 네비게이션 스켈레톤 */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex space-x-8">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="w-16 h-6 bg-gray-300 rounded animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 저자 영역 스켈레톤 */}
+        <div className="py-4">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex space-x-6">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse"></div>
+                  <div className="w-16 h-4 bg-gray-300 rounded animate-pulse mt-2"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 포스트 카드 영역 스켈레톤 */}
+        <div className="py-8">
+          <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <PostCardSkeleton key={index} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
-
-  const categoryIcons = [
-    CategoryIcon1,
-    CategoryIcon2,
-    CategoryIcon3,
-    CategoryIcon4,
-    HospitalIcon,
-    SchoolIcon,
-    CategoryIcon7,
-    CategoryIcon8,
-    CategoryIcon9
-  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -185,8 +217,9 @@ function HomePage() {
                 <span>전체</span>
               </div>
             </button>
-            {categories.map((category, index) => {
-              const IconComponent = categoryIcons[index];
+            {categories.map((category) => {
+              // category.order를 활용하여 아이콘 선택 (예: order 1이면 "order1", order 2이면 "order2")
+              const IconComponent = categoryIconMapping[`order${category.order}`] || AllCategoryIcon;
               return (
                 <button
                   key={category.id}
@@ -195,7 +228,7 @@ function HomePage() {
                     ${selectedCategory === category.id ? "border-b-2 border-black" : ""}`}
                 >
                   <div className="flex flex-col items-center gap-[10px]">
-                    {IconComponent && <IconComponent className="w-[28px] h-[28px]" />}
+                    <IconComponent className="w-[28px] h-[28px]" />
                     <span>{category.name}</span>
                   </div>
                 </button>

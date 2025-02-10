@@ -260,7 +260,7 @@ export const HospitalIcon = ({ className = "w-6 h-6" }) => (
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 
-    strokeWidth="1.5" 
+    strokeWidth="1.3" 
     strokeLinecap="round" 
     strokeLinejoin="round" 
     className={className}
@@ -280,7 +280,7 @@ export const SchoolIcon = ({ className = "w-6 h-6" }) => (
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 
-    strokeWidth="1.5" 
+    strokeWidth="1.3" 
     strokeLinecap="round" 
     strokeLinejoin="round" 
     className={className}
