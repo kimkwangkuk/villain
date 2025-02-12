@@ -82,49 +82,63 @@ function PostCard({ post, categories }) {
       className="block rounded-lg transition-colors duration-200"
     >
       <div className="flex flex-col h-full">
-        {/* 말풍선(컨텐츠) 컨테이너: 회색 배경, 고정 높이 300px, 라운드 값을 증가시킴 */}
+        {/* 컨텐츠 영역 내에 프로필 영역 포함 */}
         <div className="bg-gray-100 rounded-2xl p-5 flex flex-col h-[300px]">
-          <div>
-            <div className="flex items-center text-sm font-medium text-gray-500 mb-1">
-              {/* 카테고리 레이블 왼쪽에 16px 아이콘 */}
-              <svg 
-                className="w-4 h-4 mr-2" 
-                fill="currentColor" 
-                viewBox="0 0 20 20" 
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z" />
-              </svg>
-              {categoryName}
+          {/* 프로필 영역 - 타이틀 상단에 표시 */}
+          <div className="flex items-center mb-2">
+            <div className="w-8 h-8 rounded-full overflow-hidden">
+              <img
+                src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
+                alt={`${post.authorName}의 프로필`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  if (!imageError) {
+                    setImageError(true);
+                  }
+                }}
+              />
             </div>
-            {/* 타이틀에 말줄임표 처리 적용 (한 줄) */}
-            <h2 
-              className="text-xl font-semibold text-gray-900 mb-2" 
-              style={{
-                display: '-webkit-box',
-                WebkitLineClamp: '1',
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-            >
-              {post.title}
-            </h2>
-            {/* 컨텐츠에 말줄임표 처리: 최대 5줄까지 표시 */}
-            <p
-              className="text-gray-600"
-              style={{
-                display: '-webkit-box',
-                WebkitLineClamp: '5',
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-            >
-              {post.content}
-            </p>
+            <div className="ml-2">
+              <div className="text-sm font-medium text-gray-900">
+                {post.authorName}
+              </div>
+              <div className="text-xs text-gray-500">
+                <span>{categoryName}</span>
+                <span className="mx-1">·</span>
+                <span>{getRelativeTime(post.createdAt?.toDate())}</span>
+              </div>
+            </div>
           </div>
-          {/* 좋아요/댓글 버튼 컨테이너 - 왼쪽에는 버튼 아이콘, 오른쪽에는 텍스트로 숫자 표시 */}
+
+          {/* 타이틀 */}
+          <h2 
+            className="text-xl font-semibold text-gray-900 mb-2" 
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: '1',
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {post.title}
+          </h2>
+
+          {/* 컨텐츠 */}
+          <p
+            className="text-gray-600"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: '5',
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {post.content}
+          </p>
+
+          {/* 좋아요/댓글 버튼 컨테이너 */}
           <div className="mt-auto flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <button 
@@ -139,7 +153,6 @@ function PostCard({ post, categories }) {
               </button>
               <button
                 onClick={(e) => {
-                  // 댓글 버튼 클릭 시 상세 페이지로 이동
                   e.preventDefault();
                   e.stopPropagation();
                   navigate(`/posts/${post.id}`);
@@ -151,29 +164,6 @@ function PostCard({ post, categories }) {
             </div>
             <div className="text-sm text-gray-600">
               좋아요 {likes || 0} <span className="mx-1">·</span> 댓글 {commentCount || 0}
-            </div>
-          </div>
-        </div>
-        {/* 프로필 컨테이너 (배경 컬러 제거, 상단에 10px padding) */}
-        <div className="rounded-b-xl flex items-center bg-transparent pt-[10px]">
-          <div className="w-10 h-10 rounded-full overflow-hidden">
-            <img
-              src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
-              alt={`${post.authorName}의 프로필`}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                if (!imageError) {
-                  setImageError(true);
-                }
-              }}
-            />
-          </div>
-          <div className="ml-3">
-            <div className="text-sm font-medium text-gray-900">
-              {post.authorName}
-            </div>
-            <div className="text-xs text-gray-500">
-              {getRelativeTime(post.createdAt?.toDate())}
             </div>
           </div>
         </div>

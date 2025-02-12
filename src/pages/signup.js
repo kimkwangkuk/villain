@@ -3,18 +3,21 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { signup, login } from '../api/firebase';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '../context/AuthContext';
+import { generateRandomUsername } from '../scripts/usernameWords';
 
 function AuthPage() {
   const { googleLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(location.pathname === '/login');
-  const [formData, setFormData] = useState({
+
+  // 회원가입 모드인 경우 내부적으로 랜덤 닉네임을 생성합니다.
+  const [formData, setFormData] = useState(() => ({
     email: '',
     password: '',
     confirmPassword: '',
-    username: ''
-  });
+    username: location.pathname === '/login' ? '' : generateRandomUsername()
+  }));
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -24,7 +27,7 @@ function AuthPage() {
       email: '',
       password: '',
       confirmPassword: '',
-      username: ''
+      username: location.pathname === '/login' ? '' : generateRandomUsername()
     });
   }, [location.pathname]);
 
@@ -62,7 +65,7 @@ function AuthPage() {
   // 랜덤 프로필 이미지 가져오기
   const getRandomProfileImage = async () => {
     const storage = getStorage();
-    const imageNumber = Math.floor(Math.random() * 2) + 1; // woman1.png 또는 woman2.png
+    const imageNumber = Math.floor(Math.random() * 2) + 1; // woman1.webp 또는 woman2.webp
     const imageRef = ref(storage, `profile_images/woman${imageNumber}.webp`);
     try {
       const url = await getDownloadURL(imageRef);
@@ -80,22 +83,16 @@ function AuthPage() {
     try {
       if (isLogin) {
         await login(formData.email, formData.password);
-        // 디버깅을 위한 로그 추가
         console.log('로그인 성공');
-        console.log('location.state:', location.state);
-        console.log('이동할 경로:', location.state?.from || '/');
-        
-        // 수정된 부분: pathname 제거
         navigate(location.state?.from || '/', { replace: true });
       } else {
-        // 회원가입 처리
         if (formData.password !== formData.confirmPassword) {
           setError('비밀번호가 일치하지 않습니다.');
           return;
         }
 
         const profileImageUrl = await getRandomProfileImage();
-        console.log('선택된 프로필 이미지:', profileImageUrl); // 디버깅용
+        console.log('선택된 프로필 이미지:', profileImageUrl);
 
         if (!profileImageUrl) {
           console.error('프로필 이미지를 가져오는데 실패했습니다.');
@@ -105,24 +102,22 @@ function AuthPage() {
         const response = await signup({
           email: formData.email,
           password: formData.password,
+          // 랜덤으로 생성된 username이 사용됩니다.
           username: formData.username,
           photoURL: profileImageUrl
         });
 
-        console.log('회원가입 응답:', response); // 디버깅용
-
+        console.log('회원가입 응답:', response);
         if (!response.displayName) {
           setError('사용자 이름 설정에 실패했습니다.');
           return;
         }
 
-        // 프로필 이미지가 제대로 설정되었는지 확인
         if (!response.photoURL) {
           console.error('프로필 이미지 설정 실패');
         }
 
         alert('회원가입이 완료되었습니다.');
-        // 로그인 페이지로 이동
         setIsLogin(true);
       }
     } catch (error) {
@@ -138,15 +133,13 @@ function AuthPage() {
       email: '',
       password: '',
       confirmPassword: '',
-      username: ''
+      username: isLogin ? generateRandomUsername() : ''
     });
   };
 
-  // Google 로그인 핸들러
   const handleGoogleLogin = async () => {
     try {
       await googleLogin();
-      // 로그인 성공 시 이전 페이지 또는 홈으로 이동
       navigate(location.state?.from || '/', { replace: true });
     } catch (error) {
       console.error('Google 로그인 실패:', error);
@@ -193,7 +186,7 @@ function AuthPage() {
                   </div>
                 </div>
               )}
-              
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   이메일
@@ -209,22 +202,7 @@ function AuthPage() {
                 />
               </div>
 
-              {!isLogin && (
-                <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                    사용자 이름
-                  </label>
-                  <input
-                    id="username"
-                    name="username"
-                    type="text"
-                    required={!isLogin}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    value={formData.username}
-                    onChange={handleChange}
-                  />
-                </div>
-              )}
+              {/* 사용자 이름 입력 필드 제거됨 - 내부적으로 랜덤으로 생성된 username을 사용합니다. */}
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -250,7 +228,7 @@ function AuthPage() {
                     id="confirmPassword"
                     name="confirmPassword"
                     type="password"
-                    required={!isLogin}
+                    required
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={formData.confirmPassword}
                     onChange={handleChange}
@@ -273,10 +251,7 @@ function AuthPage() {
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white text-gray-500">
                     {isLogin ? '계정이 없으신가요?' : '이미 계정이 있으신가요?'}{' '}
-                    <button
-                      onClick={toggleForm}
-                      className="font-medium text-blue-600 hover:text-blue-500"
-                    >
+                    <button onClick={toggleForm} className="font-medium text-blue-600 hover:text-blue-500">
                       {isLogin ? '회원가입' : '로그인'}
                     </button>
                   </span>
@@ -323,7 +298,9 @@ function AuthPage() {
           <div className="absolute inset-0 flex items-center justify-center text-white p-8">
             <div className="max-w-md text-center">
               <h2 className="text-3xl font-bold mb-4">We move 10x faster than our peers</h2>
-              <p className="text-lg">and stay consistent. While they're bogged down with design debt, we're releasing new features.</p>
+              <p className="text-lg">
+                and stay consistent. While they're bogged down with design debt, we're releasing new features.
+              </p>
             </div>
           </div>
         </div>

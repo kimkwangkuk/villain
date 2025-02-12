@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider
 } from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+import { generateRandomUsername } from '../scripts/usernameWords';
 
 // Posts
 export const getPosts = async () => {
@@ -308,18 +309,21 @@ export const login = async (email, password) => {
 };
 
 // 회원가입
-export const signup = async ({ email, password, username, photoURL }) => {
+export const signup = async ({ email, password, photoURL }) => {
+  // 고유한 사용자 이름 생성
+  const username = await generateUniqueUsername();
+
   try {
-    // 1. Firebase Auth에 사용자 생성
+    // Firebase Auth에 사용자 생성
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
-    // 2. 사용자 프로필 업데이트 (displayName과 photoURL 모두 설정)
+    // 사용자 프로필 업데이트 (displayName과 photoURL 모두 설정)
     await updateProfile(auth.currentUser, {
       displayName: username,
       photoURL: photoURL
     });
     
-    // 3. Firestore에 사용자 정보 저장
+    // Firestore에 사용자 정보 저장
     const userRef = doc(db, 'users', userCredential.user.uid);
     await setDoc(userRef, {
       email: email,
@@ -339,8 +343,8 @@ export const signup = async ({ email, password, username, photoURL }) => {
 
 export const createCategories = async () => {
   const categories = [
-    { order: 1, name: "스타트업", description: "소규모 신생 기업에서 발생하는 문제 상황. 예시: 업무 과부하, 잦은 방향 전환, 불안정한 고용 환경" },
-    { order: 2, name: "중소기업", description: "중소기업 환경에서 발생하는 문제 상황. 예시: 다재다능 강요, 비효율적인 시스템, 임금 체불" },
+    { customId: 'category1', order: 1, name: "스타트업", description: "소규모 신생 기업에서 발생하는 문제 상황. 예시: 업무 과부하, 잦은 방향 전환, 불안정한 고용 환경" },
+    { customId: 'category2', order: 2, name: "중소기업", description: "중소기업 환경에서 발생하는 문제 상황. 예시: 다재다능 강요, 비효율적인 시스템, 임금 체불" },
     { order: 3, name: "대기업", description: "대기업 환경에서 발생하는 문제 상황. 예시: 과도한 보고 문화, 끝없는 회의, 상명하복식 의사결정, 내부 정치 싸움" },
     { order: 4, name: "서비스업", description: "고객 응대가 많은 업종(카페, 식당, 백화점, 콜센터 등). 예시: 진상 고객, 반말 손님, 감정 노동 강요하는 상사" },
     { order: 5, name: "공공기관", description: "공무원, 공기업 직원들이 겪는 문제 상황. 예시: 과도한 민원, 공공시설 훼손, 무리한 요구" },
@@ -538,19 +542,17 @@ export const googleLogin = async () => {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
     
-    // 이메일 가입 시와 동일하게 랜덤 프로필 이미지 적용
     const randomProfileUrl = await getRandomProfileImage();
     if (randomProfileUrl) {
       await updateProfile(userCredential.user, { photoURL: randomProfileUrl });
     }
     
-    // Firestore에 사용자 정보 저장 (업데이트)
     const userRef = doc(db, 'users', userCredential.user.uid);
     await setDoc(
       userRef,
       {
         email: userCredential.user.email,
-        username: userCredential.user.displayName || userCredential.user.email,
+        username: generateRandomUsername(),
         photoURL: randomProfileUrl || userCredential.user.photoURL,
         createdAt: new Date(),
         bio: '',
@@ -564,4 +566,39 @@ export const googleLogin = async () => {
     console.error('Google 로그인 실패:', error);
     throw error;
   }
+};
+
+// 이미 존재하는 사용자 이름과 중복 여부를 검사하는 함수
+export const checkUsernameAvailability = async (username) => {
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('username', '==', username));
+  const snapshot = await getDocs(q);
+  return snapshot.empty;
+};
+
+/**
+ * 사용자 이름을 생성하고, 데이터베이스에 저장된 이름과 중복되지 않도록 처리하는 함수
+ * 중복된 경우에는 기본 이름 뒤에 _숫자를 붙여서 고유한 이름을 반환합니다.
+ */
+export const generateUniqueUsername = async () => {
+  // 기본 이름을 생성합니다.
+  let baseUsername = generateRandomUsername();
+  let username = baseUsername;
+  let attempts = 0;
+  const maxAttempts = 20;
+  
+  // 해당 이름이 사용 가능한지 확인합니다.
+  while (!(await checkUsernameAvailability(username))) {
+    attempts++;
+    // 중복된 경우, 기본 이름 뒤에 번호를 추가합니다.
+    username = `${baseUsername}_${attempts}`;
+    
+    // 만약 너무 많이 중복되면 새로운 기본 이름으로 재설정합니다.
+    if (attempts >= maxAttempts) {
+      baseUsername = generateRandomUsername();
+      username = baseUsername;
+      attempts = 0;
+    }
+  }
+  return username;
 };

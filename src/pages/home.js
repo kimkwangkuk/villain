@@ -209,7 +209,7 @@ function HomePage() {
           <div className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8 hide-scrollbar">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`text-[15px] font-medium pb-2 px-1 transition-colors text-black
+              className={`text-[14px] pb-2 px-1 transition-colors text-black
                 ${!selectedCategory ? "border-b-2 border-black" : ""}`}
             >
               <div className="flex flex-col items-center gap-[10px]">
@@ -224,7 +224,7 @@ function HomePage() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`text-[15px] font-medium pb-2 px-1 transition-colors text-black
+                  className={`text-[14px] pb-2 px-1 transition-colors text-black
                     ${selectedCategory === category.id ? "border-b-2 border-black" : ""}`}
                 >
                   <div className="flex flex-col items-center gap-[10px]">

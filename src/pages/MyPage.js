@@ -166,6 +166,11 @@ function MyPage() {
   // 이름 업데이트 함수
   const handleNameUpdate = async (newName) => {
     try {
+      // Firebase Auth의 displayName 업데이트 추가
+      await updateProfile(user, {
+        displayName: newName
+      });
+
       // 1. 모달 닫고 UI 즉시 업데이트
       setIsEditNameModalOpen(false);
       setNameError('');
