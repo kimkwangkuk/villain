@@ -1,604 +1,602 @@
-import { db, auth } from '../firebase';
-import { 
-  collection, getDocs, getDoc, addDoc, doc,
-  query, orderBy, serverTimestamp, updateDoc,
-  arrayUnion, where, arrayRemove, setDoc,
-  increment, deleteDoc
-} from 'firebase/firestore';
-import { 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  signInWithPopup,
-  GoogleAuthProvider
-} from 'firebase/auth';
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import { generateRandomUsername } from '../scripts/usernameWords';
+  import { db, auth } from '../firebase';
+  import { 
+    collection, getDocs, getDoc, addDoc, doc,
+    query, orderBy, serverTimestamp, updateDoc,
+    arrayUnion, where, arrayRemove, setDoc,
+    increment, deleteDoc
+  } from 'firebase/firestore';
+  import { 
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    updateProfile,
+    signInWithPopup,
+    GoogleAuthProvider
+  } from 'firebase/auth';
+  import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+  import { generateRandomUsername } from '../scripts/usernameWords';
 
-// Posts
-export const getPosts = async () => {
-  const q = query(
-    collection(db, 'posts'),
-    orderBy('createdAt', 'desc')
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-};
-
-export const getPost = async (id) => {
-  const docRef = doc(db, 'posts', id);
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    throw new Error('Post not found');
-  }
-  return {
-    id: docSnap.id,
-    ...docSnap.data()
-  };
-};
-
-export const createPost = async (postData) => {
-  const user = auth.currentUser;
-  if (!user) throw new Error('Must be logged in');
-
-  // Firestore에서 사용자 정보 가져오기
-  const userDoc = await getUserDoc(user.uid);
-  
-  // 카테고리 정보 가져오기
-  const categoryRef = doc(db, 'categories', postData.categoryId);
-  const categoryDoc = await getDoc(categoryRef);
-  const categoryName = categoryDoc.exists() ? categoryDoc.data().name : '';
-
-  const post = {
-    ...postData,
-    authorId: user.uid,
-    authorName: user.displayName || user.email,
-    authorPhotoURL: userDoc.photoURL,
-    categoryName: categoryName,  // 카테고리 이름 추가
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    likes: 0,
-    commentCount: 0, // 댓글 수 필드 추가
-    comments: []
+  // Posts
+  export const getPosts = async () => {
+    const q = query(
+      collection(db, 'posts'),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
   };
 
-  try {
-    const docRef = await addDoc(collection(db, 'posts'), post);
-    return {
-      id: docRef.id,
-      ...post
-    };
-  } catch (error) {
-    console.error('게시글 생성 실패:', error);
-    throw error;
-  }
-};
-
-// 사용자 상호작용 게시글 가져오기
-export const getUserInteractions = async (userId) => {
-  const interactions = []; // 댓글 및 좋아요를 저장할 배열
-
-  // 댓글이 있는 게시글 가져오기 - 필드명을 'authorId'에서 'userId'로 수정
-  const commentsSnapshot = await getDocs(query(collection(db, 'comments'), where('userId', '==', userId)));
-  commentsSnapshot.forEach(commentDoc => {
-    interactions.push({ postId: commentDoc.data().postId, type: 'comment' });
-  });
-
-  // 좋아요가 있는 게시글 가져오기
-  const postsSnapshot = await getDocs(query(collection(db, 'posts'), where('likedBy', 'array-contains', userId)));
-  postsSnapshot.forEach(postDoc => {
-    interactions.push({ postId: postDoc.id, type: 'like' });
-  });
-
-  return interactions;
-};
-
-// Comments
-export const addComment = async (postId, commentContent) => {
-  const user = auth.currentUser;
-  if (!user) throw new Error('Must be logged in');
-
-  // 사용자 정보 가져오기
-  const userDoc = await getUserDoc(user.uid);
-
-  const comment = {
-    content: commentContent,
-    postId: postId,
-    userId: user.uid,
-    author: userDoc.username || user.email,
-    photoURL: userDoc.photoURL || user.photoURL,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  };
-
-  try {
-    // comments 컬렉션에 댓글 추가
-    const commentRef = await addDoc(collection(db, 'comments'), comment);
-    
-    // posts 컬렉션의 댓글 수 업데이트
-    const postRef = doc(db, 'posts', postId);
-    await updateDoc(postRef, {
-      commentCount: increment(1)
-    });
-
-    // (추가) 댓글 작성과 관련한 알림 생성 로직
-    // 게시글의 작성자 정보를 가져오기
-    const postSnap = await getDoc(postRef);
-    if (postSnap.exists()) {
-      const postData = postSnap.data();
-      // 댓글 작성자와 게시글 작성자가 다를 경우 알림 생성
-      if (postData.authorId !== user.uid) {
-        await createNotification(
-          'comment',      // 알림 타입 (예: 'comment')
-          postId,         // 연관된 포스트 ID
-          postData.authorId,  // 알림 수신자 (게시글 작성자)
-          user.uid,       // 댓글 작성자 (알림 발신자)
-          userDoc.username || user.email, // 발신자 이름
-          commentContent  // 추가 내용: 댓글 내용 등
-        );
-      }
+  export const getPost = async (id) => {
+    const docRef = doc(db, 'posts', id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      throw new Error('Post not found');
     }
-
     return {
-      id: commentRef.id,
-      ...comment
+      id: docSnap.id,
+      ...docSnap.data()
     };
-  } catch (error) {
-    console.error('댓글 작성 실패:', error);
-    throw error;
-  }
-};
-
-// 댓글 수정 함수
-export const updateComment = async (commentId, newContent) => {
-  try {
-    const commentRef = doc(db, 'comments', commentId);
-    await updateDoc(commentRef, {
-      content: newContent,
-      updatedAt: serverTimestamp()
-    });
-  } catch (error) {
-    console.error('댓글 수정 실패:', error);
-    throw error;
-  }
-};
-
-// 댓글 삭제 함수
-export const deleteComment = async (postId, commentId) => {
-  try {
-    // comments 컬렉션에서 댓글 삭제
-    const commentRef = doc(db, 'comments', commentId);
-    await deleteDoc(commentRef);
-    
-    // posts 컬렉션의 댓글 수 감소
-    const postRef = doc(db, 'posts', postId);
-    await updateDoc(postRef, {
-      commentCount: increment(-1)
-    });
-  } catch (error) {
-    console.error('댓글 삭제 실패:', error);
-    throw error;
-  }
-};
-
-// 특정 게시글의 댓글 목록 가져오기
-export const getPostComments = async (postId) => {
-  const q = query(
-    collection(db, 'comments'),
-    where('postId', '==', postId),
-    orderBy('createdAt', 'desc')
-  );
-  
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-};
-
-// Categories
-export const getCategories = async () => {
-  const q = query(
-    collection(db, 'categories'),
-    orderBy('order')
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-};
-// Likes
-export const updateLikes = async (postId, userId, senderName = '익명') => {
-  console.log('updateLikes 호출:', { postId, userId });
-  
-  const postRef = doc(db, 'posts', postId);
-  const postDoc = await getDoc(postRef);
-  
-  if (!postDoc.exists()) {
-    console.error('포스트를 찾을 수 없음');
-    throw new Error('Post not found');
-  }
-
-  const post = postDoc.data();
-  const likedBy = post.likedBy || [];
-  const isLiked = likedBy.includes(userId);
-
-  // 좋아요 상태 업데이트
-  await updateDoc(postRef, {
-    likes: isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1,
-    likedBy: isLiked ? arrayRemove(userId) : arrayUnion(userId)
-  });
-
-  // 새로운 좋아요 추가인 경우, 그리고 포스트 작성자와 좋아요 누른 사용자가 다르면 알림 생성
-  if (!isLiked && post.authorId && post.authorId !== userId) {
-    try {
-      await createNotification(
-        'like',                   // 알림 타입
-        postId,                   // 포스트 ID
-        post.authorId,            // 알림 수신자 (포스트 작성자)
-        userId,                   // 알림 발신자 (좋아요 누른 사용자)
-        senderName,               // 발신자 이름
-        '게시글을 좋아합니다.'      // 알림 내용
-      );
-      console.log('좋아요 알림 생성 완료');
-    } catch (error) {
-      console.error('좋아요 알림 생성 실패:', error);
-    }
-  }
-
-  const updatedLikes = isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1;
-  const updatedLikedBy = isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId];
-
-  return {
-    ...post,
-    id: postId,
-    likes: updatedLikes,
-    likedBy: updatedLikedBy
   };
-};
 
-// 테스트 데이터 생성 함수
-export const createTestData = async () => {
-  try {
-    // 1. 카테고리 생성
-    const categoryRef = await addDoc(collection(db, 'categories'), {
-      name: "테스트 카테고리",
-      description: "테스트용 카테고리입니다",
-      createdAt: serverTimestamp()
-    });
-    console.log('카테고리 생성됨:', categoryRef.id);
+  export const createPost = async (postData) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Must be logged in');
 
-    // 2. 게시글 생성
-    const postRef = await addDoc(collection(db, 'posts'), {
-      title: "테스트 게시글",
-      content: "이것은 테스트 게시글입니다.",
-      authorId: "test-author",
-      authorName: "테스트 작성자",
-      categoryId: categoryRef.id,
+    // Firestore에서 사용자 정보 가져오기
+    const userDoc = await getUserDoc(user.uid);
+    
+    // 카테고리 정보 가져오기
+    const categoryRef = doc(db, 'categories', postData.categoryId);
+    const categoryDoc = await getDoc(categoryRef);
+    const categoryName = categoryDoc.exists() ? categoryDoc.data().name : '';
+
+    const post = {
+      ...postData,
+      authorId: user.uid,
+      authorName: user.displayName || user.email,
+      authorPhotoURL: userDoc.photoURL,
+      categoryName: categoryName,  // 카테고리 이름 추가
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       likes: 0,
+      commentCount: 0, // 댓글 수 필드 추가
       comments: []
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, 'posts'), post);
+      return {
+        id: docRef.id,
+        ...post
+      };
+    } catch (error) {
+      console.error('게시글 생성 실패:', error);
+      throw error;
+    }
+  };
+
+  // 사용자 상호작용 게시글 가져오기
+  export const getUserInteractions = async (userId) => {
+    const interactions = []; // 댓글 및 좋아요를 저장할 배열
+
+    // 댓글이 있는 게시글 가져오기 - 필드명을 'authorId'에서 'userId'로 수정
+    const commentsSnapshot = await getDocs(query(collection(db, 'comments'), where('userId', '==', userId)));
+    commentsSnapshot.forEach(commentDoc => {
+      interactions.push({ postId: commentDoc.data().postId, type: 'comment' });
     });
-    console.log('게시글 생성됨:', postRef.id);
 
-    return { categoryId: categoryRef.id, postId: postRef.id };
-  } catch (error) {
-    console.error('테스트 데이터 생성 실패:', error);
-    throw error;
-  }
-}; 
+    // 좋아요가 있는 게시글 가져오기
+    const postsSnapshot = await getDocs(query(collection(db, 'posts'), where('likedBy', 'array-contains', userId)));
+    postsSnapshot.forEach(postDoc => {
+      interactions.push({ postId: postDoc.id, type: 'like' });
+    });
 
-// window 객체에 추가
-window.createTestData = createTestData; 
+    return interactions;
+  };
 
-// 로그인
-export const login = async (email, password) => {
-  console.log('로그인 시도:', { email, password });
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  } catch (error) {
-    console.error('Firebase 로그인 에러:', error);
-    throw error;
-  }
-};
+  // Comments
+  export const addComment = async (postId, commentContent) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Must be logged in');
 
-// 회원가입
-export const signup = async ({ email, password, photoURL }) => {
-  // 고유한 사용자 이름 생성
-  const username = await generateUniqueUsername();
+    // 사용자 정보 가져오기
+    const userDoc = await getUserDoc(user.uid);
+    const comment = {
+      content: commentContent,
+      postId: postId,
+      userId: user.uid,
+      authorName: userDoc.username || user.email,
+      photoURL: userDoc.photoURL || user.photoURL,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
 
-  try {
-    // Firebase Auth에 사용자 생성
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    try {
+      // comments 컬렉션에 댓글 추가
+      const commentRef = await addDoc(collection(db, 'comments'), comment);
+      
+      // posts 컬렉션의 댓글 수 업데이트
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        commentCount: increment(1)
+      });
+
+      // 게시글의 작성자 정보를 가져오기
+      const postSnap = await getDoc(postRef);
+      if (postSnap.exists()) {
+        const postData = postSnap.data();
+        // 댓글 작성자와 게시글 작성자가 다를 경우 알림 생성
+        if (postData.authorId !== user.uid) {
+          await createNotification(
+            'comment',
+            postId,
+            postData.authorId,
+            user.uid,
+            userDoc.username || user.email,
+            commentContent
+          );
+        }
+      }
+
+      return {
+        id: commentRef.id,
+        ...comment
+      };
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+      throw error;
+    }
+  };
+
+  // 댓글 수정 함수
+  export const updateComment = async (commentId, newContent) => {
+    try {
+      const commentRef = doc(db, 'comments', commentId);
+      await updateDoc(commentRef, {
+        content: newContent,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('댓글 수정 실패:', error);
+      throw error;
+    }
+  };
+
+  // 댓글 삭제 함수
+  export const deleteComment = async (postId, commentId) => {
+    try {
+      // comments 컬렉션에서 댓글 삭제
+      const commentRef = doc(db, 'comments', commentId);
+      await deleteDoc(commentRef);
+      
+      // posts 컬렉션의 댓글 수 감소
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        commentCount: increment(-1)
+      });
+    } catch (error) {
+      console.error('댓글 삭제 실패:', error);
+      throw error;
+    }
+  };
+
+  // 특정 게시글의 댓글 목록 가져오기
+  export const getPostComments = async (postId) => {
+    const q = query(
+      collection(db, 'comments'),
+      where('postId', '==', postId),
+      orderBy('createdAt', 'desc')
+    );
     
-    // 사용자 프로필 업데이트 (displayName과 photoURL 모두 설정)
-    await updateProfile(auth.currentUser, {
-      displayName: username,
-      photoURL: photoURL
-    });
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  };
+
+  // Categories
+  export const getCategories = async () => {
+    const q = query(
+      collection(db, 'categories'),
+      orderBy('order')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  };
+  // Likes
+  export const updateLikes = async (postId, userId, senderName = '익명') => {
+    console.log('updateLikes 호출:', { postId, userId });
     
-    // Firestore에 사용자 정보 저장
-    const userRef = doc(db, 'users', userCredential.user.uid);
-    await setDoc(userRef, {
-      email: email,
-      username: username,
-      photoURL: photoURL,
-      createdAt: new Date(),
-      bio: '',
-      userId: userCredential.user.uid
-    });
+    const postRef = doc(db, 'posts', postId);
+    const postDoc = await getDoc(postRef);
     
-    return userCredential.user;
-  } catch (error) {
-    console.error('회원가입 실패:', error);
-    throw error;
-  }
-};
+    if (!postDoc.exists()) {
+      console.error('포스트를 찾을 수 없음');
+      throw new Error('Post not found');
+    }
 
-export const createCategories = async () => {
-  const categories = [
-    { customId: 'category1', order: 1, name: "스타트업", description: "소규모 신생 기업에서 발생하는 문제 상황. 예시: 업무 과부하, 잦은 방향 전환, 불안정한 고용 환경" },
-    { customId: 'category2', order: 2, name: "중소기업", description: "중소기업 환경에서 발생하는 문제 상황. 예시: 다재다능 강요, 비효율적인 시스템, 임금 체불" },
-    { order: 3, name: "대기업", description: "대기업 환경에서 발생하는 문제 상황. 예시: 과도한 보고 문화, 끝없는 회의, 상명하복식 의사결정, 내부 정치 싸움" },
-    { order: 4, name: "서비스업", description: "고객 응대가 많은 업종(카페, 식당, 백화점, 콜센터 등). 예시: 진상 고객, 반말 손님, 감정 노동 강요하는 상사" },
-    { order: 5, name: "공공기관", description: "공무원, 공기업 직원들이 겪는 문제 상황. 예시: 과도한 민원, 공공시설 훼손, 무리한 요구" },
-    { order: 6, name: "의료직", description: "병원, 요양원, 약국 등에서 근무하는 의료진이 겪는 문제 상황. 예시: 무리한 요구 환자, 보호자 갑질, 비협조적인 환자" },
-    { order: 7, name: "교육직", description: "초중고교, 대학교, 학원 등에서 발생하는 문제 상황. 예시: 학부모 민원, 무례한 학생, 책임 회피하는 동료 교사" },
-    { order: 8, name: "공장/생산직", description: "제조업, 생산라인, 물류센터 등에서 발생하는 문제 상황. 예시: 안전불감증, 업무 미루기, 비협조적인 조장" },
-    { order: 9, name: "건설업", description: "건설 현장, 토목 공사, 인테리어 업종에서 발생하는 문제 상황. 예시: 부실 시공, 작업 안전 무시, 임금 체불" },
-    { order: 10, name: "유통/물류", description: "마트, 편의점, 배달업 등에서 발생하는 문제 상황. 예시: 상품 훼손, 계산대 진상, 배달 클레임" },
-    { order: 11, name: "프리랜서", description: "작가, 디자이너, 영상 제작자, 프리랜서 등이 겪는 문제 상황. 예시: 돈 떼먹는 클라이언트, 수정 무한 요청, 아이디어 도용" },
-    { order: 12, name: "경찰", description: "경찰이 업무 중 겪는 문제 상황. 예시: 시민과의 마찰, 불필요한 신고, 내부 갈등" },
-    { order: 13, name: "소방", description: "소방관이 업무 중 겪는 문제 상황. 예시: 허위 신고, 장비 부족, 위험한 출동 상황" },
-    { order: 14, name: "군대", description: "군대에서 발생하는 문제 상황. 예시: 가혹 행위, 부조리, 무책임한 간부" }
-  ];
+    const post = postDoc.data();
+    const likedBy = post.likedBy || [];
+    const isLiked = likedBy.includes(userId);
 
-  const createdCategories = [];
-  for (const category of categories) {
-    const docRef = await addDoc(collection(db, 'categories'), {
-      ...category,
-      createdAt: serverTimestamp()
+    // 좋아요 상태 업데이트
+    await updateDoc(postRef, {
+      likes: isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1,
+      likedBy: isLiked ? arrayRemove(userId) : arrayUnion(userId)
     });
-    createdCategories.push({ id: docRef.id, ...category });
-  }
-  return createdCategories;
-};
 
-// 테스트 포스트 생성 함수 추가
-export const createTestPosts = async () => {
-  const categories = await getCategories();
-  
-  const posts = [];
-  for (const category of categories) {
-    for (let i = 1; i <= 10; i++) {
-      const post = {
-        title: `${category.name} 사례 #${i}`,
-        content: `이것은 ${category.name}의 ${i}번째 사례입니다. 여기에 자세한 내용이 들어갑니다...`,
-        categoryId: category.id,
+    // 새로운 좋아요 추가인 경우, 그리고 포스트 작성자와 좋아요 누른 사용자가 다르면 알림 생성
+    if (!isLiked && post.authorId && post.authorId !== userId) {
+      try {
+        await createNotification(
+          'like',                   // 알림 타입
+          postId,                   // 포스트 ID
+          post.authorId,            // 알림 수신자 (포스트 작성자)
+          userId,                   // 알림 발신자 (좋아요 누른 사용자)
+          senderName,               // 발신자 이름
+          '게시글을 좋아합니다.'      // 알림 내용
+        );
+        console.log('좋아요 알림 생성 완료');
+      } catch (error) {
+        console.error('좋아요 알림 생성 실패:', error);
+      }
+    }
+
+    const updatedLikes = isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1;
+    const updatedLikedBy = isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId];
+
+    return {
+      ...post,
+      id: postId,
+      likes: updatedLikes,
+      likedBy: updatedLikedBy
+    };
+  };
+
+  // 테스트 데이터 생성 함수
+  export const createTestData = async () => {
+    try {
+      // 1. 카테고리 생성
+      const categoryRef = await addDoc(collection(db, 'categories'), {
+        name: "테스트 카테고리",
+        description: "테스트용 카테고리입니다",
+        createdAt: serverTimestamp()
+      });
+      console.log('카테고리 생성됨:', categoryRef.id);
+
+      // 2. 게시글 생성
+      const postRef = await addDoc(collection(db, 'posts'), {
+        title: "테스트 게시글",
+        content: "이것은 테스트 게시글입니다.",
         authorId: "test-author",
         authorName: "테스트 작성자",
+        categoryId: categoryRef.id,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        likes: Math.floor(Math.random() * 50),
+        likes: 0,
         comments: []
-      };
-      
-      const docRef = await addDoc(collection(db, 'posts'), post);
-      posts.push({ id: docRef.id, ...post });
-    }
-  }
-  return posts;
-};
-
-// window 객체에 함수 추가
-window.createCategories = createCategories;
-window.createTestPosts = createTestPosts;
-
-export const createNotification = async (type, postId, recipientId, senderId, senderName, content = '') => {
-  try {
-    const docRef = await addDoc(collection(db, 'notifications'), {
-      type,
-      postId,
-      recipientId,
-      senderId,
-      senderName,
-      content,
-      createdAt: new Date(),
-      read: false
-    });
-    console.log('알림 생성 완료:', {
-      id: docRef.id,
-      type,
-      postId,
-      recipientId,
-      senderId,
-      senderName,
-      content
-    });
-    return docRef;
-  } catch (error) {
-    console.error('알림 생성 실패:', error);
-    throw error;
-  }
-};
-
-// 사용자의 게시글 가져오기
-export const getMyPosts = async (userId) => {
-  const q = query(
-    collection(db, 'posts'),
-    where('authorId', '==', userId), // 현재 사용자의 ID와 일치하는 게시글만 가져오기
-    orderBy('createdAt', 'desc') // 생성일 기준으로 정렬
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-};
-
-export const updateUserBio = async (userId, bio) => {
-  try {
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      // 사용자 문서가 없으면 새로 생성
-      await setDoc(userRef, {
-        bio: bio,
-        userId: userId,
-        createdAt: new Date()
       });
-    } else {
-      // 기존 문서가 있으면 업데이트
-      await updateDoc(userRef, {
-        bio: bio
-      });
-    }
-    return true;
-  } catch (error) {
-    console.error('자기소개 업데이트 실패:', error);
-    throw error;
-  }
-};
+      console.log('게시글 생성됨:', postRef.id);
 
-export const getUserDoc = async (userId) => {
-  try {
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
-    
-    if (!userSnap.exists()) {
-      // 사용자 문서가 없으면 기본값으로 생성
-      const defaultUserData = {
-        userId: userId,
-        bio: '',
-        createdAt: new Date()
-      };
-      await setDoc(userRef, defaultUserData);
-      return defaultUserData;
+      return { categoryId: categoryRef.id, postId: postRef.id };
+    } catch (error) {
+      console.error('테스트 데이터 생성 실패:', error);
+      throw error;
     }
-    
-    return userSnap.data();
-  } catch (error) {
-    console.error('사용자 정보 가져오기 실패:', error);
-    throw error;
-  }
-};
+  }; 
 
-// 댓글 좋아요 업데이트 함수
-export const updateCommentLikes = async (commentId, userId) => {
-  const commentRef = doc(db, 'comments', commentId);
-  const commentSnap = await getDoc(commentRef);
-  
-  if (!commentSnap.exists()) {
-    console.error('댓글을 찾을 수 없음');
-    throw new Error('Comment not found');
-  }
-  
-  const data = commentSnap.data();
-  const likedBy = data.likedBy || [];
-  const isLiked = likedBy.includes(userId);
-  
-  await updateDoc(commentRef, {
-    likes: isLiked ? (data.likes || 0) - 1 : (data.likes || 0) + 1,
-    likedBy: isLiked ? arrayRemove(userId) : arrayUnion(userId)
-  });
-  
-  return {
-    ...data,
-    id: commentId,
-    likes: isLiked ? (data.likes || 0) - 1 : (data.likes || 0) + 1,
-    likedBy: isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId]
+  // window 객체에 추가
+  window.createTestData = createTestData; 
+
+  // 로그인
+  export const login = async (email, password) => {
+    console.log('로그인 시도:', { email, password });
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error('Firebase 로그인 에러:', error);
+      throw error;
+    }
   };
-};
 
-/**
- * 랜덤 프로필 이미지 가져오기
- * Firebase Storage에 등록된 프로필 이미지(예: woman1.webp, woman2.webp 등) 중 하나를 랜덤으로 가져옵니다.
- */
-const getRandomProfileImage = async () => {
-  try {
-    const storage = getStorage();
-    const imageNumber = Math.floor(Math.random() * 2) + 1; // 예: 1 또는 2 선택
-    const imageRef = ref(storage, `profile_images/woman${imageNumber}.webp`);
-    const url = await getDownloadURL(imageRef);
-    return url;
-  } catch (error) {
-    console.error('프로필 이미지 가져오기 실패:', error);
-    return null;
-  }
-};
+  // 회원가입
+  export const signup = async ({ email, password, photoURL }) => {
+    // 고유한 사용자 이름 생성
+    const username = await generateUniqueUsername();
 
-/**
- * Google 로그인: 기본으로 구글에서 제공하는 이미지 대신 랜덤 프로필 이미지를 적용
- */
-export const googleLogin = async () => {
-  try {
-    const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
-    
-    const randomProfileUrl = await getRandomProfileImage();
-    if (randomProfileUrl) {
-      await updateProfile(userCredential.user, { photoURL: randomProfileUrl });
-    }
-    
-    const userRef = doc(db, 'users', userCredential.user.uid);
-    await setDoc(
-      userRef,
-      {
-        email: userCredential.user.email,
-        username: generateRandomUsername(),
-        photoURL: randomProfileUrl || userCredential.user.photoURL,
+    try {
+      // Firebase Auth에 사용자 생성
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // 사용자 프로필 업데이트 (displayName과 photoURL 모두 설정)
+      await updateProfile(auth.currentUser, {
+        displayName: username,
+        photoURL: photoURL
+      });
+      
+      // Firestore에 사용자 정보 저장
+      const userRef = doc(db, 'users', userCredential.user.uid);
+      await setDoc(userRef, {
+        email: email,
+        username: username,
+        photoURL: photoURL,
         createdAt: new Date(),
         bio: '',
         userId: userCredential.user.uid
-      },
-      { merge: true }
-    );
-    
-    return userCredential.user;
-  } catch (error) {
-    console.error('Google 로그인 실패:', error);
-    throw error;
-  }
-};
-
-// 이미 존재하는 사용자 이름과 중복 여부를 검사하는 함수
-export const checkUsernameAvailability = async (username) => {
-  const usersRef = collection(db, 'users');
-  const q = query(usersRef, where('username', '==', username));
-  const snapshot = await getDocs(q);
-  return snapshot.empty;
-};
-
-/**
- * 사용자 이름을 생성하고, 데이터베이스에 저장된 이름과 중복되지 않도록 처리하는 함수
- * 중복된 경우에는 기본 이름 뒤에 _숫자를 붙여서 고유한 이름을 반환합니다.
- */
-export const generateUniqueUsername = async () => {
-  // 기본 이름을 생성합니다.
-  let baseUsername = generateRandomUsername();
-  let username = baseUsername;
-  let attempts = 0;
-  const maxAttempts = 20;
-  
-  // 해당 이름이 사용 가능한지 확인합니다.
-  while (!(await checkUsernameAvailability(username))) {
-    attempts++;
-    // 중복된 경우, 기본 이름 뒤에 번호를 추가합니다.
-    username = `${baseUsername}_${attempts}`;
-    
-    // 만약 너무 많이 중복되면 새로운 기본 이름으로 재설정합니다.
-    if (attempts >= maxAttempts) {
-      baseUsername = generateRandomUsername();
-      username = baseUsername;
-      attempts = 0;
+      });
+      
+      return userCredential.user;
+    } catch (error) {
+      console.error('회원가입 실패:', error);
+      throw error;
     }
-  }
-  return username;
-};
+  };
+
+  export const createCategories = async () => {
+    const categories = [
+      { customId: 'category1', order: 1, name: "스타트업", description: "소규모 신생 기업에서 발생하는 문제 상황. 예시: 업무 과부하, 잦은 방향 전환, 불안정한 고용 환경" },
+      { customId: 'category2', order: 2, name: "중소기업", description: "중소기업 환경에서 발생하는 문제 상황. 예시: 다재다능 강요, 비효율적인 시스템, 임금 체불" },
+      { order: 3, name: "대기업", description: "대기업 환경에서 발생하는 문제 상황. 예시: 과도한 보고 문화, 끝없는 회의, 상명하복식 의사결정, 내부 정치 싸움" },
+      { order: 4, name: "서비스업", description: "고객 응대가 많은 업종(카페, 식당, 백화점, 콜센터 등). 예시: 진상 고객, 반말 손님, 감정 노동 강요하는 상사" },
+      { order: 5, name: "공공기관", description: "공무원, 공기업 직원들이 겪는 문제 상황. 예시: 과도한 민원, 공공시설 훼손, 무리한 요구" },
+      { order: 6, name: "의료직", description: "병원, 요양원, 약국 등에서 근무하는 의료진이 겪는 문제 상황. 예시: 무리한 요구 환자, 보호자 갑질, 비협조적인 환자" },
+      { order: 7, name: "교육직", description: "초중고교, 대학교, 학원 등에서 발생하는 문제 상황. 예시: 학부모 민원, 무례한 학생, 책임 회피하는 동료 교사" },
+      { order: 8, name: "공장/생산직", description: "제조업, 생산라인, 물류센터 등에서 발생하는 문제 상황. 예시: 안전불감증, 업무 미루기, 비협조적인 조장" },
+      { order: 9, name: "건설업", description: "건설 현장, 토목 공사, 인테리어 업종에서 발생하는 문제 상황. 예시: 부실 시공, 작업 안전 무시, 임금 체불" },
+      { order: 10, name: "유통/물류", description: "마트, 편의점, 배달업 등에서 발생하는 문제 상황. 예시: 상품 훼손, 계산대 진상, 배달 클레임" },
+      { order: 11, name: "프리랜서", description: "작가, 디자이너, 영상 제작자, 프리랜서 등이 겪는 문제 상황. 예시: 돈 떼먹는 클라이언트, 수정 무한 요청, 아이디어 도용" },
+      { order: 12, name: "경찰", description: "경찰이 업무 중 겪는 문제 상황. 예시: 시민과의 마찰, 불필요한 신고, 내부 갈등" },
+      { order: 13, name: "소방", description: "소방관이 업무 중 겪는 문제 상황. 예시: 허위 신고, 장비 부족, 위험한 출동 상황" },
+      { order: 14, name: "군대", description: "군대에서 발생하는 문제 상황. 예시: 가혹 행위, 부조리, 무책임한 간부" }
+    ];
+
+    const createdCategories = [];
+    for (const category of categories) {
+      const docRef = await addDoc(collection(db, 'categories'), {
+        ...category,
+        createdAt: serverTimestamp()
+      });
+      createdCategories.push({ id: docRef.id, ...category });
+    }
+    return createdCategories;
+  };
+
+  // 테스트 포스트 생성 함수 추가
+  export const createTestPosts = async () => {
+    const categories = await getCategories();
+    
+    const posts = [];
+    for (const category of categories) {
+      for (let i = 1; i <= 10; i++) {
+        const post = {
+          title: `${category.name} 사례 #${i}`,
+          content: `이것은 ${category.name}의 ${i}번째 사례입니다. 여기에 자세한 내용이 들어갑니다...`,
+          categoryId: category.id,
+          authorId: "test-author",
+          authorName: "테스트 작성자",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          likes: Math.floor(Math.random() * 50),
+          comments: []
+        };
+        
+        const docRef = await addDoc(collection(db, 'posts'), post);
+        posts.push({ id: docRef.id, ...post });
+      }
+    }
+    return posts;
+  };
+
+  // window 객체에 함수 추가
+  window.createCategories = createCategories;
+  window.createTestPosts = createTestPosts;
+
+  export const createNotification = async (type, postId, recipientId, senderId, senderName, content = '') => {
+    try {
+      const docRef = await addDoc(collection(db, 'notifications'), {
+        type,
+        postId,
+        recipientId,
+        senderId,
+        senderName,
+        content,
+        createdAt: new Date(),
+        read: false
+      });
+      console.log('알림 생성 완료:', {
+        id: docRef.id,
+        type,
+        postId,
+        recipientId,
+        senderId,
+        senderName,
+        content
+      });
+      return docRef;
+    } catch (error) {
+      console.error('알림 생성 실패:', error);
+      throw error;
+    }
+  };
+
+  // 사용자의 게시글 가져오기
+  export const getMyPosts = async (userId) => {
+    const q = query(
+      collection(db, 'posts'),
+      where('authorId', '==', userId), // 현재 사용자의 ID와 일치하는 게시글만 가져오기
+      orderBy('createdAt', 'desc') // 생성일 기준으로 정렬
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  };
+
+  export const updateUserBio = async (userId, bio) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // 사용자 문서가 없으면 새로 생성
+        await setDoc(userRef, {
+          bio: bio,
+          userId: userId,
+          createdAt: new Date()
+        });
+      } else {
+        // 기존 문서가 있으면 업데이트
+        await updateDoc(userRef, {
+          bio: bio
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error('자기소개 업데이트 실패:', error);
+      throw error;
+    }
+  };
+
+  export const getUserDoc = async (userId) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) {
+        // 사용자 문서가 없으면 기본값으로 생성
+        const defaultUserData = {
+          userId: userId,
+          bio: '',
+          createdAt: new Date()
+        };
+        await setDoc(userRef, defaultUserData);
+        return defaultUserData;
+      }
+      
+      return userSnap.data();
+    } catch (error) {
+      console.error('사용자 정보 가져오기 실패:', error);
+      throw error;
+    }
+  };
+
+  // 댓글 좋아요 업데이트 함수
+  export const updateCommentLikes = async (commentId, userId) => {
+    const commentRef = doc(db, 'comments', commentId);
+    const commentSnap = await getDoc(commentRef);
+    
+    if (!commentSnap.exists()) {
+      console.error('댓글을 찾을 수 없음');
+      throw new Error('Comment not found');
+    }
+    
+    const data = commentSnap.data();
+    const likedBy = data.likedBy || [];
+    const isLiked = likedBy.includes(userId);
+    
+    await updateDoc(commentRef, {
+      likes: isLiked ? (data.likes || 0) - 1 : (data.likes || 0) + 1,
+      likedBy: isLiked ? arrayRemove(userId) : arrayUnion(userId)
+    });
+    
+    return {
+      ...data,
+      id: commentId,
+      likes: isLiked ? (data.likes || 0) - 1 : (data.likes || 0) + 1,
+      likedBy: isLiked ? likedBy.filter(id => id !== userId) : [...likedBy, userId]
+    };
+  };
+
+  /**
+   * 랜덤 프로필 이미지 가져오기
+   * Firebase Storage에 등록된 프로필 이미지(예: woman1.webp, woman2.webp 등) 중 하나를 랜덤으로 가져옵니다.
+   */
+  const getRandomProfileImage = async () => {
+    try {
+      const storage = getStorage();
+      const imageNumber = Math.floor(Math.random() * 2) + 1; // 예: 1 또는 2 선택
+      const imageRef = ref(storage, `profile_images/woman${imageNumber}.webp`);
+      const url = await getDownloadURL(imageRef);
+      return url;
+    } catch (error) {
+      console.error('프로필 이미지 가져오기 실패:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Google 로그인: 기본으로 구글에서 제공하는 이미지 대신 랜덤 프로필 이미지를 적용
+   */
+  export const googleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      
+      const randomProfileUrl = await getRandomProfileImage();
+      if (randomProfileUrl) {
+        await updateProfile(userCredential.user, { photoURL: randomProfileUrl });
+      }
+      
+      const userRef = doc(db, 'users', userCredential.user.uid);
+      await setDoc(
+        userRef,
+        {
+          email: userCredential.user.email,
+          username: generateRandomUsername(),
+          photoURL: randomProfileUrl || userCredential.user.photoURL,
+          createdAt: new Date(),
+          bio: '',
+          userId: userCredential.user.uid
+        },
+        { merge: true }
+      );
+      
+      return userCredential.user;
+    } catch (error) {
+      console.error('Google 로그인 실패:', error);
+      throw error;
+    }
+  };
+
+  // 이미 존재하는 사용자 이름과 중복 여부를 검사하는 함수
+  export const checkUsernameAvailability = async (username) => {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('username', '==', username));
+    const snapshot = await getDocs(q);
+    return snapshot.empty;
+  };
+
+  /**
+   * 사용자 이름을 생성하고, 데이터베이스에 저장된 이름과 중복되지 않도록 처리하는 함수
+   * 중복된 경우에는 기본 이름 뒤에 _숫자를 붙여서 고유한 이름을 반환합니다.
+   */
+  export const generateUniqueUsername = async () => {
+    // 기본 이름을 생성합니다.
+    let baseUsername = generateRandomUsername();
+    let username = baseUsername;
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    // 해당 이름이 사용 가능한지 확인합니다.
+    while (!(await checkUsernameAvailability(username))) {
+      attempts++;
+      // 중복된 경우, 기본 이름 뒤에 번호를 추가합니다.
+      username = `${baseUsername}_${attempts}`;
+      
+      // 만약 너무 많이 중복되면 새로운 기본 이름으로 재설정합니다.
+      if (attempts >= maxAttempts) {
+        baseUsername = generateRandomUsername();
+        username = baseUsername;
+        attempts = 0;
+      }
+    }
+    return username;
+  };

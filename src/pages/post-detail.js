@@ -232,7 +232,7 @@ function PostDetail() {
 
       {/* 콘텐츠 영역 */}
       <div className="w-full bg-gray-50 px-4 py-4">
-        <div className="max-w-[560px] mx-auto">
+        <div className="max-w-[560px] mx-auto px-4">
           <div className="pt-4 pb-6">
             <h1 className="text-[22px] font-semibold text-gray-900 mb-2">{post.title}</h1>
             <p className="text-[16px] text-gray-900">{post.content}</p>
@@ -340,7 +340,6 @@ function PostDetail() {
                 <CommentCard
                   comment={{
                     ...comment,
-                    authorName: comment.author,
                     authorPhotoURL: comment.photoURL,
                     userId: comment.userId,
                   }}

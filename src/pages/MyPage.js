@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyPosts, getUserInteractions, getPost, getUserDoc, updateUserBio } from '../api/firebase';
+import { 
+  getMyPosts, 
+  getUserInteractions, 
+  getPost, 
+  getUserDoc, 
+  updateUserBio,
+  getCategories  // 새로 추가
+} from '../api/firebase';
 import PostCard from '../components/PostCard';
 import { query, collection, where, orderBy, onSnapshot, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -24,6 +31,21 @@ function MyPage() {
   const [isEditBioModalOpen, setIsEditBioModalOpen] = useState(false);
   const [bioError, setBioError] = useState('');
   const [userData, setUserData] = useState(null);
+  const [categories, setCategories] = useState([]); // 새로 추가
+
+  // 카테고리 데이터 로드를 위한 useEffect 추가
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await getCategories();
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('카테고리 로딩 실패:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -77,12 +99,15 @@ function MyPage() {
           })
         );
         
-        // 같은 포스트가 여러 번 들어올 경우 중복을 제거합니다.
+        // 같은 포스트가 여러 번 들어올 경우 중복을 제거하고,
+        // 본인이 작성한 포스트는 제외합니다.
         const dedupedPosts = Array.from(new Map(
-          postsFromInteractions.map(post => [post.id, post])
+          postsFromInteractions
+            .filter(post => post.authorId !== user?.uid) // 본인 포스트 제외
+            .map(post => [post.id, post])
         ).values());
         
-        console.log('가져온 관심 포스트 (중복 제거됨):', dedupedPosts);
+        console.log('필터링된 관심 포스트:', dedupedPosts);
         setInterestedPosts(dedupedPosts);
       } catch (error) {
         console.error('내 관심 포스트 로딩 실패:', error);
@@ -210,13 +235,23 @@ function MyPage() {
           console.log('모든 포스트 업데이트 완료');
         } catch (error) {
           console.error('포스트 업데이트 중 오류:', error);
-          // 에러 발생시 사용자에게 알림 (선택사항)
-          // toast.error('일부 데이터 업데이트에 실패했습니다');
         }
       };
 
       // 백그라운드에서 포스트 업데이트 실행
       updatePosts();
+
+      // comments 업데이트 부분
+      const commentsQuery = query(
+        collection(db, 'comments'),
+        where('userId', '==', user.uid)
+      );
+      const commentsSnapshot = await getDocs(commentsQuery);
+      const commentUpdates = commentsSnapshot.docs.map(commentDoc =>
+        updateDoc(doc(db, 'comments', commentDoc.id), {
+          authorName: newName  // author 대신 authorName 사용
+        })
+      );
 
     } catch (error) {
       console.error('이름 업데이트 실패:', error);
@@ -415,7 +450,11 @@ function MyPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {myPosts.map(post => (
-                  <PostCard key={post.id} post={post} />
+                  <PostCard 
+                    key={post.id} 
+                    post={post} 
+                    categories={categories}
+                  />
                 ))}
               </div>
             )
@@ -425,7 +464,11 @@ function MyPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {interestedPosts.map(post => (
-                  <PostCard key={post.id} post={post} />
+                  <PostCard 
+                    key={post.id} 
+                    post={post} 
+                    categories={categories}
+                  />
                 ))}
               </div>
             )
