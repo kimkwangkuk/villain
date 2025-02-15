@@ -21,6 +21,11 @@ function PostDetail() {
   const [isLiked, setIsLiked] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
+  // 컴포넌트 마운트 시 스크롤 최상단으로 이동
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -231,8 +236,8 @@ function PostDetail() {
       </div>
 
       {/* 콘텐츠 영역 */}
-      <div className="w-full bg-gray-50 px-4 py-4">
-        <div className="max-w-[560px] mx-auto px-4">
+      <div className="w-full px-4 py-4">
+        <div className="max-w-[560px] mx-auto">
           <div className="pt-4 pb-6">
             <h1 className="text-[22px] font-semibold text-gray-900 mb-2">{post.title}</h1>
             <p className="text-[16px] text-gray-900">{post.content}</p>
@@ -278,61 +283,73 @@ function PostDetail() {
       </div>
 
       {/* 댓글 입력 영역 */}
-      <div className="max-w-[560px] rounded-[20px] mx-auto mt-4 bg-gray-50">
-        {isLoggedIn ? (
-          <form onSubmit={handleCommentSubmit} className="mb-6">
-            <div className="bg-gray-50 rounded-2xl p-[12px] w-full">
-              <div className="flex items-center space-x-2">
-                <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                  <img
-                    src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
-                    alt="프로필"
-                    className="w-full h-full object-cover"
-                  />
+      <div className="max-w-[560px] rounded-[20px] mx-auto mt-4 bg-gray-100">
+        <form onSubmit={(e) => e.preventDefault()} className="mb-6">
+          <div className="bg-gray-100 rounded-2xl p-[12px] w-full">
+            <div className="flex items-center space-x-2">
+              <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                {/* 비로그인 상태에서는 기본 프로필 이미지 표시 */}
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-400">?</span>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 w-full">
-                    <textarea
-                      value={commentContent}
-                      onChange={(e) => setCommentContent(e.target.value)}
-                      placeholder="댓글을 달아주세요."
-                      rows="1"
-                      className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
-                      style={{
-                        minHeight: '24px',
-                        height: 'auto'
-                      }}
-                      onInput={(e) => {
-                        e.target.style.height = 'auto';
-                        e.target.style.height = e.target.scrollHeight + 'px';
-                      }}
-                    />
-                    <div className="flex-shrink-0">
-                      <PrimaryButton type="submit">
-                        올리기
-                      </PrimaryButton>
-                    </div>
-                  </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 w-full">
+                  {isLoggedIn ? (
+                    <>
+                      <textarea
+                        value={commentContent}
+                        onChange={(e) => setCommentContent(e.target.value)}
+                        placeholder="댓글을 달아주세요."
+                        rows="1"
+                        className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
+                        style={{
+                          minHeight: '24px',
+                          height: 'auto'
+                        }}
+                        onInput={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
+                      />
+                      <div className="flex-shrink-0">
+                        <PrimaryButton type="submit">
+                          올리기
+                        </PrimaryButton>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Link 
+                        to="/login"
+                        state={{ from: `/posts/${id}` }}
+                        className="flex-1"
+                      >
+                        <div className="text-[15px] text-gray-400">
+                          댓글을 작성하려면 로그인이 필요합니다.
+                        </div>
+                      </Link>
+                      <div className="flex-shrink-0">
+                        <Link 
+                          to="/login"
+                          state={{ from: `/posts/${id}` }}
+                        >
+                          <PrimaryButton>
+                            로그인
+                          </PrimaryButton>
+                        </Link>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
-          </form>
-        ) : (
-          <div className="px-6 mb-4 flex items-center justify-between">
-            <p className="text-gray-500">댓글을 작성하려면 로그인이 필요합니다.</p>
-            <Link 
-              to="/login"
-              state={{ from: `/posts/${id}` }}
-              className="bg-black text-white px-4 py-2 rounded-xl text-[14px] hover:bg-gray-800"
-            >
-              로그인
-            </Link>
           </div>
-        )}
+        </form>
       </div>
 
       {/* 댓글 리스트 영역 */}
-      <div className="max-w-[560px] mx-auto mt-4 bg-gray-50 rounded-2xl">
+      <div className="max-w-[560px] mx-auto mt-4 bg-gray-100 rounded-2xl">
         {comments.length > 0 && (
           <div>
             {comments.map((comment, index) => (
@@ -348,7 +365,7 @@ function PostDetail() {
                   onDelete={() => handleDeleteComment(comment.id)}
                 />
                 {index !== comments.length - 1 && (
-                  <div className="h-[1px] bg-gray-100" />
+                  <div className="h-[1px] bg-gray-200" />
                 )}
               </div>
             ))}

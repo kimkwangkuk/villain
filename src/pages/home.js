@@ -218,7 +218,6 @@ function HomePage() {
               </div>
             </button>
             {categories.map((category) => {
-              // category.order를 활용하여 아이콘 선택 (예: order 1이면 "order1", order 2이면 "order2")
               const IconComponent = categoryIconMapping[`order${category.order}`] || AllCategoryIcon;
               return (
                 <button
@@ -238,35 +237,9 @@ function HomePage() {
         </div>
       </div>
 
-      <div className="py-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex overflow-x-auto whitespace-nowrap py-2 gap-6">
-            {authors.map((author) => (
-              <Link
-                key={author.id}
-                to={`/user/${author.id}`}
-                className="flex flex-col items-center space-y-2 hover:opacity-80 transition-opacity"
-              >
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                  <img
-                    src={author.profile || getDefaultProfileImage(author.id)}
-                    alt={`${author.name}의 프로필`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = getDefaultProfileImage(author.id);
-                    }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-700">{author.name}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPosts.map((post) => (
               <PostCard key={post.id} post={post} categories={categories} />
             ))}

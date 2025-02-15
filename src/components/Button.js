@@ -19,7 +19,7 @@ export const SecondaryButton = ({ children, ...props }) => (
 export const LineButton = ({ children, ...props }) => (
   <button
     {...props}
-    className="text-gray-700 hover:text-gray-900 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300"
+    className="text-[15px] text-gray-700 hover:text-gray-900 px-[9px] py-[6px] rounded-[8px] border border-gray-200 hover:border-gray-300 font-semibold"
   >
     {children}
   </button>

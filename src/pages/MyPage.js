@@ -305,29 +305,32 @@ function MyPage() {
           <div className="py-8">
             <div className="flex justify-between items-start">
               <div className="flex items-center space-x-4">
-                <button 
-                  onClick={() => setIsProfileImageModalOpen(true)}
-                  className="relative w-20 h-20 rounded-full overflow-hidden group"
-                >
-                  {user?.photoURL ? (
-                    <>
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsProfileImageModalOpen(true)}
+                    className="w-20 h-20 rounded-full overflow-hidden"
+                  >
+                    {user?.photoURL ? (
                       <img 
                         src={user.photoURL} 
                         alt="프로필" 
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <span className="text-white text-sm">변경</span>
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-2xl text-gray-600">
+                          {user?.email?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
                       </div>
-                    </>
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-2xl text-gray-600">
-                        {user?.email?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  )}
-                </button>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setIsProfileImageModalOpen(true)}
+                    className="absolute bottom-0 right-0 w-6 h-6 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+                  >
+                    <span className="text-white text-sm">✎</span>
+                  </button>
+                </div>
                 <div>
                   <div className="flex items-center space-x-2">
                     <h2 className="text-2xl font-bold text-gray-900">
@@ -341,9 +344,18 @@ function MyPage() {
                       ✎
                     </button>
                   </div>
-                  <p className="text-gray-500">
-                    {user?.email}
-                  </p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-gray-500">
+                      {bio || '자기소개가 없습니다.'}
+                    </p>
+                    <button
+                      onClick={() => setIsEditBioModalOpen(true)}
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      <span className="sr-only">자기소개 수정</span>
+                      ✎
+                    </button>
+                  </div>
                 </div>
               </div>
               <button
@@ -352,23 +364,6 @@ function MyPage() {
               >
                 로그아웃
               </button>
-            </div>
-
-            {/* 자기소개 섹션 추가 */}
-            <div className="mt-6 border-t pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-medium text-gray-900">자기소개</h3>
-                <button
-                  onClick={() => setIsEditBioModalOpen(true)}
-                  className="text-sm text-gray-500 hover:text-gray-700"
-                >
-                  <span className="sr-only">자기소개 수정</span>
-                  ✎
-                </button>
-              </div>
-              <p className="text-gray-600">
-                {bio || '자기소개가 없습니다.'}
-              </p>
             </div>
           </div>
         </div>

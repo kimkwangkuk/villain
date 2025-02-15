@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import { HomeIcon, UserIcon } from './Icons';
-import { PrimaryButton, SecondaryButton } from './Button';
+import { PrimaryButton, SecondaryButton, LineButton } from './Button';
 
 function Navbar() {
   const { isLoggedIn } = useAuth();
@@ -50,7 +50,7 @@ function Navbar() {
 
             {!isLoggedIn && (
               <Link to="/login">
-                <SecondaryButton>로그인</SecondaryButton>
+                <LineButton>로그인</LineButton>
               </Link>
             )}
           </div>
