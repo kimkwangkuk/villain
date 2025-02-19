@@ -189,7 +189,7 @@ function PostDetail() {
     <div className="min-h-screen bg-white py-8">
       {/* 프로필 영역 */}
       <div className="w-full px-4">
-        <div className="max-w-[560px] mx-auto">
+        <div className="max-w-[580px] mx-auto">
           <div className="bg-white rounded-3xl pb-[16px]">
             <div className="flex items-center justify-between">
               {/* 프로필 정보 영역 */}
@@ -237,18 +237,20 @@ function PostDetail() {
 
       {/* 콘텐츠 영역 */}
       <div className="w-full px-4 py-4">
-        <div className="max-w-[560px] mx-auto">
+        <div className="max-w-[580px] mx-auto">
           <div className="pt-4 pb-6">
-            <h1 className="text-[22px] font-semibold text-gray-900 mb-2">{post.title}</h1>
-            <p className="text-[16px] text-gray-900">{post.content}</p>
+            <h1 className="text-[22px] font-semibold text-gray-900 mb-4">{post.title}</h1>
+            <p className="text-[16px] text-gray-900 leading-relaxed">
+              {post.content}
+            </p>
           </div>
         </div>
       </div>
 
       {/* 액션 버튼 영역 */}
-      <div className="w-full bg-gray-50 px-4 pb-5">
-        <div className="max-w-[560px] mx-auto">
-          <div className="rounded-3xl bg-gray-50">
+      <div className="w-full bg-white px-4 pb-5">
+        <div className="max-w-[580px] mx-auto">
+          <div className="rounded-3xl bg-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4 font-medium text-[14px] text-gray-900">
                 <button 
@@ -282,16 +284,28 @@ function PostDetail() {
         </div>
       </div>
 
+      {/* 구분선 */}
+      <div className="w-full">
+        <div className="h-[1px] bg-gray-100" />
+      </div>
+
       {/* 댓글 입력 영역 */}
-      <div className="max-w-[560px] rounded-[20px] mx-auto mt-4 bg-gray-100">
-        <form onSubmit={(e) => e.preventDefault()} className="mb-6">
+      <div className="max-w-[580px] rounded-[20px] mx-auto mt-5 bg-gray-100">
+        <form onSubmit={handleCommentSubmit} className="mb-5">
           <div className="bg-gray-100 rounded-2xl p-[12px] w-full">
             <div className="flex items-center space-x-2">
               <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                {/* 비로그인 상태에서는 기본 프로필 이미지 표시 */}
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-400">?</span>
-                </div>
+                {isLoggedIn ? (
+                  <img
+                    src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
+                    alt="프로필"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-400">?</span>
+                  </div>
+                )}
               </div>
               <div className="flex-1">
                 <div className="flex items-center space-x-2 w-full">
@@ -349,7 +363,7 @@ function PostDetail() {
       </div>
 
       {/* 댓글 리스트 영역 */}
-      <div className="max-w-[560px] mx-auto mt-4 bg-gray-100 rounded-2xl">
+      <div className="max-w-[580px] mx-auto mt-5 bg-gray-100 rounded-2xl">
         {comments.length > 0 && (
           <div>
             {comments.map((comment, index) => (

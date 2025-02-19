@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import { getCategories, getUserDoc } from '../api/firebase';
 import PostCard from '../components/PostCard';
-import { Link } from 'react-router-dom';
 import { 
   AllCategoryIcon, 
   CategoryIcon1, 
@@ -46,6 +46,19 @@ function HomePage() {
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  // useSearchParams 훅 사용 (쿼리 파라미터 관리)
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // 컴포넌트 mount 시 query parameter에서 카테고리 값을 가져옵니다.
+  useEffect(() => {
+    const catFromUrl = searchParams.get('category');
+    if (catFromUrl) {
+      setSelectedCategory(catFromUrl);
+    } else {
+      setSelectedCategory(null);
+    }
+  }, [searchParams]);
 
   // 사용자 인증 상태 구독
   useEffect(() => {
@@ -164,9 +177,9 @@ function HomePage() {
   // 로딩 상태일 때 스켈레톤 UI 처리
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gray-100">
         {/* 카테고리 네비게이션 스켈레톤 */}
-        <div className="bg-white border-b border-gray-200">
+        <div>
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex space-x-8">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -203,14 +216,21 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gray-100">
+      {/* 카테고리 영역 (개별 배경 제거) */}
+      <div>
         <div className="max-w-7xl mx-auto">
-          <div className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8 hide-scrollbar">
+          <div className="flex justify-center overflow-x-auto whitespace-nowrap pt-16 px-4 gap-8 hide-scrollbar">
             <button
-              onClick={() => setSelectedCategory(null)}
-              className={`text-[14px] pb-2 px-1 transition-colors text-black
-                ${!selectedCategory ? "border-b-2 border-black" : ""}`}
+              onClick={() => {
+                setSelectedCategory(null);
+                setSearchParams({}); // 전체 선택 시 query parameter 초기화
+              }}
+              className={`text-[14px] pb-2 px-1 transition-colors ${
+                !selectedCategory
+                  ? "text-black border-b-2 border-black"
+                  : "text-gray-500"
+              }`}
             >
               <div className="flex flex-col items-center gap-[10px]">
                 <AllCategoryIcon className="w-[28px] h-[28px]" />
@@ -222,9 +242,15 @@ function HomePage() {
               return (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`text-[14px] pb-2 px-1 transition-colors text-black
-                    ${selectedCategory === category.id ? "border-b-2 border-black" : ""}`}
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    setSearchParams({ category: category.id });
+                  }}
+                  className={`text-[14px] pb-2 px-1 transition-colors ${
+                    selectedCategory === category.id
+                      ? "text-black border-b-2 border-black"
+                      : "text-gray-500"
+                  }`}
                 >
                   <div className="flex flex-col items-center gap-[10px]">
                     <IconComponent className="w-[28px] h-[28px]" />
@@ -237,8 +263,9 @@ function HomePage() {
         </div>
       </div>
 
-      <div className="py-8">
-        <div className="max-w-7xl mx-auto px-4">
+      {/* 카드 리스트 영역 (별도 배경 제거) */}
+      <div className="pt-12 pb-8">
+        <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPosts.map((post) => (
               <PostCard key={post.id} post={post} categories={categories} />

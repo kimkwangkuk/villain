@@ -83,31 +83,43 @@ function PostCard({ post, categories }) {
     >
       <div className="flex flex-col h-full">
         {/* 컨텐츠 영역 내에 프로필 영역 포함 */}
-        <div className="bg-gray-100 rounded-2xl p-5 flex flex-col h-[300px]">
+        <div className="bg-white rounded-2xl p-5 flex flex-col h-[330px]">
           {/* 프로필 영역 - 타이틀 상단에 표시 */}
-          <div className="flex items-center mb-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden">
-              <img
-                src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
-                alt={`${post.authorName}의 프로필`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  if (!imageError) {
-                    setImageError(true);
-                  }
-                }}
-              />
-            </div>
-            <div className="ml-2">
-              <div className="text-sm font-medium text-gray-900">
-                {post.authorName}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="w-8 h-8 rounded-full overflow-hidden">
+                <img
+                  src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
+                  alt={`${post.authorName}의 프로필`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    if (!imageError) {
+                      setImageError(true);
+                    }
+                  }}
+                />
               </div>
-              <div className="text-xs text-gray-500">
-                <span>{categoryName}</span>
-                <span className="mx-1">·</span>
-                <span>{getRelativeTime(post.createdAt?.toDate())}</span>
+              <div className="ml-2">
+                <div className="text-sm font-medium text-gray-900">
+                  {post.authorName}
+                </div>
+                <div className="text-xs text-gray-500">
+                  <span>{categoryName}</span>
+                  <span className="mx-1">·</span>
+                  <span>{getRelativeTime(post.createdAt?.toDate())}</span>
+                </div>
               </div>
             </div>
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // 더보기 옵션에 대한 처리 로직 추가 가능
+              }} 
+              className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200"
+            >
+              <span className="text-gray-300 text-sm transition-colors hover:text-gray-900">⋮</span>
+            </button>
           </div>
 
           {/* 타이틀 */}
@@ -126,7 +138,7 @@ function PostCard({ post, categories }) {
 
           {/* 컨텐츠 */}
           <p
-            className="text-gray-600"
+            className="text-[15px] text-gray-600"
             style={{
               display: '-webkit-box',
               WebkitLineClamp: '5',
@@ -139,32 +151,35 @@ function PostCard({ post, categories }) {
           </p>
 
           {/* 좋아요/댓글 버튼 컨테이너 */}
-          <div className="mt-auto flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleLike(e);
-                }}
-                className="flex items-center hover:bg-gray-200 transition-colors duration-200 rounded-full p-1"
-              >
-                <LikeIcon className="w-6 h-6 text-gray-500" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigate(`/posts/${post.id}`);
-                }}
-                className="flex items-center hover:bg-gray-200 transition-colors duration-200 rounded-full p-1"
-              >
-                <MessageIcon className="w-6 h-6 text-gray-500" />
-              </button>
-            </div>
-            <div className="text-sm text-gray-600">
-              좋아요 {likes || 0} <span className="mx-1">·</span> 댓글 {commentCount || 0}
-            </div>
+          <div className="mt-auto flex items-center space-x-1">
+            {/* 좋아요 버튼 */}
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleLike(e);
+              }}
+              className="flex items-center hover:bg-gray-200 transition-colors duration-200 rounded-full px-2 py-1"
+            >
+              <LikeIcon className="w-6 h-6 text-black" />
+              <span className="ml-[2px] text-black font-medium text-[15px] relative top-[1px]">
+                {isLiked ? "반응 취소" : "반응"}
+              </span>
+              <span className="ml-1 text-black text-[15px] relative top-[1px]">{likes || 0}</span>
+            </button>
+            {/* 댓글 버튼 */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/posts/${post.id}`);
+              }}
+              className="flex items-center hover:bg-gray-200 transition-colors duration-200 rounded-full px-2 py-1"
+            >
+              <MessageIcon className="w-6 h-6 text-black" />
+              <span className="ml-[2px] text-black font-medium text-[15px] relative top-[1px]">댓글</span>
+              <span className="ml-1 text-black text-[15px] relative top-[1px]">{commentCount || 0}</span>
+            </button>
           </div>
         </div>
       </div>

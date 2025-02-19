@@ -25,7 +25,7 @@ function Navbar() {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200
       ${isScrolled 
         ? 'bg-white/80 backdrop-blur-md shadow-sm' 
-        : 'bg-white'}`}
+        : 'bg-gray-100'}`}
     >
       <div className="px-4">
         <div className="flex justify-between items-center h-16">
