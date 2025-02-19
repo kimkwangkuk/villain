@@ -83,7 +83,7 @@ function PostCard({ post, categories }) {
     >
       <div className="flex flex-col h-full">
         {/* 컨텐츠 영역 내에 프로필 영역 포함 */}
-        <div className="bg-white rounded-2xl p-5 flex flex-col h-[330px]">
+        <div className="bg-[#F5F5F7] rounded-2xl p-5 flex flex-col h-[330px]">
           {/* 프로필 영역 - 타이틀 상단에 표시 */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
@@ -151,7 +151,7 @@ function PostCard({ post, categories }) {
           </p>
 
           {/* 좋아요/댓글 버튼 컨테이너 */}
-          <div className="mt-auto flex items-center space-x-1">
+          <div className="mt-auto flex items-center">
             {/* 좋아요 버튼 */}
             <button 
               onClick={(e) => {
