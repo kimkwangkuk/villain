@@ -85,7 +85,7 @@ function PostCard({ post, categories }) {
         {/* 컨텐츠 영역 내에 프로필 영역 포함 */}
         <div className="bg-[#F5F5F7] rounded-2xl p-5 pb-3 flex flex-col h-[360px]">
           {/* 프로필 영역 - 타이틀 상단에 표시 */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-full overflow-hidden">
                 <img
@@ -124,7 +124,7 @@ function PostCard({ post, categories }) {
 
           {/* 타이틀 */}
           <h2 
-            className="text-xl font-semibold text-gray-900 mb-2" 
+            className="text-[20px] font-semibold text-gray-900 mb-1" 
             style={{
               display: '-webkit-box',
               WebkitLineClamp: '1',
@@ -151,7 +151,7 @@ function PostCard({ post, categories }) {
           </p>
 
           {/* 좋아요/댓글 수 표시 */}
-          <div className="mt-auto flex items-center justify-between text-[15px] text-gray-500 pb-3">
+          <div className="mt-auto flex items-center justify-between text-[14px] text-gray-500 pb-3">
             <span>{likes || 0}명의 반응</span>
             <span>댓글 {commentCount || 0}</span>
           </div>
