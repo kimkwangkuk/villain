@@ -265,7 +265,7 @@ function HomePage() {
 
       {/* 카드 리스트 영역 (별도 배경 제거) */}
       <div className="pt-12 pb-8">
-        <div className="max-w-[1060px] mx-auto px-4">
+        <div className="max-w-[1200px] mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredPosts.map((post) => (
               <PostCard key={post.id} post={post} categories={categories} />
