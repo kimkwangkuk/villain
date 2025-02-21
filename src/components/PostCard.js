@@ -124,7 +124,7 @@ function PostCard({ post, categories }) {
 
           {/* 타이틀 */}
           <h2 
-            className="text-[20px] font-semibold text-gray-900 mb-1" 
+            className="text-[19px] font-semibold text-gray-900 mb-[6px]" 
             style={{
               display: '-webkit-box',
               WebkitLineClamp: '1',
@@ -165,10 +165,10 @@ function PostCard({ post, categories }) {
                 e.stopPropagation();
                 handleLike(e);
               }}
-              className="flex items-center hover:bg-gray-100 transition-colors duration-200 rounded-full px-2 py-1"
+              className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
             >
-              <LikeIcon className="w-[22px] h-[22px] text-gray-600" />
-              <span className="ml-[2px] text-gray-600 text-[14px] relative top-[1px]">
+              <LikeIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+              <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">
                 {isLiked ? "반응 취소" : "반응"}
               </span>
             </button>
@@ -180,10 +180,10 @@ function PostCard({ post, categories }) {
                 e.stopPropagation();
                 navigate(`/posts/${post.id}`);
               }}
-              className="flex items-center hover:bg-gray-100 transition-colors duration-200 rounded-full px-2 py-1"
+              className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
             >
-              <MessageIcon className="w-[22px] h-[22px] text-gray-600" />
-              <span className="ml-[2px] text-gray-600 text-[14px] relative top-[1px]">댓글</span>
+              <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+              <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
             </button>
 
             {/* 공유 버튼 */}
@@ -193,10 +193,10 @@ function PostCard({ post, categories }) {
                 e.stopPropagation();
                 // 공유 기능 구현
               }}
-              className="flex items-center hover:bg-gray-100 transition-colors duration-200 rounded-full px-2 py-1"
+              className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
             >
-              <MessageIcon className="w-[22px] h-[22px] text-gray-600" />
-              <span className="ml-[2px] text-gray-600 text-[14px] relative top-[1px]">공유</span>
+              <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+              <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">공유</span>
             </button>
           </div>
         </div>

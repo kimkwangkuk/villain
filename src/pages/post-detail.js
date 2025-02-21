@@ -238,7 +238,7 @@ function PostDetail() {
       {/* 콘텐츠 영역 */}
       <div className="w-full px-4 py-4">
         <div className="max-w-[580px] mx-auto">
-          <div className="pt-4 pb-6">
+          <div className="pt-2 pb-6">
             <h1 className="text-[22px] font-semibold text-gray-900 mb-4">{post.title}</h1>
             <p className="text-[16px] text-gray-900 leading-relaxed">
               {post.content}
@@ -248,36 +248,49 @@ function PostDetail() {
       </div>
 
       {/* 액션 버튼 영역 */}
-      <div className="w-full bg-white px-4 pb-5">
+      <div className="w-full bg-white px-4 pb-3">
         <div className="max-w-[580px] mx-auto">
           <div className="rounded-3xl bg-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 font-medium text-[14px] text-gray-900">
-                <button 
-                  onClick={handleLike}
-                  className="flex items-center space-x-1"
-                >
-                  <LikeIcon 
-                    className={`w-[24px] h-[24px] ${isLiked ? 'text-red-500' : 'text-gray-900 hover:text-red-500'}`} 
-                  />
-                  <span>{post.likes || 0}</span>
-                </button>
-                <div className="flex items-center space-x-1">
-                  <MessageIcon className="w-[24px] h-[24px] text-gray-900" />
-                  <span>{post.commentCount || 0}</span>
-                </div>
-                <span className="flex items-center">
-                  <span className="mr-1">
-                    <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
-                  </span>
-                  {post.viewCount || 0}
-                </span>
-              </div>
+            {/* 좋아요/댓글 수 표시 */}
+            <div className="flex items-center justify-between text-[14px] text-gray-500 pb-3">
+              <span>{post.likes || 0}명의 반응</span>
+              <span>댓글 {post.commentCount || 0}</span>
+            </div>
+
+            {/* 좋아요/댓글/공유 버튼 컨테이너 */}
+            <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+              {/* 좋아요 버튼 */}
               <button 
-                onClick={handleShare}
-                className="text-gray-500 hover:text-gray-700"
+                onClick={handleLike}
+                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
               >
-                <ShareIcon className="w-[24px] h-[24px] text-gray-500" />
+                <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'}`} />
+                <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'} text-[14px] relative top-[1px]`}>
+                  {isLiked ? "반응 취소" : "반응"}
+                </span>
+              </button>
+
+              {/* 댓글 버튼 */}
+              <button
+                onClick={() => {
+                  const commentInput = document.querySelector('textarea');
+                  if (commentInput) {
+                    commentInput.focus();
+                  }
+                }}
+                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+              >
+                <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+                <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
+              </button>
+
+              {/* 공유 버튼 */}
+              <button
+                onClick={handleShare}
+                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+              >
+                <ShareIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+                <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">공유</span>
               </button>
             </div>
           </div>
