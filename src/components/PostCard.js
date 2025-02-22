@@ -83,7 +83,7 @@ function PostCard({ post, categories }) {
     >
       <div className="flex flex-col h-full">
         {/* 컨텐츠 영역 내에 프로필 영역 포함 */}
-        <div className="bg-[#F5F5F7] rounded-2xl p-5 pb-3 flex flex-col h-[360px]">
+        <div className="bg-[#F5F5F7] rounded-2xl pt-[14px] p-5 pb-3 flex flex-col h-[360px]">
           {/* 프로필 영역 - 타이틀 상단에 표시 */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">

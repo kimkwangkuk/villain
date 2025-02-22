@@ -191,11 +191,10 @@ function PostDetail() {
       <div className="w-full px-4">
         <div className="max-w-[580px] mx-auto bg-gray-100 rounded-2xl">
           {/* 프로필 영역 */}
-          <div className="p-4">
+          <div className="pb-[0px] p-4">
             <div className="flex items-center justify-between">
-              {/* 프로필 정보 영역 */}
-              <div className="flex items-center space-x-2">
-                <div className="w-[36px] h-[36px] rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+              <div className="flex items-center">
+                <div className="w-8 h-8 rounded-full overflow-hidden">
                   <img
                     src={
                       post.authorPhotoURL ||
@@ -205,34 +204,28 @@ function PostDetail() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[14px] font-bold text-gray-900">
+                <div className="ml-2">
+                  <div className="text-[13px] font-semibold text-gray-900">
                     {post.authorName}
-                  </span>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-[13px] text-gray-900">
-                      #{post.categoryName}
-                    </span>
-                    <span className="text-[13px] text-gray-900">
-                      에 쓴 글
-                    </span>
-                    <span className="text-[13px] text-gray-400">
-                      {post.createdAt?.toDate().toLocaleTimeString()}
-                    </span>
+                  </div>
+                  <div className="text-[12px] text-gray-500">
+                    <span>{post.categoryName}</span>
+                    <span className="mx-1">·</span>
+                    <span>{post.createdAt?.toDate().toLocaleTimeString()}</span>
                   </div>
                 </div>
               </div>
               {/* 더보기 버튼 */}
-              <button className="hover:bg-gray-200 rounded-full p-1 cursor-pointer transition-colors duration-200">
-                <EllipsisIcon className="w-5 h-5 text-gray-500" />
+              <button className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200">
+                <span className="text-gray-300 text-sm transition-colors hover:text-gray-900">⋮</span>
               </button>
             </div>
           </div>
 
           {/* 콘텐츠 영역 */}
-          <div className="p-4">
-            <div className="pt-2 pb-6">
-              <h1 className="text-[22px] font-semibold text-gray-900 mb-4">{post.title}</h1>
+          <div className="pt-[0px] p-4">
+            <div className="pt-3 pb-6">
+              <h1 className="text-[20px] font-semibold text-gray-900 mb-2">{post.title}</h1>
               <p className="text-[16px] text-gray-900 leading-relaxed">
                 {post.content}
               </p>
@@ -288,12 +281,12 @@ function PostDetail() {
         </div>
       </div>
 
-      {/* 댓글 영역 컨테이너 */}
-      <div className="w-full px-4">
+      {/* 댓글 영역 전체를 감싸는 컨테이너 - 좌우 패딩 추가 */}
+      <div className="w-full px-4 mt-4">
         <div className="max-w-[580px] mx-auto">
           {/* 댓글 입력 영역 */}
-          <div className="rounded-[20px] mt-5 bg-gray-100">
-            <form onSubmit={handleCommentSubmit} className="mb-5">
+          <div className="bg-gray-100 rounded-2xl">
+            <form onSubmit={handleCommentSubmit}>
               <div className="bg-gray-100 rounded-2xl p-[12px] w-full">
                 <div className="flex items-center space-x-2">
                   <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
@@ -365,7 +358,7 @@ function PostDetail() {
           </div>
 
           {/* 댓글 리스트 영역 */}
-          <div className="mt-5 bg-gray-100 rounded-2xl">
+          <div className="mt-4 bg-gray-100 rounded-2xl">
             {comments.length > 0 && (
               <div>
                 {comments.map((comment, index) => (

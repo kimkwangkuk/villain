@@ -93,10 +93,10 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-[14px] font-semibold text-gray-900">
+              <span className="text-[13px] font-medium text-gray-900">
                 {comment.authorName || '익명'}
               </span>
-              <span className="text-[13px] text-gray-500">
+              <span className="text-[13px] text-gray-400">
                 {formatDate(comment.createdAt)}
               </span>
             </div>

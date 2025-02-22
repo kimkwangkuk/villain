@@ -16,13 +16,12 @@ await createTestPosts()
 # 원격 저장소의 변경사항 가져오기
 git fetch origin
 
-# 원격 저장소의 변경사항을 현재 브랜치에 적용
 git pull origin main
-
+# 원격 저장소의 변경사항을 현재 브랜치에 적용
 
 
 git add .
-git commit -m "카테고리 변경"
+git commit -m "무한스크롤 및 아이콘 일부 추가"
 git push origin main
 
 
