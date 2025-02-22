@@ -302,102 +302,107 @@ function PostDetail() {
       {/* 구분선 */}
       <div className="w-full h-[1px] bg-gray-200" />
 
-      {/* 댓글 입력 영역 */}
-      <div className="max-w-[580px] rounded-[20px] mx-auto mt-5 bg-gray-100">
-        <form onSubmit={handleCommentSubmit} className="mb-5">
-          <div className="bg-gray-100 rounded-2xl p-[12px] w-full">
-            <div className="flex items-center space-x-2">
-              <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                {isLoggedIn ? (
-                  <img
-                    src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
-                    alt="프로필"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-400">?</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 w-full">
-                  {isLoggedIn ? (
-                    <>
-                      <textarea
-                        value={commentContent}
-                        onChange={(e) => setCommentContent(e.target.value)}
-                        placeholder="댓글을 달아주세요."
-                        rows="1"
-                        className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
-                        style={{
-                          minHeight: '24px',
-                          height: 'auto'
-                        }}
-                        onInput={(e) => {
-                          e.target.style.height = 'auto';
-                          e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
+      {/* 댓글 영역 컨테이너 */}
+      <div className="w-full px-4">
+        <div className="max-w-[580px] mx-auto">
+          {/* 댓글 입력 영역 */}
+          <div className="rounded-[20px] mt-5 bg-gray-100">
+            <form onSubmit={handleCommentSubmit} className="mb-5">
+              <div className="bg-gray-100 rounded-2xl p-[12px] w-full">
+                <div className="flex items-center space-x-2">
+                  <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                    {isLoggedIn ? (
+                      <img
+                        src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
+                        alt="프로필"
+                        className="w-full h-full object-cover"
                       />
-                      <div className="flex-shrink-0">
-                        <PrimaryButton type="submit">
-                          올리기
-                        </PrimaryButton>
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-400">?</span>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <Link 
-                        to="/login"
-                        state={{ from: `/posts/${id}` }}
-                        className="flex-1"
-                      >
-                        <div className="text-[15px] text-gray-400">
-                          댓글을 작성하려면 로그인이 필요합니다.
-                        </div>
-                      </Link>
-                      <div className="flex-shrink-0">
-                        <Link 
-                          to="/login"
-                          state={{ from: `/posts/${id}` }}
-                        >
-                          <PrimaryButton>
-                            로그인
-                          </PrimaryButton>
-                        </Link>
-                      </div>
-                    </>
-                  )}
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 w-full">
+                      {isLoggedIn ? (
+                        <>
+                          <textarea
+                            value={commentContent}
+                            onChange={(e) => setCommentContent(e.target.value)}
+                            placeholder="댓글을 달아주세요."
+                            rows="1"
+                            className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
+                            style={{
+                              minHeight: '24px',
+                              height: 'auto'
+                            }}
+                            onInput={(e) => {
+                              e.target.style.height = 'auto';
+                              e.target.style.height = e.target.scrollHeight + 'px';
+                            }}
+                          />
+                          <div className="flex-shrink-0">
+                            <PrimaryButton type="submit">
+                              올리기
+                            </PrimaryButton>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Link 
+                            to="/login"
+                            state={{ from: `/posts/${id}` }}
+                            className="flex-1"
+                          >
+                            <div className="text-[15px] text-gray-400">
+                              댓글을 작성하려면 로그인이 필요합니다.
+                            </div>
+                          </Link>
+                          <div className="flex-shrink-0">
+                            <Link 
+                              to="/login"
+                              state={{ from: `/posts/${id}` }}
+                            >
+                              <PrimaryButton>
+                                로그인
+                              </PrimaryButton>
+                            </Link>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </form>
           </div>
-        </form>
-      </div>
 
-      {/* 댓글 리스트 영역 */}
-      <div className="max-w-[580px] mx-auto mt-5 bg-gray-100 rounded-2xl">
-        {comments.length > 0 && (
-          <div>
-            {comments.map((comment, index) => (
-              <div key={comment.id}>
-                <CommentCard
-                  comment={{
-                    ...comment,
-                    authorPhotoURL: comment.photoURL,
-                    userId: comment.userId,
-                  }}
-                  postAuthorId={post.authorId}
-                  onEdit={(newContent) => handleEditComment(comment.id, newContent)}
-                  onDelete={() => handleDeleteComment(comment.id)}
-                />
-                {index !== comments.length - 1 && (
-                  <div className="h-[1px] bg-gray-200" />
-                )}
+          {/* 댓글 리스트 영역 */}
+          <div className="mt-5 bg-gray-100 rounded-2xl">
+            {comments.length > 0 && (
+              <div>
+                {comments.map((comment, index) => (
+                  <div key={comment.id}>
+                    <CommentCard
+                      comment={{
+                        ...comment,
+                        authorPhotoURL: comment.photoURL,
+                        userId: comment.userId,
+                      }}
+                      postAuthorId={post.authorId}
+                      onEdit={(newContent) => handleEditComment(comment.id, newContent)}
+                      onDelete={() => handleDeleteComment(comment.id)}
+                    />
+                    {index !== comments.length - 1 && (
+                      <div className="h-[1px] bg-gray-200" />
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* 토스트 메시지 */}
