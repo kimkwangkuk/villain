@@ -232,7 +232,7 @@ function PostDetail() {
 
       {/* 구분선 */}
       <div className="w-full">
-        <div className="h-[1px] bg-gray-100" />
+        <div className="h-[1px] bg-gray-200" />
       </div>
 
       {/* 콘텐츠 영역 */}
@@ -251,43 +251,45 @@ function PostDetail() {
       <div className="w-full bg-white px-4 pb-3">
         <div className="max-w-[580px] mx-auto">
           <div className="rounded-3xl bg-white">
-            {/* 좋아요/댓글 수 표시 */}
-            <div className="flex items-center justify-between text-[14px] text-gray-500 pb-3">
-              <span>{post.likes || 0}명의 반응</span>
-              <span>댓글 {post.commentCount || 0}</span>
-            </div>
+            <div className="flex items-center justify-between pt-3">
+              {/* 좋아요, 댓글 버튼 그룹 */}
+              <div className="flex items-center gap-2">
+                {/* 좋아요 버튼 */}
+                <button 
+                  onClick={handleLike}
+                  className="flex items-center bg-gray-100 hover:bg-gray-200 group transition-colors duration-200 rounded-full px-3 py-1.5"
+                >
+                  <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'}`} />
+                  <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'} text-[14px] relative top-[1px]`}>
+                    {isLiked ? "반응 취소" : "반응"}
+                  </span>
+                  {post.likes > 0 && (
+                    <span className="ml-1 text-[14px] text-gray-600">{post.likes}</span>
+                  )}
+                </button>
 
-            {/* 좋아요/댓글/공유 버튼 컨테이너 */}
-            <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-              {/* 좋아요 버튼 */}
-              <button 
-                onClick={handleLike}
-                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
-              >
-                <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'}`} />
-                <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'} text-[14px] relative top-[1px]`}>
-                  {isLiked ? "반응 취소" : "반응"}
-                </span>
-              </button>
-
-              {/* 댓글 버튼 */}
-              <button
-                onClick={() => {
-                  const commentInput = document.querySelector('textarea');
-                  if (commentInput) {
-                    commentInput.focus();
-                  }
-                }}
-                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
-              >
-                <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
-                <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
-              </button>
+                {/* 댓글 버튼 */}
+                <button
+                  onClick={() => {
+                    const commentInput = document.querySelector('textarea');
+                    if (commentInput) {
+                      commentInput.focus();
+                    }
+                  }}
+                  className="flex items-center bg-gray-100 hover:bg-gray-200 group transition-colors duration-200 rounded-full px-3 py-1.5"
+                >
+                  <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+                  <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
+                  {post.commentCount > 0 && (
+                    <span className="ml-1 text-[14px] text-gray-600">{post.commentCount}</span>
+                  )}
+                </button>
+              </div>
 
               {/* 공유 버튼 */}
               <button
                 onClick={handleShare}
-                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+                className="flex items-center bg-gray-100 hover:bg-gray-200 group transition-colors duration-200 rounded-full px-3 py-1.5"
               >
                 <ShareIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
                 <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">공유</span>
@@ -298,9 +300,7 @@ function PostDetail() {
       </div>
 
       {/* 구분선 */}
-      <div className="w-full">
-        <div className="h-[1px] bg-gray-100" />
-      </div>
+      <div className="w-full h-[1px] bg-gray-200" />
 
       {/* 댓글 입력 영역 */}
       <div className="max-w-[580px] rounded-[20px] mx-auto mt-5 bg-gray-100">

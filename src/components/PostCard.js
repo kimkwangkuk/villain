@@ -100,10 +100,10 @@ function PostCard({ post, categories }) {
                 />
               </div>
               <div className="ml-2">
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-[13px] font-semibold text-gray-900">
                   {post.authorName}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-[12px] text-gray-500">
                   <span>{categoryName}</span>
                   <span className="mx-1">·</span>
                   <span>{getRelativeTime(post.createdAt?.toDate())}</span>
