@@ -218,9 +218,9 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* 카테고리 영역 (네비게이션바) */}
-      <div className="bg-white border-b border-gray-100">
+      <div className="bg-white border-b border-gray-100 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center overflow-x-auto whitespace-nowrap pt-16 px-4 gap-8 hide-scrollbar">
+          <div className="flex justify-center overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8 hide-scrollbar">
             <button
               onClick={() => {
                 setSelectedCategory(null);
@@ -264,7 +264,7 @@ function HomePage() {
       </div>
 
       {/* 카드 리스트 영역 (별도 배경 제거) */}
-      <div className="pt-12 pb-8">
+      <div className="pt-[20px] pb-8">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredPosts.map((post) => (
