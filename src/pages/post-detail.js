@@ -187,10 +187,11 @@ function PostDetail() {
 
   return (
     <div className="min-h-screen bg-white py-8">
-      {/* 프로필 영역 */}
+      {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
-        <div className="max-w-[580px] mx-auto">
-          <div className="bg-white rounded-3xl pb-[16px]">
+        <div className="max-w-[580px] mx-auto bg-gray-100 rounded-2xl">
+          {/* 프로필 영역 */}
+          <div className="p-4">
             <div className="flex items-center justify-between">
               {/* 프로필 정보 영역 */}
               <div className="flex items-center space-x-2">
@@ -222,42 +223,31 @@ function PostDetail() {
                 </div>
               </div>
               {/* 더보기 버튼 */}
-              <button className="hover:bg-gray-100 rounded-full p-1 cursor-pointer transition-colors duration-200">
+              <button className="hover:bg-gray-200 rounded-full p-1 cursor-pointer transition-colors duration-200">
                 <EllipsisIcon className="w-5 h-5 text-gray-500" />
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* 구분선 */}
-      <div className="w-full">
-        <div className="h-[1px] bg-gray-200" />
-      </div>
-
-      {/* 콘텐츠 영역 */}
-      <div className="w-full px-4 py-4">
-        <div className="max-w-[580px] mx-auto">
-          <div className="pt-2 pb-6">
-            <h1 className="text-[22px] font-semibold text-gray-900 mb-4">{post.title}</h1>
-            <p className="text-[16px] text-gray-900 leading-relaxed">
-              {post.content}
-            </p>
+          {/* 콘텐츠 영역 */}
+          <div className="p-4">
+            <div className="pt-2 pb-6">
+              <h1 className="text-[22px] font-semibold text-gray-900 mb-4">{post.title}</h1>
+              <p className="text-[16px] text-gray-900 leading-relaxed">
+                {post.content}
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* 액션 버튼 영역 */}
-      <div className="w-full bg-white px-4 pb-3">
-        <div className="max-w-[580px] mx-auto">
-          <div className="rounded-3xl bg-white">
-            <div className="flex items-center justify-between pt-3">
+          {/* 액션 버튼 영역 */}
+          <div className="px-4 pb-4">
+            <div className="flex items-center justify-between">
               {/* 좋아요, 댓글 버튼 그룹 */}
               <div className="flex items-center gap-2">
                 {/* 좋아요 버튼 */}
                 <button 
                   onClick={handleLike}
-                  className="flex items-center bg-gray-100 hover:bg-gray-200 group transition-colors duration-200 rounded-full px-3 py-1.5"
+                  className="flex items-center bg-gray-200 hover:bg-gray-300 group transition-colors duration-200 rounded-full px-3 py-2"
                 >
                   <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'}`} />
                   <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'} text-[14px] relative top-[1px]`}>
@@ -276,7 +266,7 @@ function PostDetail() {
                       commentInput.focus();
                     }
                   }}
-                  className="flex items-center bg-gray-100 hover:bg-gray-200 group transition-colors duration-200 rounded-full px-3 py-1.5"
+                  className="flex items-center bg-gray-200 hover:bg-gray-300 group transition-colors duration-200 rounded-full px-3 py-2"
                 >
                   <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
                   <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
@@ -289,18 +279,14 @@ function PostDetail() {
               {/* 공유 버튼 */}
               <button
                 onClick={handleShare}
-                className="flex items-center bg-gray-100 hover:bg-gray-200 group transition-colors duration-200 rounded-full px-3 py-1.5"
+                className="flex items-center bg-gray-200 hover:bg-gray-300 group transition-colors duration-200 rounded-full p-2"
               >
                 <ShareIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
-                <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">공유</span>
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      {/* 구분선 */}
-      <div className="w-full h-[1px] bg-gray-200" />
 
       {/* 댓글 영역 컨테이너 */}
       <div className="w-full px-4">

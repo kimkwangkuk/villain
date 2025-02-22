@@ -74,12 +74,12 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   };
 
   return (
-    <div className=" p-[20px]">
+    <div className=" px-[20px] py-[16px]">
       {/* 상단 영역: 프로필 정보와 더보기 버튼 */}
-      <div className="flex justify-between items-start mb-[12px]">
+      <div className="flex justify-between items-start">
         {/* 프로필 정보 그룹 */}
         <div className="flex items-center space-x-[6px]">
-          <div className="w-[26px] h-[26px] rounded-full overflow-hidden bg-gray-200">
+          <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200">
             <img
               src={imageError ? getDefaultProfileImage() : (comment.authorPhotoURL || getDefaultProfileImage())}
               alt={comment.authorName}
@@ -159,7 +159,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           </div>
         </div>
       ) : (
-        <div className="text-[15px] text-gray-900 mb-[12px]">
+        <div className="text-[15px] text-gray-900 mb-[12px] break-all whitespace-pre-wrap">
           {comment.content}
         </div>
       )}
