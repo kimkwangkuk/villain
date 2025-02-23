@@ -20,6 +20,7 @@ function PostDetail() {
   const [error, setError] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
 
   // 컴포넌트 마운트 시 스크롤 최상단으로 이동
   useEffect(() => {
@@ -89,6 +90,12 @@ function PostDetail() {
     }
     if (!commentContent.trim()) return;
 
+    // 현재 댓글 내용 저장
+    const currentComment = commentContent;
+    
+    // 입력창 즉시 초기화
+    setCommentContent('');
+
     // 낙관적 업데이트: 현재 댓글 수를 즉시 1 증가
     const previousCommentCount = post?.commentCount || 0;
     setPost((prev) => ({
@@ -97,14 +104,15 @@ function PostDetail() {
     }));
 
     try {
-      await addComment(id, commentContent);
-      setCommentContent('');
+      await addComment(id, currentComment);
     } catch (error) {
       // 에러 시 롤백 처리
       setPost((prev) => ({
         ...prev,
         commentCount: previousCommentCount
       }));
+      // 에러 시 입력창 복구
+      setCommentContent(currentComment);
       console.error('댓글 작성 실패:', error);
       alert('댓글 작성에 실패했습니다.');
     }
@@ -115,14 +123,21 @@ function PostDetail() {
       alert('로그인이 필요합니다.');
       return;
     }
+
+    // 이미 처리 중이면 중복 요청 방지
+    if (isLikeLoading) return;
     
     // 낙관적 업데이트: 현재 상태 바로 변경
     const previousIsLiked = isLiked;
     const previousLikes = post.likes;
     setIsLiked(!previousIsLiked);
-    setPost(prev => ({ ...prev, likes: previousIsLiked ? previousLikes - 1 : previousLikes + 1 }));
+    setPost(prev => ({ 
+      ...prev, 
+      likes: previousIsLiked ? previousLikes - 1 : previousLikes + 1 
+    }));
     
     try {
+      setIsLikeLoading(true);
       const updatedPost = await updateLikes(post.id, user.uid, user.displayName || '익명');
       setPost(prev => ({
         ...prev,
@@ -135,6 +150,8 @@ function PostDetail() {
       setPost(prev => ({ ...prev, likes: previousLikes }));
       console.error('좋아요 처리 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
+    } finally {
+      setIsLikeLoading(false);
     }
   };
 
@@ -186,7 +203,7 @@ function PostDetail() {
   if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="min-h-screen bg-white py-8">
+    <div className="bg-white py-8">
       {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
         <div className="max-w-[580px] mx-auto bg-gray-100 rounded-2xl">
@@ -230,58 +247,63 @@ function PostDetail() {
                 {post.content}
               </p>
             </div>
-          </div>
 
-          {/* 액션 버튼 영역 */}
-          <div className="px-4 pb-4">
-            <div className="flex items-center justify-between">
-              {/* 좋아요, 댓글 버튼 그룹 */}
-              <div className="flex items-center gap-2">
-                {/* 좋아요 버튼 */}
-                <button 
-                  onClick={handleLike}
-                  className="flex items-center bg-gray-200 hover:bg-gray-300 group transition-colors duration-200 rounded-full px-3 py-2"
-                >
-                  <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'}`} />
-                  <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'} text-[14px] relative top-[1px]`}>
-                    {isLiked ? "반응 취소" : "반응"}
-                  </span>
-                  {post.likes > 0 && (
-                    <span className="ml-1 text-[14px] text-gray-600">{post.likes}</span>
-                  )}
-                </button>
+            {/* 좋아요/댓글 수 표시 */}
+            <div className="flex items-center justify-between text-[14px] text-gray-500 pb-3">
+              <span>{post.likes || 0}명의 반응</span>
+              <span>댓글 {post.commentCount || 0}</span>
+            </div>
 
-                {/* 댓글 버튼 */}
-                <button
-                  onClick={() => {
-                    const commentInput = document.querySelector('textarea');
-                    if (commentInput) {
-                      commentInput.focus();
-                    }
-                  }}
-                  className="flex items-center bg-gray-200 hover:bg-gray-300 group transition-colors duration-200 rounded-full px-3 py-2"
-                >
-                  <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
-                  <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
-                  {post.commentCount > 0 && (
-                    <span className="ml-1 text-[14px] text-gray-600">{post.commentCount}</span>
-                  )}
-                </button>
-              </div>
+            {/* 좋아요/댓글/공유 버튼 컨테이너 */}
+            <div className="flex items-center justify-between border-t border-gray-200 pt-3 -mx-4 px-4">
+              {/* 좋아요 버튼 */}
+              <button 
+                onClick={handleLike}
+                disabled={isLikeLoading}
+                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+              >
+                <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'}`} />
+                <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'} text-[14px] relative top-[1px]`}>
+                  {isLiked ? "반응 취소" : "반응"}
+                </span>
+              </button>
+
+              {/* 댓글 버튼 */}
+              <button
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    alert('로그인이 필요합니다.');
+                    return;
+                  }
+                  const commentInput = document.querySelector('textarea');
+                  if (commentInput) {
+                    commentInput.focus();
+                  }
+                }}
+                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+              >
+                <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+                <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
+              </button>
 
               {/* 공유 버튼 */}
               <button
-                onClick={handleShare}
-                className="flex items-center bg-gray-200 hover:bg-gray-300 group transition-colors duration-200 rounded-full p-2"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleShare();
+                }}
+                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
               >
                 <ShareIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+                <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">공유</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 댓글 영역 전체를 감싸는 컨테이너 - 좌우 패딩 추가 */}
+      {/* 댓글 영역 전체를 감싸는 컨테이너 */}
       <div className="w-full px-4 mt-4">
         <div className="max-w-[580px] mx-auto">
           {/* 댓글 입력 영역 */}
@@ -358,29 +380,27 @@ function PostDetail() {
           </div>
 
           {/* 댓글 리스트 영역 */}
-          <div className="mt-4 bg-gray-100 rounded-2xl">
-            {comments.length > 0 && (
-              <div>
-                {comments.map((comment, index) => (
-                  <div key={comment.id}>
-                    <CommentCard
-                      comment={{
-                        ...comment,
-                        authorPhotoURL: comment.photoURL,
-                        userId: comment.userId,
-                      }}
-                      postAuthorId={post.authorId}
-                      onEdit={(newContent) => handleEditComment(comment.id, newContent)}
-                      onDelete={() => handleDeleteComment(comment.id)}
-                    />
-                    {index !== comments.length - 1 && (
-                      <div className="h-[1px] bg-gray-200" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {comments.length > 0 && (
+            <div className="mt-4 bg-gray-100 rounded-2xl">
+              {comments.map((comment, index) => (
+                <div key={comment.id}>
+                  <CommentCard
+                    comment={{
+                      ...comment,
+                      authorPhotoURL: comment.photoURL,
+                      userId: comment.userId,
+                    }}
+                    postAuthorId={post.authorId}
+                    onEdit={(newContent) => handleEditComment(comment.id, newContent)}
+                    onDelete={() => handleDeleteComment(comment.id)}
+                  />
+                  {index !== comments.length - 1 && (
+                    <div className="h-[1px] bg-gray-200" />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -12,6 +12,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   const [editContent, setEditContent] = useState(comment.content);
   const [commentLikes, setCommentLikes] = useState(comment.likes || 0);
   const [liked, setLiked] = useState(user && comment.likedBy ? comment.likedBy.includes(user.uid) : false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
   const menuRef = useRef(null);
 
   // 바깥 영역 클릭 감지
@@ -64,12 +65,32 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       alert('로그인이 필요합니다.');
       return;
     }
+
+    // 이미 처리 중이면 중복 요청 방지
+    if (isLikeLoading) return;
+
+    // 이전 상태 저장
+    const previousLiked = liked;
+    const previousLikes = commentLikes;
+
+    // 낙관적 업데이트
+    setLiked(!previousLiked);
+    setCommentLikes(previousLiked ? previousLikes - 1 : previousLikes + 1);
+
     try {
+      setIsLikeLoading(true);
       const updatedComment = await updateCommentLikes(comment.id, user.uid);
+      // 서버 응답으로 상태 동기화
       setCommentLikes(updatedComment.likes);
       setLiked(updatedComment.likedBy.includes(user.uid));
     } catch (error) {
+      // 실패 시 이전 상태로 롤백
+      setLiked(previousLiked);
+      setCommentLikes(previousLikes);
       console.error('댓글 좋아요 업데이트 실패:', error);
+      alert('좋아요 처리에 실패했습니다.');
+    } finally {
+      setIsLikeLoading(false);
     }
   };
 
@@ -168,6 +189,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       <div className="flex items-center space-x-4">
         <button 
           onClick={handleLike}
+          disabled={isLikeLoading}
           className="flex items-center space-x-1 text-gray-500 hover:text-gray-700"
         >
           <LikeIcon className={`w-[24px] h-[24px] ${liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`} />
