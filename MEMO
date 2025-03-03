@@ -15,13 +15,12 @@ await createTestPosts()
 
 # 원격 저장소의 변경사항 가져오기
 git fetch origin
-
 git pull origin main
 # 원격 저장소의 변경사항을 현재 브랜치에 적용
 
 
 git add .
-git commit -m "무한스크롤 및 아이콘 일부 추가"
+git commit -m "맥북에서 카드 디자인 수정"
 git push origin main
 
 

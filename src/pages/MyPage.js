@@ -76,12 +76,12 @@ function MyPage() {
 
     const fetchMyPosts = async () => {
       try {
-        console.log('내 게시글을 가져오는 중...');
+        console.log('Fetching posts with user ID:', user?.uid);
         const filteredPosts = await getMyPosts(user?.uid);
-        console.log('가져온 게시글:', filteredPosts);
+        console.log('Fetched posts:', filteredPosts);
         setMyPosts(filteredPosts);
       } catch (error) {
-        console.error('내 게시글 로딩 실패:', error);
+        console.error('Failed to load my posts:', error);
       }
     };
 

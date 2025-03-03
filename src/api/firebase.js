@@ -428,12 +428,16 @@
 
   // 사용자의 게시글 가져오기
   export const getMyPosts = async (userId) => {
+    console.log('Fetching posts for userId:', userId); // 디버깅용
     const q = query(
       collection(db, 'posts'),
-      where('authorId', '==', userId), // 현재 사용자의 ID와 일치하는 게시글만 가져오기
-      orderBy('createdAt', 'desc') // 생성일 기준으로 정렬
+      where('authorId', '==', userId),
+      orderBy('createdAt', 'desc')
     );
+    
     const snapshot = await getDocs(q);
+    console.log('Found posts:', snapshot.size); // 디버깅용
+    
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
