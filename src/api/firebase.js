@@ -97,20 +97,22 @@
   };
 
   // Comments
-  export const addComment = async (postId, commentContent) => {
+  export const addComment = async (postId, content) => {
     const user = auth.currentUser;
     if (!user) throw new Error('Must be logged in');
 
-    // 사용자 정보 가져오기
     const userDoc = await getUserDoc(user.uid);
     const comment = {
-      content: commentContent,
-      postId: postId,
+      content,
+      postId,
       userId: user.uid,
       authorName: userDoc.username || user.email,
       photoURL: userDoc.photoURL || user.photoURL,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      isReply: false,  // 명시적으로 false 설정
+      likes: 0,
+      likedBy: []
     };
 
     try {
@@ -135,7 +137,7 @@
             postData.authorId,
             user.uid,
             userDoc.username || user.email,
-            commentContent
+            content
           );
         }
       }
@@ -603,4 +605,57 @@
       }
     }
     return username;
+  };
+
+  // 대댓글 추가
+  export const addReply = async (postId, parentCommentId, replyContent) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Must be logged in');
+
+    const userDoc = await getUserDoc(user.uid);
+    const reply = {
+      content: replyContent,
+      userId: user.uid,
+      authorName: userDoc.username || user.email,
+      photoURL: userDoc.photoURL || user.photoURL,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    try {
+      // 댓글의 서브컬렉션으로 대댓글 추가
+      const replyRef = await addDoc(
+        collection(db, 'comments', parentCommentId, 'replies'), 
+        reply
+      );
+      
+      // posts 컬렉션의 댓글 수 업데이트
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        commentCount: increment(1)
+      });
+
+      return {
+        id: replyRef.id,
+        ...reply,
+        createdAt: new Date()
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // 대댓글 목록 가져오기
+  export const getReplies = async (parentCommentId) => {
+    const q = query(
+      collection(db, 'comments', parentCommentId, 'replies'),
+      orderBy('createdAt', 'asc')
+    );
+    
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate()
+    }));
   };

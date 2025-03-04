@@ -56,6 +56,7 @@ function PostDetail() {
       }
     };
 
+    // 단순화된 쿼리
     const commentsQuery = query(
       collection(db, 'comments'),
       where('postId', '==', id),

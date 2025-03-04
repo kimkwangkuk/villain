@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import dayjs from 'dayjs';
-import { updateCommentLikes } from '../api/firebase';
+import { updateCommentLikes, addReply, getReplies } from '../api/firebase';
 import { LikeIcon, MessageIcon, EllipsisIcon } from '../components/Icons';
 
 function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
@@ -14,6 +14,10 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   const [liked, setLiked] = useState(user && comment.likedBy ? comment.likedBy.includes(user.uid) : false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const menuRef = useRef(null);
+  const [showReplyInput, setShowReplyInput] = useState(false);
+  const [replyContent, setReplyContent] = useState('');
+  const [replies, setReplies] = useState([]);
+  const [showReplies, setShowReplies] = useState(false);
 
   // 바깥 영역 클릭 감지
   useEffect(() => {
@@ -91,6 +95,42 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       alert('좋아요 처리에 실패했습니다.');
     } finally {
       setIsLikeLoading(false);
+    }
+  };
+
+  // 대댓글 목록 가져오기
+  useEffect(() => {
+    const fetchReplies = async () => {
+      try {
+        const replyList = await getReplies(comment.id);
+        setReplies(replyList);
+        // 대댓글이 있으면 자동으로 보이게 설정
+        if (replyList.length > 0) {
+          setShowReplies(true);
+        }
+      } catch (error) {
+        console.error('대댓글 로딩 실패:', error);
+      }
+    };
+    fetchReplies();
+  }, [comment.id]);
+
+  // 대댓글 작성 처리
+  const handleReplySubmit = async (e) => {
+    e.preventDefault();
+    if (!replyContent.trim()) return;
+
+    try {
+      const newReply = await addReply(comment.postId, comment.id, replyContent);
+      if (newReply) {
+        setReplies(prev => [...prev, newReply]);
+        setReplyContent('');
+        setShowReplyInput(false);
+        setShowReplies(true);
+      }
+    } catch (error) {
+      console.error('대댓글 작성 실패:', error);
+      alert('대댓글 작성에 실패했습니다.');
     }
   };
 
@@ -195,11 +235,60 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           <LikeIcon className={`w-[24px] h-[24px] ${liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`} />
           <span className="text-[13px]">{commentLikes}</span>
         </button>
-        <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700">
+        <button 
+          onClick={() => {
+            if (!user) {
+              alert('로그인이 필요합니다.');
+              return;
+            }
+            setShowReplyInput(!showReplyInput);
+          }}
+          className="flex items-center space-x-1 text-gray-500 hover:text-gray-700"
+        >
           <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
           <span className="text-[13px]">답글달기</span>
         </button>
       </div>
+
+      {/* 대댓글 입력 폼 */}
+      {showReplyInput && (
+        <form onSubmit={handleReplySubmit} className="mt-3 ml-8">
+          <div className="flex items-center space-x-2">
+            <textarea
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder="답글을 입력하세요..."
+              className="flex-1 bg-gray-50 rounded-lg p-2 text-sm resize-none"
+              rows="1"
+            />
+            <button
+              type="submit"
+              className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
+            >
+              답글
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* 대댓글 목록 */}
+      {replies.length > 0 && showReplies && (
+        <div className="ml-8 mt-3 space-y-3">
+          {replies.map(reply => (
+            <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
+              <div className="flex items-center space-x-2">
+                <img
+                  src={reply.photoURL || getDefaultProfileImage()}
+                  alt={reply.authorName}
+                  className="w-5 h-5 rounded-full"
+                />
+                <span className="text-sm font-medium">{reply.authorName}</span>
+              </div>
+              <p className="text-sm mt-1">{reply.content}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
