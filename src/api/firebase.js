@@ -169,15 +169,36 @@
   // 댓글 삭제 함수
   export const deleteComment = async (postId, commentId) => {
     try {
-      // comments 컬렉션에서 댓글 삭제
       const commentRef = doc(db, 'comments', commentId);
-      await deleteDoc(commentRef);
-      
-      // posts 컬렉션의 댓글 수 감소
       const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        commentCount: increment(-1)
-      });
+      
+      // 게시글 정보 가져오기
+      const postDoc = await getDoc(postRef);
+      const currentCommentCount = postDoc.data()?.commentCount || 0;
+      
+      // 대댓글 확인
+      const repliesSnapshot = await getDocs(collection(commentRef, 'replies'));
+      const hasReplies = !repliesSnapshot.empty;
+
+      // 대댓글 유무와 관계없이 댓글 완전 삭제
+      if (!hasReplies) {
+        await deleteDoc(commentRef);
+        
+        // 게시글의 댓글 수 감소 (0 미만이 되지 않도록)
+        if (currentCommentCount > 0) {
+          await updateDoc(postRef, {
+            commentCount: currentCommentCount - 1
+          });
+        }
+      } else {
+        // 대댓글이 있는 경우에만 내용 삭제 처리하고 사용자 정보 숨김
+        await updateDoc(commentRef, {
+          content: '[삭제된 댓글입니다]',
+          isDeleted: true,
+          authorName: '삭제된 댓글',
+          authorPhotoURL: null
+        });
+      }
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
       throw error;
@@ -658,4 +679,49 @@
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate()
     }));
+  };
+
+  // 게시글 수정
+  export const updatePost = async (postId, updateData) => {
+    try {
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        ...updateData,
+        updatedAt: serverTimestamp()
+      });
+      
+      // 업데이트된 게시글 데이터 반환
+      const updatedPost = await getDoc(postRef);
+      return {
+        id: updatedPost.id,
+        ...updatedPost.data()
+      };
+    } catch (error) {
+      console.error('게시글 수정 실패:', error);
+      throw error;
+    }
+  };
+
+  // 대댓글 삭제
+  export const deleteReply = async (postId, commentId, replyId) => {
+    try {
+      // 대댓글 삭제
+      const replyRef = doc(db, 'comments', commentId, 'replies', replyId);
+      await deleteDoc(replyRef);
+      
+      // 게시글 정보 가져오기
+      const postRef = doc(db, 'posts', postId);
+      const postDoc = await getDoc(postRef);
+      const currentCommentCount = postDoc.data()?.commentCount || 0;
+      
+      // 게시글의 댓글 수 감소 (0 미만이 되지 않도록)
+      if (currentCommentCount > 0) {
+        await updateDoc(postRef, {
+          commentCount: currentCommentCount - 1
+        });
+      }
+    } catch (error) {
+      console.error('대댓글 삭제 실패:', error);
+      throw error;
+    }
   };

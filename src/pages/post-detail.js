@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
 import { doc, getDoc, collection, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
-import { addComment, updateComment, deleteComment, updateLikes } from '../api/firebase';
+import { addComment, updateComment, deleteComment, updateLikes, updatePost } from '../api/firebase';
 import { MessageIcon, LikeIcon, ShareIcon } from '../components/Icons';
 import { PrimaryButton } from '../components/Button';
 import { EllipsisIcon } from '../components/Icons';
@@ -12,6 +12,7 @@ import PostDetailSkeleton from '../components/PostDetailSkeleton';
 
 function PostDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
@@ -21,6 +22,10 @@ function PostDetail() {
   const [isLiked, setIsLiked] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
   // 컴포넌트 마운트 시 스크롤 최상단으로 이동
   useEffect(() => {
@@ -199,6 +204,39 @@ function PostDetail() {
     }
   };
 
+  const handleEdit = async () => {
+    if (!editTitle.trim() || !editContent.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      const updatedPost = await updatePost(id, {
+        title: editTitle,
+        content: editContent
+      });
+      setPost(updatedPost);
+      setIsEditing(false);
+      setShowMoreMenu(false);
+    } catch (error) {
+      console.error('게시글 수정 실패:', error);
+      alert('게시글 수정에 실패했습니다.');
+    }
+  };
+
+  const handleReport = () => {
+    alert('신고가 접수되었습니다.');
+    setShowMoreMenu(false);
+  };
+
+  // 수정 모드로 전환
+  const startEditing = () => {
+    setEditTitle(post.title);
+    setEditContent(post.content);
+    setIsEditing(true);
+    setShowMoreMenu(false);
+  };
+
   if (loading) return <PostDetailSkeleton />;
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
   if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
@@ -215,39 +253,94 @@ function PostDetail() {
                 <div className="w-8 h-8 rounded-full overflow-hidden">
                   <img
                     src={
-                      post.authorPhotoURL ||
-                      `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post.authorId}&backgroundColor=e8f5e9`
+                      post?.authorPhotoURL ||
+                      `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post?.authorId}&backgroundColor=e8f5e9`
                     }
-                    alt={`${post.authorName}의 프로필`}
+                    alt={`${post?.authorName}의 프로필`}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="ml-2">
                   <div className="text-[13px] font-semibold text-gray-900">
-                    {post.authorName}
+                    {post?.authorName}
                   </div>
                   <div className="text-[12px] text-gray-500">
-                    <span>{post.categoryName}</span>
+                    <span>{post?.categoryName}</span>
                     <span className="mx-1">·</span>
-                    <span>{post.createdAt?.toDate().toLocaleTimeString()}</span>
+                    <span>{post?.createdAt?.toDate().toLocaleTimeString()}</span>
                   </div>
                 </div>
               </div>
-              {/* 더보기 버튼 */}
-              <button className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200">
-                <span className="text-gray-300 text-sm transition-colors hover:text-gray-900">⋮</span>
-              </button>
+              {/* 더보기 버튼과 팝업 메뉴 */}
+              <div className="relative">
+                <button 
+                  className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200"
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                >
+                  <span className="text-gray-300 text-sm transition-colors hover:text-gray-900">⋮</span>
+                </button>
+                {showMoreMenu && (
+                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg z-10 py-1">
+                    {user?.uid === post?.authorId && (
+                      <button
+                        onClick={startEditing}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        수정하기
+                      </button>
+                    )}
+                    <button
+                      onClick={handleReport}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      신고하기
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* 콘텐츠 영역 */}
           <div className="pt-[0px] p-4">
-            <div className="pt-3 pb-6">
-              <h1 className="text-[20px] font-semibold text-gray-900 mb-2">{post.title}</h1>
-              <p className="text-[16px] text-gray-900 leading-relaxed">
-                {post.content}
-              </p>
-            </div>
+            {isEditing ? (
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="제목"
+                />
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[200px]"
+                  placeholder="내용"
+                />
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={handleEdit}
+                    className="px-4 py-2 text-sm text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-3 pb-6">
+                <h1 className="text-[20px] font-semibold text-gray-900 mb-2">{post?.title}</h1>
+                <p className="text-[16px] text-gray-900 leading-relaxed">
+                  {post?.content}
+                </p>
+              </div>
+            )}
 
             {/* 좋아요/댓글 수 표시 */}
             <div className="flex items-center justify-between text-[14px] text-gray-500 pb-3">
