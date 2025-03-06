@@ -3,7 +3,7 @@
     collection, getDocs, getDoc, addDoc, doc,
     query, orderBy, serverTimestamp, updateDoc,
     arrayUnion, where, arrayRemove, setDoc,
-    increment, deleteDoc
+    increment, deleteDoc, limit
   } from 'firebase/firestore';
   import { 
     signInWithEmailAndPassword,
@@ -55,13 +55,13 @@
     const post = {
       ...postData,
       authorId: user.uid,
-      authorName: user.displayName || user.email,
+      authorName: userDoc.username || user.email,
       authorPhotoURL: userDoc.photoURL,
-      categoryName: categoryName,  // 카테고리 이름 추가
+      categoryName: categoryName,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       likes: 0,
-      commentCount: 0, // 댓글 수 필드 추가
+      commentCount: 0,
       comments: []
     };
 
@@ -722,6 +722,121 @@
       }
     } catch (error) {
       console.error('대댓글 삭제 실패:', error);
+      throw error;
+    }
+  };
+
+  // 게시물/댓글 신고하기
+  export const reportContent = async (type, contentId, userId, reason) => {
+    try {
+      const reportRef = collection(db, 'reports');
+      const reportData = {
+        type: type, // 'post' or 'comment' or 'reply'
+        contentId: contentId,
+        reporterId: userId,
+        reason: reason,
+        createdAt: serverTimestamp(),
+        status: 'pending' // 'pending', 'reviewed', 'resolved'
+      };
+      
+      await addDoc(reportRef, reportData);
+    } catch (error) {
+      console.error('신고 실패:', error);
+      throw error;
+    }
+  };
+
+  // 내가 신고한 게시물/댓글 목록 가져오기
+  export const getMyReports = async (userId) => {
+    try {
+      const reportRef = collection(db, 'reports');
+      const q = query(
+        reportRef,
+        where('reporterId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const reports = [];
+      
+      for (const doc of querySnapshot.docs) {
+        const reportData = doc.data();
+        // 신고된 컨텐츠의 실제 데이터 가져오기
+        let contentData = null;
+        
+        if (reportData.type === 'post') {
+          const postDoc = await getDoc(doc(db, 'posts', reportData.contentId));
+          contentData = postDoc.data();
+        } else if (reportData.type === 'comment') {
+          const commentDoc = await getDoc(doc(db, 'comments', reportData.contentId));
+          contentData = commentDoc.data();
+        }
+        
+        reports.push({
+          id: doc.id,
+          ...reportData,
+          content: contentData
+        });
+      }
+      
+      return reports;
+    } catch (error) {
+      console.error('신고 목록 가져오기 실패:', error);
+      throw error;
+    }
+  };
+
+  // 이미 신고한 컨텐츠인지 확인
+  export const hasAlreadyReported = async (type, contentId, userId) => {
+    try {
+      const reportRef = collection(db, 'reports');
+      const q = query(
+        reportRef,
+        where('type', '==', type),
+        where('contentId', '==', contentId),
+        where('reporterId', '==', userId),
+        limit(1)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('신고 확인 실패:', error);
+      throw error;
+    }
+  };
+
+  // 포스트와 관련된 모든 댓글 삭제
+  export const deletePost = async (postId) => {
+    try {
+      // 1. 해당 포스트의 모든 댓글 가져오기
+      const commentsQuery = query(
+        collection(db, 'comments'),
+        where('postId', '==', postId)
+      );
+      const commentsSnapshot = await getDocs(commentsQuery);
+
+      // 2. 각 댓글과 그 댓글의 대댓글들 삭제
+      for (const commentDoc of commentsSnapshot.docs) {
+        const commentRef = doc(db, 'comments', commentDoc.id);
+        
+        // 2-1. 대댓글 삭제
+        const repliesSnapshot = await getDocs(collection(commentRef, 'replies'));
+        const replyDeletions = repliesSnapshot.docs.map(replyDoc =>
+          deleteDoc(doc(commentRef, 'replies', replyDoc.id))
+        );
+        await Promise.all(replyDeletions);
+
+        // 2-2. 댓글 삭제
+        await deleteDoc(commentRef);
+      }
+
+      // 3. 포스트 삭제
+      const postRef = doc(db, 'posts', postId);
+      await deleteDoc(postRef);
+
+    } catch (error) {
+      console.error('포스트 삭제 실패:', error);
       throw error;
     }
   };

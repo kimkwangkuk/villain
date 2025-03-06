@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
-import { HomeIcon, UserIcon } from './Icons';
+import { UserIcon } from './Icons';
 import { PrimaryButton, SecondaryButton, LineButton } from './Button';
 
 function Navbar() {
@@ -25,15 +25,11 @@ function Navbar() {
     >
       <div className="px-4">
         <div className="flex justify-between items-center h-16">
-          <Link to="/about" className="text-2xl font-bold hover:text-gray-900">
+          <Link to="/" className="text-2xl font-bold hover:text-gray-900">
             빌런
           </Link>
 
           <div className="flex items-center space-x-4">
-            <Link to="/" className="hover:text-gray-600">
-              <HomeIcon />
-            </Link>
-            
             {isLoggedIn && (
               <Link to="/mypage" className="hover:text-gray-600">
                 <UserIcon />

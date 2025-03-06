@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPost, getCategories } from '../api/firebase';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { createPost, getCategories, updatePost } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
 import { PrimaryButton, LineButton } from '../components/Button';
 
 function AddPostPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEditing = location.state?.isEditing;
+  const editingPost = location.state?.post;
+  
   const { isLoggedIn, user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    category: ''
+    title: editingPost?.title || '',
+    content: editingPost?.content || '',
+    category: editingPost?.categoryId || ''
   });
   const [errors, setErrors] = useState({
     title: '',
@@ -137,15 +141,24 @@ function AddPostPage() {
     }
 
     try {
-      await createPost({
-        title: formData.title,
-        content: formData.content,
-        categoryId: formData.category
-      });
-      navigate('/');
+      if (isEditing) {
+        await updatePost(editingPost.id, {
+          title: formData.title,
+          content: formData.content,
+          categoryId: formData.category
+        });
+        navigate(`/posts/${editingPost.id}`);
+      } else {
+        await createPost({
+          title: formData.title,
+          content: formData.content,
+          categoryId: formData.category
+        });
+        navigate('/');
+      }
     } catch (error) {
-      console.error('게시글 작성 실패:', error);
-      setErrors({ ...errors, general: error.message || '게시글 작성에 실패했습니다.' });
+      console.error(isEditing ? '게시글 수정 실패:' : '게시글 작성 실패:', error);
+      setErrors({ ...errors, general: error.message || (isEditing ? '게시글 수정에 실패했습니다.' : '게시글 작성에 실패했습니다.') });
     }
   };
 
@@ -158,7 +171,11 @@ function AddPostPage() {
     const navbar = document.querySelector('nav');
     if (navbar) navbar.style.display = 'block';
     
-    navigate('/');
+    if (isEditing) {
+      navigate(`/posts/${editingPost.id}`);
+    } else {
+      navigate('/');
+    }
   };
 
   if (loading) {
@@ -183,8 +200,12 @@ function AddPostPage() {
                 <span className="text-xl">⚡</span>
               </div>
               <div>
-                <p className="text-lg font-semibold">더 이상 비슷한 일이 일어나지 않도록.</p>
-                <p className="text-lg font-semibold">빌런의 행태를 세상에 알리세요.</p>
+                <p className="text-lg font-semibold">
+                  {isEditing ? '게시글을 수정하여' : '더 이상 비슷한 일이 일어나지 않도록.'}
+                </p>
+                <p className="text-lg font-semibold">
+                  {isEditing ? '정확한 정보를 공유하세요.' : '빌런의 행태를 세상에 알리세요.'}
+                </p>
               </div>
             </div>
           </div>
@@ -262,7 +283,7 @@ function AddPostPage() {
                   type="button"
                   onClick={handleSubmit}
                 >
-                  올리기
+                  {isEditing ? '수정' : '올리기'}
                 </PrimaryButton>
               </div>
             </div>

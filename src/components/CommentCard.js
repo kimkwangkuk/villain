@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import dayjs from 'dayjs';
-import { updateCommentLikes, addReply, getReplies, deleteReply, deleteComment } from '../api/firebase';
+import { updateCommentLikes, addReply, getReplies, deleteReply, deleteComment, reportContent, hasAlreadyReported } from '../api/firebase';
 import { LikeIcon, MessageIcon, EllipsisIcon } from '../components/Icons';
 
 function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
@@ -149,9 +149,50 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
     }
   };
 
+  // 댓글 신고 처리
+  const handleReportComment = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      // 이미 신고한 댓글인지 확인
+      const alreadyReported = await hasAlreadyReported('comment', comment.id, user.uid);
+      if (alreadyReported) {
+        alert('이미 신고한 댓글입니다.');
+        return;
+      }
+
+      await reportContent('comment', comment.id, user.uid, '부적절한 내용');
+      alert('신고가 접수되었습니다.');
+    } catch (error) {
+      console.error('댓글 신고 실패:', error);
+      alert('신고 처리에 실패했습니다.');
+    }
+  };
+
   // 대댓글 신고 처리
-  const handleReportReply = (replyId) => {
-    alert('신고가 접수되었습니다.');
+  const handleReportReply = async (replyId) => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      // 이미 신고한 대댓글인지 확인
+      const alreadyReported = await hasAlreadyReported('reply', replyId, user.uid);
+      if (alreadyReported) {
+        alert('이미 신고한 답글입니다.');
+        return;
+      }
+
+      await reportContent('reply', replyId, user.uid, '부적절한 내용');
+      alert('신고가 접수되었습니다.');
+    } catch (error) {
+      console.error('답글 신고 실패:', error);
+      alert('신고 처리에 실패했습니다.');
+    }
   };
 
   const handleDeleteComment = async (commentId) => {

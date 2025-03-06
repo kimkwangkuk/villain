@@ -7,7 +7,6 @@ import SignupPage from './pages/signup';
 import AddPostPage from './pages/add-post';
 import MyPage from './pages/MyPage';
 import NotificationsPage from './pages/notifications';
-import AboutVillains from './pages/AboutVillains';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import UserPage from './pages/UserPage';
@@ -48,7 +47,6 @@ function App() {
             <Route path="/posts/:id" element={<PostDetail />} />
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/about" element={<AboutVillains />} />
             <Route path="/user/:userId" element={<UserPage />} />
           </Routes>
         </AppLayout>
