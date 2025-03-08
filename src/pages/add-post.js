@@ -240,15 +240,22 @@ function AddPostPage() {
 
             <div className="border-b border-gray-100">
               <div className="px-6">
-                <div className="flex justify-between items-center h-[72px]">
-                  <h1 className="text-base font-medium">빌런 네임</h1>
-                  <input
-                    type="text"
+                <div className="min-h-[72px] flex items-center py-3">
+                  <textarea
                     name="title"
                     placeholder="제목을 입력하세요"
-                    className="text-right border-none focus:outline-none focus:ring-0 text-gray-500 text-base"
+                    className="w-full border-none focus:outline-none focus:ring-0 text-gray-500 text-base resize-none"
                     value={formData.title}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      handleChange(e);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    rows="1"
+                    style={{ 
+                      minHeight: '24px',
+                      height: 'auto'
+                    }}
                   />
                 </div>
               </div>

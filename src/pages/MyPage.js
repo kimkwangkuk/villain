@@ -13,7 +13,7 @@ import PostCard from '../components/PostCard';
 import { query, collection, where, orderBy, onSnapshot, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import dayjs from 'dayjs';
-import { ProfileImageModal, EditNameModal, EditBioModal } from '../components/Modal';
+import { ProfileImageModal, EditNameModal } from '../components/Modal';
 import { updateProfile } from 'firebase/auth';
 
 function MyPage() {
@@ -27,9 +27,6 @@ function MyPage() {
   const [isProfileImageModalOpen, setIsProfileImageModalOpen] = useState(false);
   const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
   const [nameError, setNameError] = useState('');
-  const [bio, setBio] = useState('');
-  const [isEditBioModalOpen, setIsEditBioModalOpen] = useState(false);
-  const [bioError, setBioError] = useState('');
   const [userData, setUserData] = useState(null);
   const [categories, setCategories] = useState([]); // 새로 추가
 
@@ -272,7 +269,6 @@ function MyPage() {
         try {
           const userData = await getUserDoc(user.uid);
           setUserData(userData);
-          setBio(userData.bio || '');
         } catch (error) {
           console.error('사용자 정보 로딩 실패:', error);
         }
@@ -282,81 +278,53 @@ function MyPage() {
     loadUserData();
   }, [user]);
 
-  // 자기소개 업데이트 함수
-  const handleBioUpdate = async (newBio) => {
-    try {
-      await updateUserBio(user.uid, newBio);
-      setBio(newBio);
-      setIsEditBioModalOpen(false);
-      setBioError('');
-    } catch (error) {
-      console.error('자기소개 업데이트 실패:', error);
-      setBioError('자기소개 업데이트에 실패했습니다.');
-    }
-  };
-
   if (!isLoggedIn) return null;
   if (loading) return <div>로딩중...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* 프로필 영역 */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="py-8">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <button 
-                    onClick={() => setIsProfileImageModalOpen(true)}
-                    className="w-20 h-20 rounded-full overflow-hidden"
-                  >
-                    {user?.photoURL ? (
-                      <img 
-                        src={user.photoURL} 
-                        alt="프로필" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-2xl text-gray-600">
-                          {user?.email?.charAt(0)?.toUpperCase() || '?'}
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setIsProfileImageModalOpen(true)}
-                    className="absolute bottom-0 right-0 w-6 h-6 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
-                  >
-                    <span className="text-white text-sm">✎</span>
-                  </button>
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {userData?.username || user?.email}
-                    </h2>
-                    <button
-                      onClick={() => setIsEditNameModalOpen(true)}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      <span className="sr-only">이름 수정</span>
-                      ✎
-                    </button>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <p className="text-gray-500">
-                      {bio || '자기소개가 없습니다.'}
-                    </p>
-                    <button
-                      onClick={() => setIsEditBioModalOpen(true)}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      <span className="sr-only">자기소개 수정</span>
-                      ✎
-                    </button>
-                  </div>
-                </div>
+            <div className="flex flex-col items-center">
+              <div className="relative mb-4">
+                <button 
+                  onClick={() => setIsProfileImageModalOpen(true)}
+                  className="w-20 h-20 rounded-full overflow-hidden"
+                >
+                  {user?.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt="프로필" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-2xl text-gray-600">
+                        {user?.email?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    </div>
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsProfileImageModalOpen(true)}
+                  className="absolute bottom-0 right-0 w-6 h-6 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+                >
+                  <span className="text-white text-sm">✎</span>
+                </button>
+              </div>
+              <div className="flex items-center justify-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {userData?.username || user?.email}
+                </h2>
+                <button
+                  onClick={() => setIsEditNameModalOpen(true)}
+                  className="ml-2 text-sm text-gray-500 hover:text-gray-700"
+                >
+                  <span className="sr-only">이름 수정</span>
+                  ✎
+                </button>
               </div>
               <button
                 onClick={handleLogout}
@@ -369,41 +337,10 @@ function MyPage() {
         </div>
       </div>
 
-      {/* 프로필 이미지 선택 모달 */}
-      <ProfileImageModal
-        isOpen={isProfileImageModalOpen}
-        onClose={() => setIsProfileImageModalOpen(false)}
-        onSelect={handleProfileImageUpdate}
-        currentImage={user?.photoURL}
-      />
-
-      {/* 이름 수정 모달 추가 */}
-      <EditNameModal
-        isOpen={isEditNameModalOpen}
-        onClose={() => {
-          setIsEditNameModalOpen(false);
-          setNameError('');
-        }}
-        onSubmit={handleNameUpdate}
-        initialValue={userData?.username || ''}
-        error={nameError}
-      />
-
-      {/* 자기소개 수정 모달 */}
-      <EditBioModal
-        isOpen={isEditBioModalOpen}
-        onClose={() => {
-          setIsEditBioModalOpen(false);
-          setBioError('');
-        }}
-        onSubmit={handleBioUpdate}
-        initialValue={bio}
-        error={bioError}
-      />
-
+      {/* 탭 메뉴 */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="flex overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">
+          <div className="flex justify-center overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">
             <button
               onClick={() => setActiveTab('myPosts')}
               className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
@@ -429,7 +366,11 @@ function MyPage() {
         </div>
       </div>
 
-      <div className="py-8">
+      {/* 구분선 */}
+      <div className="border-t border-gray-100"></div>
+
+      {/* 포스트 영역 */}
+      <div className="py-8 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           {activeTab === 'myPosts' ? (
             myPosts.length === 0 ? (
@@ -501,6 +442,24 @@ function MyPage() {
           )}
         </div>
       </div>
+
+      {/* 모달 컴포넌트들 */}
+      <ProfileImageModal
+        isOpen={isProfileImageModalOpen}
+        onClose={() => setIsProfileImageModalOpen(false)}
+        onSelect={handleProfileImageUpdate}
+        currentImage={user?.photoURL}
+      />
+      <EditNameModal
+        isOpen={isEditNameModalOpen}
+        onClose={() => {
+          setIsEditNameModalOpen(false);
+          setNameError('');
+        }}
+        onSubmit={handleNameUpdate}
+        initialValue={userData?.username || ''}
+        error={nameError}
+      />
     </div>
   );
 }

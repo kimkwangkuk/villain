@@ -467,41 +467,14 @@
     }));
   };
 
-  export const updateUserBio = async (userId, bio) => {
-    try {
-      const userRef = doc(db, 'users', userId);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        // 사용자 문서가 없으면 새로 생성
-        await setDoc(userRef, {
-          bio: bio,
-          userId: userId,
-          createdAt: new Date()
-        });
-      } else {
-        // 기존 문서가 있으면 업데이트
-        await updateDoc(userRef, {
-          bio: bio
-        });
-      }
-      return true;
-    } catch (error) {
-      console.error('자기소개 업데이트 실패:', error);
-      throw error;
-    }
-  };
-
   export const getUserDoc = async (userId) => {
     try {
       const userRef = doc(db, 'users', userId);
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
-        // 사용자 문서가 없으면 기본값으로 생성
         const defaultUserData = {
           userId: userId,
-          bio: '',
           createdAt: new Date()
         };
         await setDoc(userRef, defaultUserData);

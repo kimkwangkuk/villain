@@ -25,13 +25,29 @@ function Navbar() {
     >
       <div className="px-4">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="text-2xl font-bold hover:text-gray-900">
-            빌런
-          </Link>
+          <div className="flex items-center">
+            <Link to="/" className="text-2xl font-bold hover:text-gray-900 mr-4">
+              빌런
+            </Link>
+            <div className="h-[38px] bg-gray-100 rounded-lg px-4 flex items-center overflow-hidden relative w-[100px]">
+              <div 
+                className="text-[13px] text-gray-500 whitespace-nowrap absolute left-0 flex"
+                style={{
+                  animation: 'marquee 25s linear infinite',
+                  paddingLeft: '100%' // 오른쪽에서 시작
+                }}
+              >
+                <span className="mx-2">빌런 제보 익명 커뮤니티</span>
+                <span className="mx-2">빌런 제보 익명 커뮤니티</span>
+                <span className="mx-2">빌런 제보 익명 커뮤니티</span>
+                <span className="mx-2">빌런 제보 익명 커뮤니티</span>
+              </div>
+            </div>
+          </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             {isLoggedIn && (
-              <Link to="/mypage" className="hover:text-gray-600">
+              <Link to="/mypage" className="hover:text-gray-600 mr-2">
                 <UserIcon />
               </Link>
             )}
@@ -48,6 +64,20 @@ function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* 애니메이션을 위한 CSS */}
+      <style>
+        {`
+          @keyframes marquee {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-100%);
+            }
+          }
+        `}
+      </style>
     </nav>
   );
 }

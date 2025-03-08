@@ -46,6 +46,7 @@ function HomePage() {
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   // useSearchParams 훅 사용 (쿼리 파라미터 관리)
   const [searchParams, setSearchParams] = useSearchParams();
@@ -174,6 +175,19 @@ function HomePage() {
     return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${authorId}&backgroundColor=e8f5e9`;
   };
 
+  const handleShare = async (e, postId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (error) {
+      console.error('클립보드 복사 실패:', error);
+    }
+  };
+
   // 로딩 상태일 때 스켈레톤 UI 처리
   if (loading) {
     return (
@@ -268,13 +282,25 @@ function HomePage() {
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredPosts.map((post) => (
-              <PostCard key={post.id} post={post} categories={categories} />
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                categories={categories}
+                onShare={handleShare}
+              />
             ))}
           </div>
           {loadingMore && <div className="text-center mt-4">Loading more posts...</div>}
           {!hasMore && <div className="text-center mt-4">더 이상 게시글이 없습니다.</div>}
         </div>
       </div>
+
+      {/* 토스트 메시지 */}
+      {showToast && (
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg z-50">
+          링크가 복사되었습니다!
+        </div>
+      )}
     </div>
   );
 }

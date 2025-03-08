@@ -5,26 +5,12 @@ import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '../context/AuthContext';
 import { generateRandomUsername } from '../scripts/usernameWords';
 
-const villains = [
-  "직장인 빌런",
-  "학교 빌런",
-  "카페 빌런",
-  "식당 빌런",
-  "대중교통 빌런",
-  "운동시설 빌런",
-  "병원 빌런",
-  "공공장소 빌런",
-  "온라인 빌런",
-  "이웃 빌런"
-];
-
 function AuthPage() {
   const { googleLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(location.pathname === '/login');
-  const [currentVillain, setCurrentVillain] = useState(villains[0]);
-
+  
   // 회원가입 모드인 경우 내부적으로 랜덤 닉네임을 생성합니다.
   const [formData, setFormData] = useState(() => ({
     email: '',
@@ -44,17 +30,6 @@ function AuthPage() {
       username: location.pathname === '/login' ? '' : generateRandomUsername()
     });
   }, [location.pathname]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentVillain(prev => {
-        const currentIndex = villains.indexOf(prev);
-        return villains[(currentIndex + 1) % villains.length];
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -183,7 +158,13 @@ function AuthPage() {
       </div>
 
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-bold text-gray-900 mb-6">{currentVillain}을 제보하세요.</h1>
+        <p className="text-gray-500 text-lg mb-4">
+          익명 빌런 제보 커뮤니티
+        </p>
+        <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-[1.4]">
+          내 일상을 어지럽히는 빌런을 제보하고<br />
+          밝은 세상을 만들어요.
+        </h1>
       </div>
 
       <div className="flex-1 flex flex-col max-w-md mx-auto w-full">
@@ -191,11 +172,6 @@ function AuthPage() {
           <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
             {isLogin ? '로그인' : '회원가입'}
           </h2>
-          {!isLogin && (
-            <p className="text-center text-gray-600 mb-8">
-              빌런을 세상에 알리세요.
-            </p>
-          )}
         </div>
 
         <div className="w-full">

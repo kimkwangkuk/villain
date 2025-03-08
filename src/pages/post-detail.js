@@ -9,6 +9,13 @@ import { MessageIcon, LikeIcon, ShareIcon } from '../components/Icons';
 import { PrimaryButton } from '../components/Button';
 import { EllipsisIcon } from '../components/Icons';
 import PostDetailSkeleton from '../components/PostDetailSkeleton';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';  // 한국어 로케일
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+// dayjs 설정
+dayjs.locale('ko');
+dayjs.extend(relativeTime);
 
 function PostDetail() {
   const { id } = useParams();
@@ -217,6 +224,11 @@ function PostDetail() {
     }
   };
 
+  // getRelativeTime 함수 추가
+  const getRelativeTime = (date) => {
+    return dayjs(date).fromNow();
+  };
+
   if (loading) return <PostDetailSkeleton />;
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
   if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
@@ -247,7 +259,7 @@ function PostDetail() {
                   <div className="text-[12px] text-gray-500">
                     <span>{post?.categoryName}</span>
                     <span className="mx-1">·</span>
-                    <span>{post?.createdAt?.toDate().toLocaleTimeString()}</span>
+                    <span>{getRelativeTime(post?.createdAt?.toDate())}</span>
                   </div>
                 </div>
               </div>

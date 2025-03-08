@@ -39,6 +39,5 @@
  * @property {string} email - 이메일
  * @property {string} username - 사용자 이름
  * @property {string} photoURL - 프로필 이미지 URL
- * @property {string} bio - 자기소개
  * @property {Date} createdAt - 가입일
  */ 

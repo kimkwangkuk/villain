@@ -240,14 +240,14 @@ export const ShareIcon = ({ className = "w-6 h-6" }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
-    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-    <polyline points="16 6 12 2 8 6" />
-    <line x1="12" x2="12" y1="2" y2="15" />
+    <path d="M5.333 12v6.667a1.667 1.667 0 001.667 1.666h10a1.667 1.667 0 001.666-1.666V12" />
+    <path d="M15.334 7L12 3.667 8.667 7" />
+    <path d="M12 3.667v10.833" />
   </svg>
 );
 

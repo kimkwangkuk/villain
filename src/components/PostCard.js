@@ -7,13 +7,13 @@ import { collection, query, onSnapshot } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';  // 한국어 로케일
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { MessageIcon, LikeIcon } from './Icons';  // 상단에 import 추가
+import { MessageIcon, LikeIcon, ShareIcon } from './Icons';  // 상단에 import 추가
 
 // dayjs 설정
 dayjs.locale('ko');
 dayjs.extend(relativeTime);
 
-function PostCard({ post, categories }) {
+function PostCard({ post, categories, onShare }) {
   const [categoryName, setCategoryName] = useState('');
   const [likes, setLikes] = useState(post.likes || 0);
   const [isLiked, setIsLiked] = useState(false);
@@ -188,14 +188,10 @@ function PostCard({ post, categories }) {
 
             {/* 공유 버튼 */}
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                // 공유 기능 구현
-              }}
+              onClick={(e) => onShare(e, post.id)}
               className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
             >
-              <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
+              <ShareIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
               <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">공유</span>
             </button>
           </div>
