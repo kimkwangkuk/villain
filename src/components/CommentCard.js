@@ -215,9 +215,9 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       <div className="flex justify-between items-start">
         {/* 프로필 정보 그룹 */}
         <div className="flex items-center space-x-[6px]">
-          <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200">
+          <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800">
             {comment.isDeleted ? (
-              <div className="w-full h-full bg-gray-300" />
+              <div className="w-full h-full bg-gray-300 dark:bg-neutral-700" />
             ) : (
               <img
                 src={imageError ? getDefaultProfileImage() : (comment.authorPhotoURL || getDefaultProfileImage())}
@@ -233,10 +233,10 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className={`text-[13px] font-medium ${comment.isDeleted ? 'text-gray-400' : 'text-gray-900'}`}>
+              <span className={`text-[13px] font-medium ${comment.isDeleted ? 'text-gray-400 dark:text-neutral-500' : 'text-gray-900 dark:text-neutral-300'}`}>
                 {comment.isDeleted ? '삭제된 댓글' : (comment.authorName || '익명')}
               </span>
-              <span className="text-[13px] text-gray-400">
+              <span className="text-[13px] text-gray-400 dark:text-neutral-500">
                 {formatDate(comment.createdAt)}
               </span>
             </div>
@@ -248,24 +248,30 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           <div className="relative" ref={menuRef}>
             <button 
               onClick={() => setShowMenu(!showMenu)}
-              className="hover:bg-gray-100 rounded-full p-1"
+              className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
             >
-              <EllipsisIcon className="w-5 h-5" />
+              <EllipsisIcon className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
             </button>
+            
             {showMenu && (
-              <div className="absolute right-0 mt-1 py-2 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10">
-                <button 
+              <div className="absolute right-0 mt-1 w-24 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
+                <button
                   onClick={() => {
                     setIsEditing(true);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+                  className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
                 >
                   수정
                 </button>
-                <button 
-                  onClick={() => handleDeleteComment(comment.id)}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-red-500"
+                <button
+                  onClick={() => {
+                    if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+                      handleDeleteComment(comment.id);
+                    }
+                    setShowMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
                 >
                   삭제
                 </button>
@@ -276,133 +282,177 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       </div>
 
       {/* 댓글 내용 */}
-      {isEditing ? (
-        <div className="mb-3">
-          <textarea
-            value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            className="w-full min-h-[60px] p-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="flex justify-end space-x-2 mt-2">
-            <button
-              onClick={handleCancelEdit}
-              className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleSubmitEdit}
-              className="px-3 py-1 text-sm text-white bg-blue-500 rounded-lg hover:bg-blue-600"
-            >
-              완료
-            </button>
+      <div className="mt-1 ml-[26px]">
+        {isEditing ? (
+          <div className="mt-2">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-300 dark:bg-neutral-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              rows="2"
+            />
+            <div className="flex justify-end space-x-2 mt-2">
+              <button
+                onClick={handleCancelEdit}
+                className="px-3 py-1 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSubmitEdit}
+                className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                수정완료
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className={`text-[15px] mb-[12px] break-all whitespace-pre-wrap ${comment.isDeleted ? 'text-gray-400 italic' : 'text-gray-900'}`}>
-          {comment.content}
-        </div>
-      )}
+        ) : (
+          <p className={`text-[15px] ${comment.isDeleted ? 'text-gray-400 dark:text-neutral-500 italic' : 'text-gray-700 dark:text-neutral-400'}`}>
+            {comment.isDeleted ? '삭제된 댓글입니다.' : comment.content}
+          </p>
+        )}
+      </div>
 
-      {/* 좋아요/답글 버튼은 삭제된 댓글이 아닐 때만 표시 */}
+      {/* 좋아요/답글 버튼 영역 - 삭제된 댓글이 아닐 때만 표시 */}
       {!comment.isDeleted && (
-        <div className="flex items-center space-x-4">
+        <div className="mt-2 ml-[26px] flex items-center space-x-4">
           <button 
             onClick={handleLike}
             disabled={isLikeLoading}
-            className="flex items-center space-x-1 text-gray-500 hover:text-gray-700"
+            className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
           >
-            <LikeIcon className={`w-[24px] h-[24px] ${liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`} />
-            <span className="text-[13px]">{commentLikes}</span>
+            <LikeIcon className={`w-[18px] h-[18px] ${liked ? 'text-red-500' : ''}`} />
+            <span className={`ml-1 text-[13px] ${liked ? 'text-red-500' : ''}`}>
+              {commentLikes > 0 ? commentLikes : '좋아요'}
+            </span>
           </button>
+          
           <button 
-            onClick={() => {
-              if (!user) {
-                alert('로그인이 필요합니다.');
-                return;
-              }
-              setShowReplyInput(!showReplyInput);
-            }}
-            className="flex items-center space-x-1 text-gray-500 hover:text-gray-700"
+            onClick={() => setShowReplyInput(!showReplyInput)}
+            className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
           >
-            <MessageIcon className="w-[24px] h-[24px] text-gray-500" />
-            <span className="text-[13px]">답글달기</span>
+            <MessageIcon className="w-[18px] h-[18px]" />
+            <span className="ml-1 text-[13px]">
+              {replies.length > 0 ? `답글 ${replies.length}` : '답글'}
+            </span>
           </button>
+          
+          {/* 신고 버튼 - 자신의 댓글이 아닐 때만 표시 */}
+          {user && user.uid !== comment.userId && (
+            <button 
+              onClick={handleReportComment}
+              className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
+            >
+              <span className="text-[13px]">신고</span>
+            </button>
+          )}
         </div>
       )}
 
-      {/* 대댓글 입력 폼 */}
-      {showReplyInput && !comment.isDeleted && (
-        <form onSubmit={handleReplySubmit} className="mt-3 ml-8">
-          <div className="flex items-center space-x-2">
-            <textarea
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="답글을 입력하세요..."
-              className="flex-1 bg-gray-50 rounded-lg p-2 text-sm resize-none"
-              rows="1"
-            />
-            <button
-              type="submit"
-              className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
-            >
-              답글
-            </button>
-          </div>
-        </form>
+      {/* 대댓글 입력 영역 */}
+      {showReplyInput && (
+        <div className="mt-3 ml-[26px]">
+          <form onSubmit={handleReplySubmit} className="flex items-start space-x-2">
+            <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
+              <img
+                src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
+                alt="프로필"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1">
+              <textarea
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                placeholder="답글을 입력하세요..."
+                className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-300 dark:bg-[#111111] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                rows="2"
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowReplyInput(false)}
+                  className="px-3 py-1 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  등록
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
       )}
 
       {/* 대댓글 목록 */}
-      {replies.length > 0 && showReplies && (
-        <div className="ml-8 mt-3 space-y-3">
-          {replies.map(reply => (
-            <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <img
-                    src={reply.photoURL || getDefaultProfileImage()}
-                    alt={reply.authorName}
-                    className="w-5 h-5 rounded-full"
-                  />
-                  <span className="text-sm font-medium">{reply.authorName}</span>
-                </div>
-                {/* 대댓글 더보기 메뉴 */}
-                <div className="relative">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setReplies(prev => prev.map(r => ({
-                        ...r,
-                        showMenu: r.id === reply.id ? !r.showMenu : false
-                      })));
-                    }}
-                    className="hover:bg-gray-200 rounded-full p-1"
-                  >
-                    <EllipsisIcon className="w-4 h-4" />
-                  </button>
-                  {reply.showMenu && (
-                    <div className="absolute right-0 mt-1 py-1 w-24 bg-white rounded-lg shadow-lg border border-gray-100 z-10">
-                      {user?.uid === reply.userId && (
-                        <button 
-                          onClick={() => handleDeleteReply(reply.id)}
-                          className="w-full px-3 py-1 text-left text-sm hover:bg-gray-50 text-red-500"
+      {replies.length > 0 && (
+        <div className="mt-3 ml-[26px]">
+          <button
+            onClick={() => setShowReplies(!showReplies)}
+            className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300 mb-2"
+          >
+            <span className="text-[13px]">
+              {showReplies ? '답글 숨기기' : `답글 ${replies.length}개 보기`}
+            </span>
+          </button>
+          
+          {showReplies && (
+            <div className="space-y-3">
+              {replies.map((reply) => (
+                <div key={reply.id} className="flex space-x-2">
+                  <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
+                    <img
+                      src={reply.authorPhotoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${reply.userId}&backgroundColor=e8f5e9`}
+                      alt={reply.authorName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-neutral-300">
+                        {reply.authorName || '익명'}
+                      </span>
+                      <span className="text-[13px] text-gray-400 dark:text-neutral-500">
+                        {formatDate(reply.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-[15px] text-gray-700 dark:text-neutral-400 mt-1">
+                      {reply.content}
+                    </p>
+                    
+                    {/* 대댓글 작업 버튼 */}
+                    <div className="flex items-center space-x-4 mt-1">
+                      {user && user.uid === reply.userId && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm('정말로 이 답글을 삭제하시겠습니까?')) {
+                              handleDeleteReply(reply.id);
+                            }
+                          }}
+                          className="text-[13px] text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
                         >
                           삭제
                         </button>
                       )}
-                      <button 
-                        onClick={() => handleReportReply(reply.id)}
-                        className="w-full px-3 py-1 text-left text-sm hover:bg-gray-50"
-                      >
-                        신고
-                      </button>
+                      
+                      {user && user.uid !== reply.userId && (
+                        <button
+                          onClick={() => handleReportReply(reply.id)}
+                          className="text-[13px] text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
+                        >
+                          신고
+                        </button>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-              <p className="text-sm mt-1">{reply.content}</p>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

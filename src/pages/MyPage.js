@@ -15,6 +15,7 @@ import { db } from '../firebase';
 import dayjs from 'dayjs';
 import { ProfileImageModal, EditNameModal } from '../components/Modal';
 import { updateProfile } from 'firebase/auth';
+import MyPageSkeleton from '../components/MyPageSkeleton';
 
 function MyPage() {
   const navigate = useNavigate();
@@ -198,15 +199,12 @@ function MyPage() {
       setNameError('');
       
       // 2. 로컬 상태 업데이트 (UI에 즉시 반영)
-      setUserData(prev => ({
-        ...prev,
-        username: newName
-      }));
-      
-      setMyPosts(prev => prev.map(post => ({
-        ...post,
-        authorName: newName
-      })));
+      if (userData) {
+        setUserData({
+          ...userData,
+          username: newName
+        });
+      }
 
       // 3. Firestore users 컬렉션 업데이트
       const userRef = doc(db, 'users', user.uid);
@@ -214,151 +212,150 @@ function MyPage() {
         username: newName
       });
 
-      // 4. 백그라운드에서 posts 업데이트
+      // 4. 사용자가 작성한 모든 포스트의 authorName 업데이트
       const updatePosts = async () => {
-        try {
-          const postsQuery = query(
-            collection(db, 'posts'),
-            where('authorId', '==', user.uid)
-          );
-          const postsSnapshot = await getDocs(postsQuery);
-          
-          const updatePromises = postsSnapshot.docs.map(postDoc => 
-            updateDoc(doc(db, 'posts', postDoc.id), {
-              authorName: newName
-            })
-          );
-          await Promise.all(updatePromises);
-          console.log('모든 포스트 업데이트 완료');
-        } catch (error) {
-          console.error('포스트 업데이트 중 오류:', error);
-        }
+        const postsQuery = query(
+          collection(db, 'posts'),
+          where('authorId', '==', user.uid)
+        );
+        const postsSnapshot = await getDocs(postsQuery);
+        
+        const updatePromises = postsSnapshot.docs.map(postDoc => 
+          updateDoc(doc(db, 'posts', postDoc.id), {
+            authorName: newName
+          })
+        );
+        await Promise.all(updatePromises);
       };
 
-      // 백그라운드에서 포스트 업데이트 실행
-      updatePosts();
+      // 5. 사용자가 작성한 모든 댓글의 authorName 업데이트
+      const updateComments = async () => {
+        const commentsQuery = query(
+          collection(db, 'comments'),
+          where('authorId', '==', user.uid)
+        );
+        const commentsSnapshot = await getDocs(commentsQuery);
+        
+        const updatePromises = commentsSnapshot.docs.map(commentDoc => 
+          updateDoc(doc(db, 'comments', commentDoc.id), {
+            authorName: newName
+          })
+        );
+        await Promise.all(updatePromises);
+      };
 
-      // comments 업데이트 부분
-      const commentsQuery = query(
-        collection(db, 'comments'),
-        where('userId', '==', user.uid)
-      );
-      const commentsSnapshot = await getDocs(commentsQuery);
-      const commentUpdates = commentsSnapshot.docs.map(commentDoc =>
-        updateDoc(doc(db, 'comments', commentDoc.id), {
-          authorName: newName  // author 대신 authorName 사용
-        })
-      );
-
+      // 포스트와 댓글 업데이트 병렬 실행
+      await Promise.all([updatePosts(), updateComments()]);
+      
+      console.log('이름 업데이트 완료:', newName);
     } catch (error) {
       console.error('이름 업데이트 실패:', error);
-      setNameError('이름 업데이트에 실패했습니다.');
-      
-      // 에러 발생 시 UI 롤백
-      setUserData(prev => ({
-        ...prev,
-        username: prev.username
-      }));
+      setNameError('이름 업데이트 중 오류가 발생했습니다.');
     }
   };
 
-  // 사용자 정보 로드
+  // 사용자 데이터 로드
   useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
+    if (user) {
+      const loadUserData = async () => {
         try {
           const userData = await getUserDoc(user.uid);
+          console.log('로드된 사용자 데이터:', userData);
           setUserData(userData);
         } catch (error) {
-          console.error('사용자 정보 로딩 실패:', error);
+          console.error('사용자 데이터 로드 실패:', error);
         }
-      }
-    };
-
-    loadUserData();
+      };
+      
+      loadUserData();
+    }
   }, [user]);
 
-  if (!isLoggedIn) return null;
-  if (loading) return <div>로딩중...</div>;
+  if (loading) {
+    return <MyPageSkeleton />;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* 프로필 영역 */}
-      <div className="bg-white">
+      <div className="bg-white dark:bg-black py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="py-8">
-            <div className="flex flex-col items-center">
-              <div className="relative mb-4">
-                <button 
-                  onClick={() => setIsProfileImageModalOpen(true)}
-                  className="w-20 h-20 rounded-full overflow-hidden"
-                >
-                  {user?.photoURL ? (
-                    <img 
-                      src={user.photoURL} 
-                      alt="프로필" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-2xl text-gray-600">
-                        {user?.email?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  )}
-                </button>
+          <div className="flex flex-col items-center">
+            <div className="bg-transparent dark:bg-transparent rounded-2xl p-6 w-full max-w-md">
+              <div className="flex flex-col items-center">
+                {/* 프로필 이미지 */}
+                <div className="relative w-24 h-24 mb-4">
+                  <button
+                    onClick={() => setIsProfileImageModalOpen(true)}
+                    className="w-24 h-24 rounded-full overflow-hidden"
+                  >
+                    {user?.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt="프로필 이미지"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
+                        <span className="text-2xl text-gray-600 dark:text-gray-400">
+                          {user?.email?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setIsProfileImageModalOpen(true)}
+                    className="absolute bottom-0 right-0 w-6 h-6 bg-black dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+                  >
+                    <span className="text-white text-sm">✎</span>
+                  </button>
+                </div>
+                <div className="flex items-center justify-center mb-4">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {userData?.username || user?.email}
+                  </h2>
+                  <button
+                    onClick={() => setIsEditNameModalOpen(true)}
+                    className="ml-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  >
+                    <span className="sr-only">이름 수정</span>
+                    ✎
+                  </button>
+                </div>
                 <button
-                  onClick={() => setIsProfileImageModalOpen(true)}
-                  className="absolute bottom-0 right-0 w-6 h-6 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+                  onClick={handleLogout}
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <span className="text-white text-sm">✎</span>
+                  로그아웃
                 </button>
               </div>
-              <div className="flex items-center justify-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {userData?.username || user?.email}
-                </h2>
-                <button
-                  onClick={() => setIsEditNameModalOpen(true)}
-                  className="ml-2 text-sm text-gray-500 hover:text-gray-700"
-                >
-                  <span className="sr-only">이름 수정</span>
-                  ✎
-                </button>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
-              >
-                로그아웃
-              </button>
             </div>
           </div>
         </div>
       </div>
 
       {/* 탭 메뉴 */}
-      <div className="bg-white">
+      <div className="bg-white dark:bg-black">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-center overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">
             <button
               onClick={() => setActiveTab('myPosts')}
-              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
-                ${activeTab === 'myPosts' ? 'border-b-2 border-black' : ''}`}
+              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
+                ${activeTab === 'myPosts' ? 'border-b-2 border-black dark:border-white' : ''}`}
             >
               내 포스트 ({myPosts.length})
             </button>
             <button
               onClick={() => setActiveTab('interestedPosts')}
-              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
-                ${activeTab === 'interestedPosts' ? 'border-b-2 border-black' : ''}`}
+              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
+                ${activeTab === 'interestedPosts' ? 'border-b-2 border-black dark:border-white' : ''}`}
             >
               관심 포스트 ({interestedPosts.length})
             </button>
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black
-                ${activeTab === 'notifications' ? 'border-b-2 border-black' : ''}`}
+              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
+                ${activeTab === 'notifications' ? 'border-b-2 border-black dark:border-white' : ''}`}
             >
               알림 ({notifications.length})
             </button>
@@ -367,15 +364,15 @@ function MyPage() {
       </div>
 
       {/* 구분선 */}
-      <div className="border-t border-gray-100"></div>
+      <div className="border-t border-gray-100 dark:border-neutral-900"></div>
 
       {/* 포스트 영역 */}
-      <div className="py-8 bg-white">
+      <div className="py-8 bg-white dark:bg-black">
         <div className="max-w-7xl mx-auto px-4">
           {activeTab === 'myPosts' ? (
             myPosts.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">아직 작성한 게시글이 없습니다.</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">아직 작성한 게시글이 없습니다.</p>
                 <Link 
                   to="/posts/new" 
                   className="inline-block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
@@ -396,7 +393,7 @@ function MyPage() {
             )
           ) : activeTab === 'interestedPosts' ? (
             interestedPosts.length === 0 ? (
-              <p className="text-center py-8 text-gray-500">아직 관심 포스트가 없습니다.</p>
+              <p className="text-center py-8 text-gray-500 dark:text-gray-400">아직 관심 포스트가 없습니다.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {interestedPosts.map(post => (
@@ -411,26 +408,26 @@ function MyPage() {
           ) : (
             <div className="space-y-4">
               {notifications.length === 0 ? (
-                <p className="text-center py-8 text-gray-500">새로운 알림이 없습니다.</p>
+                <p className="text-center py-8 text-gray-500 dark:text-gray-400">새로운 알림이 없습니다.</p>
               ) : (
                 notifications.map(notification => (
                   <Link
                     key={notification.id}
                     to={`/posts/${notification.postId}`}
                     onClick={() => handleNotificationClick(notification.id)}
-                    className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
+                    className="block bg-white dark:bg-[#0A0A0A] rounded-lg shadow dark:shadow-none p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-grow">
-                        <p className="text-gray-800">
+                        <p className="text-gray-800 dark:text-gray-200">
                           <span className="font-medium">{notification.senderName}</span>
                           {notification.type === 'comment' && '님이 회원님의 게시글에 댓글을 남겼습니다:'}
                           {notification.type === 'like' && '님이 회원님의 게시글을 좋아합니다.'}
                         </p>
                         {notification.content && (
-                          <p className="text-gray-600 mt-1">{notification.content}</p>
+                          <p className="text-gray-600 dark:text-gray-400 mt-1">{notification.content}</p>
                         )}
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-500 dark:text-gray-500">
                           {dayjs(notification.createdAt).fromNow()}
                         </span>
                       </div>

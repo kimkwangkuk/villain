@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { getCategories, getUserDoc } from '../api/firebase';
 import PostCard from '../components/PostCard';
@@ -50,6 +50,12 @@ function HomePage() {
 
   // useSearchParams 훅 사용 (쿼리 파라미터 관리)
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // 드래그 스크롤을 위한 상태와 ref 추가
+  const categoryScrollRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   // 컴포넌트 mount 시 query parameter에서 카테고리 값을 가져옵니다.
   useEffect(() => {
@@ -188,16 +194,97 @@ function HomePage() {
     }
   };
 
+  // 드래그 시작 핸들러
+  const handleMouseDown = (e) => {
+    if (!categoryScrollRef.current) return;
+    
+    // 클릭한 요소가 버튼인 경우 드래그를 시작하지 않음
+    if (e.target.tagName.toLowerCase() === 'button' || 
+        e.target.closest('button') !== null) {
+      return;
+    }
+    
+    setIsDragging(true);
+    setStartX(e.pageX - categoryScrollRef.current.offsetLeft);
+    setScrollLeft(categoryScrollRef.current.scrollLeft);
+    
+    // 텍스트 선택 방지
+    e.preventDefault();
+  };
+
+  // 드래그 중 핸들러
+  const handleMouseMove = (e) => {
+    if (!isDragging || !categoryScrollRef.current) return;
+    
+    // 마우스 이동 거리 계산
+    const x = e.pageX - categoryScrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // 스크롤 속도 조절 (1.5는 배수)
+    
+    // 스크롤 위치 업데이트
+    categoryScrollRef.current.scrollLeft = scrollLeft - walk;
+    
+    // 텍스트 선택 방지
+    e.preventDefault();
+  };
+
+  // 드래그 종료 핸들러
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // 전역 마우스 이벤트 리스너 설정
+  useEffect(() => {
+    // 마우스 이벤트 핸들러
+    const handleGlobalMouseMove = (e) => {
+      if (isDragging && categoryScrollRef.current) {
+        const x = e.pageX - categoryScrollRef.current.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        categoryScrollRef.current.scrollLeft = scrollLeft - walk;
+        e.preventDefault();
+      }
+    };
+    
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+    
+    // 드래그 중일 때만 전역 이벤트 리스너 추가
+    if (isDragging) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+    
+    // 컴포넌트 언마운트 또는 isDragging 변경 시 이벤트 리스너 정리
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, startX, scrollLeft]);
+
+  // 드래그 중 커서 스타일 변경
+  useEffect(() => {
+    if (isDragging) {
+      document.body.style.cursor = 'grabbing';
+    } else {
+      document.body.style.cursor = '';
+    }
+    
+    // 컴포넌트 언마운트 시 커서 스타일 정리
+    return () => {
+      document.body.style.cursor = '';
+    };
+  }, [isDragging]);
+
   // 로딩 상태일 때 스켈레톤 UI 처리
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-black">
         {/* 카테고리 네비게이션 스켈레톤 */}
         <div>
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex space-x-8">
+          <div className="max-w-[1200px] mx-auto px-4 py-4 scroll-container">
+            <div className="flex space-x-8 overflow-x-auto hide-scrollbar">
               {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="w-16 h-6 bg-gray-300 rounded animate-pulse"></div>
+                <div key={index} className="w-16 h-6 bg-gray-300 dark:bg-neutral-900 rounded animate-pulse"></div>
               ))}
             </div>
           </div>
@@ -209,8 +296,8 @@ function HomePage() {
             <div className="flex space-x-6">
               {Array.from({ length: 5 }).map((_, index) => (
                 <div key={index} className="flex flex-col items-center">
-                  <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse"></div>
-                  <div className="w-16 h-4 bg-gray-300 rounded animate-pulse mt-2"></div>
+                  <div className="w-12 h-12 bg-gray-300 dark:bg-neutral-900 rounded-full animate-pulse"></div>
+                  <div className="w-16 h-4 bg-gray-300 dark:bg-neutral-900 rounded animate-pulse mt-2"></div>
                 </div>
               ))}
             </div>
@@ -219,7 +306,7 @@ function HomePage() {
 
         {/* 포스트 카드 영역 스켈레톤 */}
         <div className="py-8">
-          <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="max-w-[1200px] mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, index) => (
               <PostCardSkeleton key={index} />
             ))}
@@ -230,11 +317,16 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* 카테고리 영역 (네비게이션바) */}
-      <div className="bg-white border-b border-gray-100 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8 hide-scrollbar">
+      <div className="bg-white dark:bg-black border-b border-gray-100 dark:border-neutral-900 sticky top-16 z-40">
+        <div className="max-w-[1200px] mx-auto relative scroll-container">
+          <div 
+            ref={categoryScrollRef}
+            className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8 hide-scrollbar cursor-grab select-none"
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseUp}
+          >
             <button
               onClick={() => {
                 setSelectedCategory(null);
@@ -242,8 +334,8 @@ function HomePage() {
               }}
               className={`text-[14px] pb-2 px-1 transition-colors ${
                 !selectedCategory
-                  ? "text-black border-b-2 border-black"
-                  : "text-gray-500"
+                  ? "text-black dark:text-white border-b-2 border-black dark:border-white"
+                  : "text-gray-500 dark:text-neutral-300"
               }`}
             >
               <div className="flex flex-col items-center gap-[10px]">
@@ -262,8 +354,8 @@ function HomePage() {
                   }}
                   className={`text-[14px] pb-2 px-1 transition-colors ${
                     selectedCategory === category.id
-                      ? "text-black border-b-2 border-black"
-                      : "text-gray-500"
+                      ? "text-black dark:text-white border-b-2 border-black dark:border-white"
+                      : "text-gray-500 dark:text-neutral-300"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-[10px]">
@@ -297,7 +389,7 @@ function HomePage() {
 
       {/* 토스트 메시지 */}
       {showToast && (
-        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg z-50">
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black dark:bg-neutral-900 text-white px-4 py-2 rounded-lg z-50">
           링크가 복사되었습니다!
         </div>
       )}

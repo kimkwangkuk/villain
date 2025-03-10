@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPost, getCategories, updatePost } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { PrimaryButton, LineButton } from '../components/Button';
 
 function AddPostPage() {
@@ -11,6 +12,7 @@ function AddPostPage() {
   const editingPost = location.state?.post;
   
   const { isLoggedIn, user } = useAuth();
+  const { isDarkMode } = useTheme();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
@@ -180,30 +182,30 @@ function AddPostPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F5F5] py-8">
+      <div className="min-h-screen bg-[#F5F5F5] dark:bg-black py-8">
         <div className="max-w-2xl mx-auto px-4">
-          <p className="text-center">카테고리 로딩중...</p>
+          <p className="text-center text-gray-700 dark:text-neutral-300">카테고리 로딩중...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
-      <div className="max-w-[820px] w-full bg-white rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] relative 
-        before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 before:to-transparent before:rounded-2xl"
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-black flex items-center justify-center">
+      <div className="max-w-[820px] w-full bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative 
+        before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 dark:before:from-black/25 before:to-transparent before:rounded-2xl"
       >
         <div className="flex">
-          <div className="w-[340px] p-6 border-r border-gray-100">
+          <div className="w-[340px] p-6 border-r border-gray-100 dark:border-neutral-900">
             <div className="flex flex-col items-start space-y-6">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
                 <span className="text-xl">⚡</span>
               </div>
               <div>
-                <p className="text-lg font-semibold">
+                <p className="text-lg font-semibold text-gray-900 dark:text-neutral-200">
                   {isEditing ? '게시글을 수정하여' : '더 이상 비슷한 일이 일어나지 않도록.'}
                 </p>
-                <p className="text-lg font-semibold">
+                <p className="text-lg font-semibold text-gray-900 dark:text-neutral-200">
                   {isEditing ? '정확한 정보를 공유하세요.' : '빌런의 행태를 세상에 알리세요.'}
                 </p>
               </div>
@@ -211,25 +213,19 @@ function AddPostPage() {
           </div>
 
           <div className="flex-1">
-            <div className="border-b border-gray-100">
+            <div className="border-b border-gray-100 dark:border-neutral-900">
               <div className="px-6">
                 <div className="flex justify-between items-center h-[72px]">
-                  <h1 className="text-base font-medium">빌런 종류</h1>
+                  <h1 className="text-base font-medium text-gray-900 dark:text-neutral-200">빌런 종류</h1>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="text-right border-none bg-transparent focus:outline-none focus:ring-0 text-gray-500 cursor-pointer appearance-none pr-8 text-base"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right center',
-                      backgroundSize: '1.5em 1.5em'
-                    }}
+                    className="text-right border-none bg-transparent focus:outline-none focus:ring-0 text-gray-500 dark:text-neutral-400 cursor-pointer appearance-none pr-8 text-base select-arrow-custom"
                   >
-                    <option value="">카테고리 선택</option>
+                    <option value="" className="bg-white dark:bg-neutral-800">카테고리 선택</option>
                     {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
+                      <option key={category.id} value={category.id} className="bg-white dark:bg-neutral-800">
                         {category.name}
                       </option>
                     ))}
@@ -238,13 +234,13 @@ function AddPostPage() {
               </div>
             </div>
 
-            <div className="border-b border-gray-100">
+            <div className="border-b border-gray-100 dark:border-neutral-900">
               <div className="px-6">
                 <div className="min-h-[72px] flex items-center py-3">
                   <textarea
                     name="title"
                     placeholder="제목을 입력하세요"
-                    className="w-full border-none focus:outline-none focus:ring-0 text-gray-500 text-base resize-none"
+                    className="w-full border-none focus:outline-none focus:ring-0 text-gray-500 dark:text-neutral-300 text-base resize-none bg-transparent"
                     value={formData.title}
                     onChange={(e) => {
                       handleChange(e);
@@ -267,7 +263,7 @@ function AddPostPage() {
                   <textarea
                     name="content"
                     placeholder="빌런 경험을 모두에게 공유해주세요."
-                    className="w-full h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-base"
+                    className="w-full h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-base text-gray-700 dark:text-neutral-300 bg-transparent"
                     value={formData.content}
                     onChange={handleChange}
                   />
@@ -300,23 +296,23 @@ function AddPostPage() {
 
       {showDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-            <h3 className="text-lg font-medium mb-4">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-neutral-200">
               작성을 취소하시겠습니까?
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-gray-500 dark:text-neutral-400 mb-4">
               작성 중인 내용은 저장되지 않습니다.
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setShowDialog(false)}
-                className="text-gray-700 hover:text-gray-900"
+                className="text-gray-700 dark:text-neutral-300 hover:text-gray-900 dark:hover:text-white"
               >
                 아니오
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="bg-black text-white px-4 py-2 rounded-md"
+                className="bg-black dark:bg-neutral-800 text-white px-4 py-2 rounded-md"
               >
                 네
               </button>
@@ -324,6 +320,28 @@ function AddPostPage() {
           </div>
         </div>
       )}
+
+      {/* 커스텀 화살표 아이콘을 위한 스타일 */}
+      <style>
+        {`
+          .select-arrow-custom {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23737373'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right center;
+            background-size: 1.5em 1.5em;
+          }
+          
+          @media (prefers-color-scheme: dark) {
+            .select-arrow-custom {
+              background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a3a3a3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            }
+          }
+          
+          :root.dark .select-arrow-custom {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a3a3a3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+          }
+        `}
+      </style>
     </div>
   );
 }

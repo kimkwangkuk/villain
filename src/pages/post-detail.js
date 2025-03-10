@@ -230,14 +230,14 @@ function PostDetail() {
   };
 
   if (loading) return <PostDetailSkeleton />;
-  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
-  if (!post) return <div className="text-center py-8">포스트를 찾을 수 없습니다.</div>;
+  if (error) return <div className="text-center py-8 text-red-500 dark:text-red-400">{error}</div>;
+  if (!post) return <div className="text-center py-8 text-gray-700 dark:text-neutral-300">포스트를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="bg-white py-8">
+    <div className="bg-white dark:bg-black min-h-screen py-8">
       {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
-        <div className="max-w-[580px] mx-auto bg-gray-100 rounded-2xl">
+        <div className="max-w-[580px] mx-auto bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
           {/* 프로필 영역 */}
           <div className="pb-[0px] p-4">
             <div className="flex items-center justify-between">
@@ -253,10 +253,10 @@ function PostDetail() {
                   />
                 </div>
                 <div className="ml-2">
-                  <div className="text-[13px] font-semibold text-gray-900">
+                  <div className="text-[13px] font-semibold text-gray-900 dark:text-neutral-300">
                     {post?.authorName}
                   </div>
-                  <div className="text-[12px] text-gray-500">
+                  <div className="text-[12px] text-gray-500 dark:text-neutral-500">
                     <span>{post?.categoryName}</span>
                     <span className="mx-1">·</span>
                     <span>{getRelativeTime(post?.createdAt?.toDate())}</span>
@@ -266,13 +266,13 @@ function PostDetail() {
               {/* 더보기 버튼과 팝업 메뉴 */}
               <div className="relative">
                 <button 
-                  className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200"
+                  className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
                 >
-                  <span className="text-gray-300 text-sm transition-colors hover:text-gray-900">⋮</span>
+                  <span className="text-gray-300 dark:text-neutral-500 text-sm transition-colors hover:text-gray-900 dark:hover:text-neutral-300">⋮</span>
                 </button>
                 {showMoreMenu && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg z-10 py-1">
+                  <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
                     {user?.uid === post?.authorId && (
                       <>
                         <button
@@ -290,7 +290,7 @@ function PostDetail() {
                             });
                             setShowMoreMenu(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
                         >
                           수정하기
                         </button>
@@ -301,7 +301,7 @@ function PostDetail() {
                             }
                             setShowMoreMenu(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
                         >
                           삭제하기
                         </button>
@@ -309,7 +309,7 @@ function PostDetail() {
                     )}
                     <button
                       onClick={handleReport}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
                     >
                       신고하기
                     </button>
@@ -322,28 +322,28 @@ function PostDetail() {
           {/* 콘텐츠 영역 */}
           <div className="pt-[0px] p-4">
             <div className="pt-3 pb-6">
-              <h1 className="text-[20px] font-semibold text-gray-900 mb-2">{post?.title}</h1>
-              <p className="text-[16px] text-gray-900 leading-relaxed">
+              <h1 className="text-[20px] font-semibold text-gray-900 dark:text-neutral-300 mb-2">{post?.title}</h1>
+              <p className="text-[16px] text-gray-700 dark:text-neutral-400 leading-relaxed">
                 {post?.content}
               </p>
             </div>
 
             {/* 좋아요/댓글 수 표시 */}
-            <div className="flex items-center justify-between text-[14px] text-gray-500 pb-3">
+            <div className="flex items-center justify-between text-[14px] text-gray-500 dark:text-neutral-500 pb-3">
               <span>{post.likes || 0}명의 반응</span>
               <span>댓글 {post.commentCount || 0}</span>
             </div>
 
             {/* 좋아요/댓글/공유 버튼 컨테이너 */}
-            <div className="flex items-center justify-between border-t border-gray-200 pt-3 -mx-4 px-4">
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-900 pt-3 -mx-4 px-4">
               {/* 좋아요 버튼 */}
               <button 
                 onClick={handleLike}
                 disabled={isLikeLoading}
-                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
               >
-                <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'}`} />
-                <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 group-hover:text-gray-800'} text-[14px] relative top-[1px]`}>
+                <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'}`} />
+                <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px]`}>
                   {isLiked ? "반응 취소" : "반응"}
                 </span>
               </button>
@@ -360,10 +360,10 @@ function PostDetail() {
                     commentInput.focus();
                   }
                 }}
-                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
               >
-                <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
-                <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
+                <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+                <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
               </button>
 
               {/* 공유 버튼 */}
@@ -373,10 +373,10 @@ function PostDetail() {
                   e.stopPropagation();
                   handleShare();
                 }}
-                className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
               >
-                <ShareIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
-                <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">공유</span>
+                <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+                <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
               </button>
             </div>
           </div>
@@ -387,9 +387,9 @@ function PostDetail() {
       <div className="w-full px-4 mt-4">
         <div className="max-w-[580px] mx-auto">
           {/* 댓글 입력 영역 */}
-          <div className="bg-gray-100 rounded-2xl">
+          <div className="bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
             <form onSubmit={handleCommentSubmit}>
-              <div className="bg-gray-100 rounded-2xl p-[12px] w-full">
+              <div className="bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl p-[12px] w-full">
                 <div className="flex items-center space-x-2">
                   <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                     {isLoggedIn ? (
@@ -413,7 +413,7 @@ function PostDetail() {
                             onChange={(e) => setCommentContent(e.target.value)}
                             placeholder="댓글을 달아주세요."
                             rows="1"
-                            className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] placeholder-gray-400 overflow-hidden"
+                            className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] text-gray-900 dark:text-neutral-300 placeholder-gray-400 dark:placeholder-neutral-500 overflow-hidden"
                             style={{
                               minHeight: '24px',
                               height: 'auto'
@@ -436,7 +436,7 @@ function PostDetail() {
                             state={{ from: `/posts/${id}` }}
                             className="flex-1"
                           >
-                            <div className="text-[15px] text-gray-400">
+                            <div className="text-[15px] text-gray-400 dark:text-neutral-500">
                               댓글을 작성하려면 로그인이 필요합니다.
                             </div>
                           </Link>
@@ -461,7 +461,7 @@ function PostDetail() {
 
           {/* 댓글 리스트 영역 */}
           {comments.length > 0 && (
-            <div className="mt-4 bg-gray-100 rounded-2xl">
+            <div className="mt-4 bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
               {comments.map((comment, index) => (
                 <div key={comment.id}>
                   <CommentCard
@@ -475,7 +475,7 @@ function PostDetail() {
                     onDelete={() => handleDeleteComment(comment.id)}
                   />
                   {index !== comments.length - 1 && (
-                    <div className="h-[1px] bg-gray-200" />
+                    <div className="h-[1px] bg-gray-200 dark:bg-neutral-800" />
                   )}
                 </div>
               ))}
@@ -486,7 +486,7 @@ function PostDetail() {
 
       {/* 토스트 메시지 */}
       {showToast && (
-        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg">
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black dark:bg-neutral-900 text-white px-4 py-2 rounded-lg">
           링크가 복사되었습니다!
         </div>
       )}

@@ -26,6 +26,29 @@ iframe[style*="z-index: 2147483647"] {
   -ms-overflow-style: none;  /* IE와 Edge용 */
   scrollbar-width: none;  /* Firefox용 */
 }
+
 .hide-scrollbar::-webkit-scrollbar {
   display: none;  /* Chrome, Safari, Opera용 */
+}
+
+/* 스크롤 컨테이너 부모 요소에 적용할 클래스 */
+.scroll-container {
+  position: relative;
+}
+
+/* 스크롤 그라데이션 효과 - 컨테이너 외부에 배치 */
+.scroll-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 40px;
+  background: linear-gradient(to right, rgba(255,255,255,0), white 90%);
+  pointer-events: none; /* 마우스 이벤트가 그라데이션을 통과하도록 설정 */
+  z-index: 10; /* 그라데이션이 콘텐츠 위에 표시되도록 설정 */
+}
+
+:root.dark .scroll-container::after {
+  background: linear-gradient(to right, rgba(0,0,0,0), black 90%);
 }

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import { UserIcon } from './Icons';
 import { PrimaryButton, SecondaryButton, LineButton } from './Button';
+import ThemeToggle from './ThemeToggle';
 
 function Navbar() {
   const { isLoggedIn } = useAuth();
@@ -20,18 +21,18 @@ function Navbar() {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200
       ${isScrolled 
-        ? 'bg-white shadow-sm' 
-        : 'bg-white'}`}
+        ? 'bg-white dark:bg-black shadow-sm dark:shadow-black' 
+        : 'bg-white dark:bg-black'}`}
     >
       <div className="px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold hover:text-gray-900 mr-4">
+            <Link to="/" className="text-2xl font-bold text-black dark:text-white hover:text-gray-900 dark:hover:text-gray-100 mr-4">
               빌런
             </Link>
-            <div className="h-[38px] bg-gray-100 rounded-lg px-4 flex items-center overflow-hidden relative w-[100px]">
+            <div className="h-[38px] bg-gray-100 dark:bg-[#111111] rounded-lg px-4 flex items-center overflow-hidden relative w-[100px]">
               <div 
-                className="text-[13px] text-gray-500 whitespace-nowrap absolute left-0 flex"
+                className="text-[13px] text-gray-500 dark:text-neutral-300 whitespace-nowrap absolute left-0 flex"
                 style={{
                   animation: 'marquee 25s linear infinite',
                   paddingLeft: '100%' // 오른쪽에서 시작
@@ -46,8 +47,10 @@ function Navbar() {
           </div>
 
           <div className="flex items-center space-x-2">
+            <ThemeToggle />
+            
             {isLoggedIn && (
-              <Link to="/mypage" className="hover:text-gray-600 mr-2">
+              <Link to="/mypage" className="text-gray-700 dark:text-neutral-400 hover:text-gray-600 dark:hover:text-white mr-2">
                 <UserIcon />
               </Link>
             )}

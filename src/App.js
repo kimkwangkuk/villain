@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import HomePage from './pages/home';
 import PostDetail from './pages/post-detail';
@@ -30,27 +31,29 @@ function AppLayout({ children }) {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<SignupPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route 
-              path="/posts/new" 
-              element={
-                <PrivateRoute>
-                  <AddPostPage />
-                </PrivateRoute>
-              } 
-            />
-            <Route path="/posts/:id" element={<PostDetail />} />
-            <Route path="/mypage" element={<MyPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/user/:userId" element={<UserPage />} />
-          </Routes>
-        </AppLayout>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<SignupPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route 
+                path="/posts/new" 
+                element={
+                  <PrivateRoute>
+                    <AddPostPage />
+                  </PrivateRoute>
+                } 
+              />
+              <Route path="/posts/:id" element={<PostDetail />} />
+              <Route path="/mypage" element={<MyPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/user/:userId" element={<UserPage />} />
+            </Routes>
+          </AppLayout>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

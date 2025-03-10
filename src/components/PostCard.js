@@ -83,7 +83,7 @@ function PostCard({ post, categories, onShare }) {
     >
       <div className="flex flex-col h-full">
         {/* 컨텐츠 영역 내에 프로필 영역 포함 */}
-        <div className="bg-[#F5F5F7] rounded-2xl pt-[14px] p-5 pb-3 flex flex-col h-[360px]">
+        <div className="bg-[#F5F5F7] dark:bg-[#0A0A0A] rounded-2xl pt-[14px] p-5 pb-3 flex flex-col h-[360px]">
           {/* 프로필 영역 - 타이틀 상단에 표시 */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
@@ -100,10 +100,10 @@ function PostCard({ post, categories, onShare }) {
                 />
               </div>
               <div className="ml-2">
-                <div className="text-[13px] font-semibold text-gray-900">
+                <div className="text-[13px] font-semibold text-gray-900 dark:text-neutral-300">
                   {post.authorName}
                 </div>
-                <div className="text-[12px] text-gray-500">
+                <div className="text-[12px] text-gray-500 dark:text-neutral-500">
                   <span>{categoryName}</span>
                   <span className="mx-1">·</span>
                   <span>{getRelativeTime(post.createdAt?.toDate())}</span>
@@ -116,15 +116,15 @@ function PostCard({ post, categories, onShare }) {
                 e.stopPropagation();
                 // 더보기 옵션에 대한 처리 로직 추가 가능
               }} 
-              className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200"
+              className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
             >
-              <span className="text-gray-300 text-sm transition-colors hover:text-gray-900">⋮</span>
+              <span className="text-gray-300 dark:text-neutral-500 text-sm transition-colors hover:text-gray-900 dark:hover:text-neutral-300">⋮</span>
             </button>
           </div>
 
           {/* 타이틀 */}
           <h2 
-            className="text-[19px] font-semibold text-gray-900 mb-[6px]" 
+            className="text-[19px] font-semibold text-gray-900 dark:text-neutral-300 mb-[6px]" 
             style={{
               display: '-webkit-box',
               WebkitLineClamp: '1',
@@ -138,7 +138,7 @@ function PostCard({ post, categories, onShare }) {
 
           {/* 컨텐츠 */}
           <p
-            className="text-[15px] text-gray-900"
+            className="text-[15px] text-gray-700 dark:text-neutral-400"
             style={{
               display: '-webkit-box',
               WebkitLineClamp: '5',
@@ -151,13 +151,13 @@ function PostCard({ post, categories, onShare }) {
           </p>
 
           {/* 좋아요/댓글 수 표시 */}
-          <div className="mt-auto flex items-center justify-between text-[14px] text-gray-500 pb-3">
+          <div className="mt-auto flex items-center justify-between text-[14px] text-gray-500 dark:text-neutral-500 pb-3">
             <span>{likes || 0}명의 반응</span>
             <span>댓글 {commentCount || 0}</span>
           </div>
 
           {/* 좋아요/댓글/공유 버튼 컨테이너 */}
-          <div className="flex items-center justify-between border-t border-gray-200 pt-3 -mx-5 px-5">
+          <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-900 pt-3 -mx-5 px-5">
             {/* 좋아요 버튼 */}
             <button 
               onClick={(e) => {
@@ -165,10 +165,10 @@ function PostCard({ post, categories, onShare }) {
                 e.stopPropagation();
                 handleLike(e);
               }}
-              className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
             >
-              <LikeIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
-              <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">
+              <LikeIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+              <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">
                 {isLiked ? "반응 취소" : "반응"}
               </span>
             </button>
@@ -180,19 +180,19 @@ function PostCard({ post, categories, onShare }) {
                 e.stopPropagation();
                 navigate(`/posts/${post.id}`);
               }}
-              className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
             >
-              <MessageIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
-              <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">댓글</span>
+              <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+              <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
             </button>
 
             {/* 공유 버튼 */}
             <button
               onClick={(e) => onShare(e, post.id)}
-              className="flex items-center hover:bg-gray-200 group transition-colors duration-200 rounded-full px-2 py-1"
+              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
             >
-              <ShareIcon className="w-[22px] h-[22px] text-gray-600 group-hover:text-gray-800" />
-              <span className="ml-[2px] text-gray-600 group-hover:text-gray-800 text-[14px] relative top-[1px]">공유</span>
+              <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+              <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
             </button>
           </div>
         </div>
