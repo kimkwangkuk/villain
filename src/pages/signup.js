@@ -4,6 +4,7 @@ import { signup, login } from '../api/firebase';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '../context/AuthContext';
 import { generateRandomUsername } from '../scripts/usernameWords';
+import { LogoIcon, StarIcon } from '../components/Icons';
 
 function AuthPage() {
   const { googleLogin } = useAuth();
@@ -148,28 +149,29 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-4 sm:px-6 lg:px-8 bg-white">
+    <div className="min-h-screen flex flex-col px-4 sm:px-6 lg:px-8 bg-white dark:bg-black">
       <div className="pt-8 pb-6">
         <Link to="/" className="inline-block">
-          <h1 className="text-2xl font-bold text-gray-900 hover:text-gray-600 transition-colors">
-            빌런
-          </h1>
+          <LogoIcon className="h-6 text-black dark:text-white" />
         </Link>
       </div>
 
       <div className="text-center mb-12">
-        <p className="text-gray-500 text-lg mb-4">
+        <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">
           익명 빌런 제보 커뮤니티
         </p>
-        <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-[1.4]">
+        <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-[1.4]">
           내 일상을 어지럽히는 빌런을 제보하고<br />
-          밝은 세상을 만들어요.
+          <span className="inline-flex items-center">
+            <StarIcon className="w-8 h-8 mr-1 text-gray-900 dark:text-white" />
+            밝은
+          </span> 세상을 만들어요.
         </h1>
       </div>
 
       <div className="flex-1 flex flex-col max-w-md mx-auto w-full">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
+          <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
             {isLogin ? '로그인' : '회원가입'}
           </h2>
         </div>
@@ -177,7 +179,7 @@ function AuthPage() {
         <div className="w-full">
           <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -185,14 +187,14 @@ function AuthPage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
                   </div>
                 </div>
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 이메일
               </label>
               <input
@@ -200,7 +202,7 @@ function AuthPage() {
                 name="email"
                 type="email"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-200 dark:border-neutral-700 rounded-md shadow-sm bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:ring-gray-300 focus:border-gray-300 dark:focus:ring-neutral-700 dark:focus:border-neutral-700"
                 value={formData.email}
                 onChange={handleChange}
               />
@@ -209,7 +211,7 @@ function AuthPage() {
             {/* 사용자 이름 입력 필드 제거됨 - 내부적으로 랜덤으로 생성된 username을 사용합니다. */}
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 비밀번호
               </label>
               <input
@@ -217,7 +219,7 @@ function AuthPage() {
                 name="password"
                 type="password"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-200 dark:border-neutral-700 rounded-md shadow-sm bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:ring-gray-300 focus:border-gray-300 dark:focus:ring-neutral-700 dark:focus:border-neutral-700"
                 value={formData.password}
                 onChange={handleChange}
               />
@@ -225,7 +227,7 @@ function AuthPage() {
 
             {!isLogin && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   비밀번호 확인
                 </label>
                 <input
@@ -233,7 +235,7 @@ function AuthPage() {
                   name="confirmPassword"
                   type="password"
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-200 dark:border-neutral-700 rounded-md shadow-sm bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:ring-gray-300 focus:border-gray-300 dark:focus:ring-neutral-700 dark:focus:border-neutral-700"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                 />
@@ -243,7 +245,7 @@ function AuthPage() {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white dark:text-gray-900 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 {isLogin ? '로그인' : '회원가입'}
               </button>
@@ -253,7 +255,7 @@ function AuthPage() {
           <div className="mt-4">
             <div className="relative">
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
+                <span className="px-2 bg-white dark:bg-black text-gray-500 dark:text-gray-400">
                   {isLogin ? '계정이 없으신가요?' : '이미 계정이 있으신가요?'}{' '}
                   <button onClick={toggleForm} className="font-medium text-blue-600 hover:text-blue-500">
                     {isLogin ? '회원가입' : '로그인'}
@@ -266,17 +268,17 @@ function AuthPage() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-300 dark:border-gray-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white dark:bg-black text-gray-500 dark:text-gray-400">Or continue with</span>
               </div>
             </div>
 
             <div className="mt-6">
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                className="w-full flex justify-center items-center px-4 py-2 border border-gray-200 dark:border-neutral-700 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-neutral-300 bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-neutral-900"
               >
                 <img 
                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 

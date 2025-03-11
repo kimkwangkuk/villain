@@ -281,8 +281,8 @@ function HomePage() {
       <div className="min-h-screen bg-white dark:bg-black">
         {/* 카테고리 네비게이션 스켈레톤 */}
         <div>
-          <div className="max-w-[1200px] mx-auto px-4 py-4 scroll-container">
-            <div className="flex space-x-8 overflow-x-auto hide-scrollbar">
+          <div className="max-w-[1200px] mx-auto px-4 py-4 md:py-10 scroll-container">
+            <div className="flex justify-center space-x-8 overflow-x-auto hide-scrollbar">
               {Array.from({ length: 5 }).map((_, index) => (
                 <div key={index} className="w-16 h-6 bg-gray-300 dark:bg-neutral-900 rounded animate-pulse"></div>
               ))}
@@ -305,7 +305,7 @@ function HomePage() {
         </div>
 
         {/* 포스트 카드 영역 스켈레톤 */}
-        <div className="py-8">
+        <div className="py-8 md:pt-[50px]">
           <div className="max-w-[1200px] mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, index) => (
               <PostCardSkeleton key={index} />
@@ -323,7 +323,7 @@ function HomePage() {
         <div className="max-w-[1200px] mx-auto relative scroll-container">
           <div 
             ref={categoryScrollRef}
-            className="flex overflow-x-auto whitespace-nowrap pt-4 px-4 gap-8 hide-scrollbar cursor-grab select-none"
+            className="flex justify-center overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-8 hide-scrollbar cursor-grab select-none"
             onMouseDown={handleMouseDown}
             onMouseLeave={handleMouseUp}
           >
@@ -335,7 +335,7 @@ function HomePage() {
               className={`text-[14px] pb-2 px-1 transition-colors ${
                 !selectedCategory
                   ? "text-black dark:text-white border-b-2 border-black dark:border-white"
-                  : "text-gray-500 dark:text-neutral-300"
+                  : "text-gray-500 dark:text-neutral-500"
               }`}
             >
               <div className="flex flex-col items-center gap-[10px]">
@@ -355,7 +355,7 @@ function HomePage() {
                   className={`text-[14px] pb-2 px-1 transition-colors ${
                     selectedCategory === category.id
                       ? "text-black dark:text-white border-b-2 border-black dark:border-white"
-                      : "text-gray-500 dark:text-neutral-300"
+                      : "text-gray-500 dark:text-neutral-500"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-[10px]">
@@ -370,7 +370,7 @@ function HomePage() {
       </div>
 
       {/* 카드 리스트 영역 (별도 배경 제거) */}
-      <div className="pt-[20px] pb-8">
+      <div className="pt-[20px] md:pt-[50px] pb-8">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredPosts.map((post) => (

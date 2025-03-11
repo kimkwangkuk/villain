@@ -1,3 +1,18 @@
+export const LogoIcon = ({ className = "w-auto h-8" }) => (
+  <svg 
+    viewBox="0 0 609 224" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path d="M74.5 41H0L99.3333 224H128.306L149 178.25L74.5 41Z" fill="currentColor"/>
+    <rect x="75" y="41" width="25" height="9" fill="currentColor"/>
+    <path fillRule="evenodd" clipRule="evenodd" d="M178.681 0H182.321C182.321 24.1232 201.877 43.6791 226 43.68V47.32C201.877 47.321 182.321 66.8768 182.321 91L178.681 91C178.681 66.8762 159.124 47.32 135 47.32V43.68C159.124 43.68 178.681 24.1238 178.681 0Z" fill="currentColor"/>
+    <path d="M536.779 45.4155V106.656H476.384V127.562C506.159 127.35 527.065 126.506 550.083 122.916L552.195 144.455C525.798 148.468 502.147 149.101 465.403 149.101H449.354V86.1718H509.96V66.7439H449.143V45.4155H536.779ZM604.143 32.7451V174.231H577.324V101.587H546.493V78.7807H577.324V32.7451H604.143ZM609 199.783V221.322H475.539V162.616H502.358V199.783H609Z" fill="currentColor"/>
+    <path d="M415.988 32.5342V131.363H389.169V32.5342H415.988ZM416.2 139.599V190.491H313.992V202.739H421.479V223.434H287.595V171.275H389.381V160.082H287.173V139.599H416.2ZM291.608 40.5587V62.7319H331.942V40.5587H358.761V125.45H265V40.5587H291.608ZM291.608 104.122H331.942V83.4268H291.608V104.122Z" fill="currentColor"/>
+  </svg>
+);
+
 export const HomeIcon = ({ className = "w-6 h-6" }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
@@ -291,6 +306,24 @@ export const SchoolIcon = ({ className = "w-6 h-6" }) => (
     <path d="m4 6 7.106-3.553a2 2 0 0 1 1.788 0L20 6"/>
     <path d="M6 5v17"/>
     <circle cx="12" cy="9" r="2"/>
+  </svg>
+);
+
+export const StarIcon = ({ className = "w-6 h-6" }) => (
+  <svg 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path 
+      fillRule="evenodd" 
+      clipRule="evenodd" 
+      d="M11.6002 2H12.4002C12.4002 7.30181 16.6981 11.5998 22 11.6V12.4C16.6982 12.4002 12.4002 16.6982 12.4002 22L11.6002 22C11.6002 16.6981 7.30203 12.4 2 12.4V11.6C7.30204 11.6 11.6002 7.30194 11.6002 2Z" 
+      fill="currentColor"
+    />
   </svg>
 );
 
