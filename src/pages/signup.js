@@ -217,7 +217,7 @@ function AuthPage() {
           {/* 로고를 왼쪽 상단에 배치 */}
           <div className="absolute top-4 left-4">
             <Link to="/" className="text-black dark:text-white hover:text-gray-900 dark:hover:text-gray-100 flex items-center">
-              <LogoIcon className="h-6 text-[#FF3131] dark:text-[#FF3131]" />
+              <LogoIcon className="h-6 text-black dark:text-white" />
             </Link>
           </div>
           

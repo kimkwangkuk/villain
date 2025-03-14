@@ -237,7 +237,7 @@ function PostDetail() {
     <div className="bg-white dark:bg-black min-h-screen py-8">
       {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
-        <div className="max-w-[580px] mx-auto bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
+        <div className="max-w-[580px] mx-auto bg-gray-100 dark:bg-[#121212] rounded-2xl">
           {/* 프로필 영역 */}
           <div className="pb-[0px] p-4">
             <div className="flex items-center justify-between">
@@ -387,9 +387,9 @@ function PostDetail() {
       <div className="w-full px-4 mt-4">
         <div className="max-w-[580px] mx-auto">
           {/* 댓글 입력 영역 */}
-          <div className="bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
+          <div className="bg-gray-100 dark:bg-[#121212] rounded-2xl">
             <form onSubmit={handleCommentSubmit}>
-              <div className="bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl p-[12px] w-full">
+              <div className="bg-gray-100 dark:bg-[#121212] rounded-2xl p-[12px] w-full">
                 <div className="flex items-center space-x-2">
                   <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                     {isLoggedIn ? (
@@ -461,7 +461,7 @@ function PostDetail() {
 
           {/* 댓글 리스트 영역 */}
           {comments.length > 0 && (
-            <div className="mt-4 bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
+            <div className="mt-4 bg-gray-100 dark:bg-[#121212] rounded-2xl">
               {comments.map((comment, index) => (
                 <div key={comment.id}>
                   <CommentCard

@@ -28,7 +28,7 @@ function Navbar() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="text-black dark:text-white hover:text-gray-900 dark:hover:text-gray-100 mr-4 flex items-center">
-              <LogoIcon className="h-6 text-[#FF3131] dark:text-[#FF3131]" />
+              <LogoIcon className="h-6 text-black dark:text-white" />
             </Link>
             <div className="h-[38px] rounded-lg px-4 flex items-center overflow-hidden relative w-[100px]">
               <div 
