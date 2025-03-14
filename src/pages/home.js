@@ -20,7 +20,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 // firestore 쿼리를 위해 추가
 import { db } from '../firebase';
-import { collection, query, orderBy, limit, startAfter, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, startAfter, getDocs, doc, getDoc, where } from 'firebase/firestore';
 import PostCardSkeleton from '../components/PostCardSkeleton';
 
 // 홈 페이지 상단에 객체로 카테고리 아이콘 매핑
@@ -41,6 +41,8 @@ function HomePage() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
   const [authors, setAuthors] = useState([]);
   const [user, setUser] = useState(null);
   const [lastDoc, setLastDoc] = useState(null);
@@ -49,6 +51,11 @@ function HomePage() {
   const [showToast, setShowToast] = useState(false);
   const [isRestoringState, setIsRestoringState] = useState(false);
   const [cachedLastDocId, setCachedLastDocId] = useState(null);
+  const [noPostsMessage, setNoPostsMessage] = useState(false); // 게시글 없음 메시지 표시 여부
+  const [previousPosts, setPreviousPosts] = useState([]); // 이전 포스트 저장
+  
+  // 현재 진행 중인 요청을 추적하기 위한 ref
+  const currentRequestRef = useRef(null);
 
   // useSearchParams 훅 사용 (쿼리 파라미터 관리)
   const [searchParams, setSearchParams] = useSearchParams();
@@ -205,6 +212,9 @@ function HomePage() {
     if (!isBackNavigation) {
       window.scrollTo(0, 0);
     }
+    
+    // 카테고리 변경 시 카테고리 UI가 스켈레톤으로 표시되지 않도록 함
+    setCategoriesLoading(false);
   }, [searchParams, isBackNavigation]);
 
   // 카테고리 초기 로드 시 스크롤 위치 초기화
@@ -232,13 +242,18 @@ function HomePage() {
     
     const initLoad = async () => {
       try {
-        const [categoriesData] = await Promise.all([
-          getCategories(), 
-          loadPosts() // posts 불러오기 함수
-        ]);
+        // 카테고리 먼저 로드하여 UI가 스켈레톤으로 표시되지 않도록 함
+        const categoriesData = await getCategories();
         setCategories(categoriesData);
+        setCategoriesLoading(false);
+        
+        // 그 다음 포스트 로드
+        await loadPosts();
+        setPostsLoading(false);
       } catch (error) {
         console.error('데이터 로딩 실패:', error);
+        setCategoriesLoading(false);
+        setPostsLoading(false);
       }
       setLoading(false);
       
@@ -255,17 +270,25 @@ function HomePage() {
 
   // 카테고리 데이터 로드 (상태 복원 시에도 필요)
   useEffect(() => {
+    // 이미 카테고리가 로드되어 있으면 스킵
+    if (categories.length > 0) {
+      setCategoriesLoading(false);
+      return;
+    }
+    
     const loadCategories = async () => {
       try {
         const categoriesData = await getCategories();
         setCategories(categoriesData);
+        setCategoriesLoading(false);
       } catch (error) {
         console.error('카테고리 로딩 실패:', error);
+        setCategoriesLoading(false);
       }
     };
     
     loadCategories();
-  }, []);
+  }, [categories.length]);
 
   // 페이지당 불러올 게시글 수
   const postsPerPage = 20;
@@ -277,44 +300,66 @@ function HomePage() {
     try {
       let q;
       
-      // 캐시된 lastDocId가 있고 lastDoc이 없는 경우, 해당 ID로 문서 가져오기
-      if (cachedLastDocId && !lastDoc) {
-        // 캐시된 ID로 마지막 문서 복원
-        const docRef = doc(db, 'posts', cachedLastDocId);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          // 복원된 문서로 쿼리 생성
+      // 선택된 카테고리가 있는 경우
+      if (selectedCategory) {
+        if (lastDoc) {
+          q = query(
+            collection(db, 'posts'),
+            where('categoryId', '==', selectedCategory),
+            orderBy('createdAt', 'desc'),
+            startAfter(lastDoc),
+            limit(postsPerPage)
+          );
+        } else {
+          q = query(
+            collection(db, 'posts'),
+            where('categoryId', '==', selectedCategory),
+            orderBy('createdAt', 'desc'),
+            limit(postsPerPage)
+          );
+        }
+      } 
+      // 전체 카테고리 선택 시
+      else {
+        // 캐시된 lastDocId가 있고 lastDoc이 없는 경우, 해당 ID로 문서 가져오기
+        if (cachedLastDocId && !lastDoc) {
+          // 캐시된 ID로 마지막 문서 복원
+          const docRef = doc(db, 'posts', cachedLastDocId);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            // 복원된 문서로 쿼리 생성
+            q = query(
+              collection(db, 'posts'),
+              orderBy('createdAt', 'desc'),
+              startAfter(docSnap),
+              limit(postsPerPage)
+            );
+            
+            // 캐시된 ID 초기화
+            setCachedLastDocId(null);
+          } else {
+            // 문서가 없으면 처음부터 로드
+            q = query(
+              collection(db, 'posts'),
+              orderBy('createdAt', 'desc'),
+              limit(postsPerPage)
+            );
+          }
+        } else if (lastDoc) {
           q = query(
             collection(db, 'posts'),
             orderBy('createdAt', 'desc'),
-            startAfter(docSnap),
+            startAfter(lastDoc),
             limit(postsPerPage)
           );
-          
-          // 캐시된 ID 초기화
-          setCachedLastDocId(null);
         } else {
-          // 문서가 없으면 처음부터 로드
           q = query(
             collection(db, 'posts'),
             orderBy('createdAt', 'desc'),
             limit(postsPerPage)
           );
         }
-      } else if (lastDoc) {
-        q = query(
-          collection(db, 'posts'),
-          orderBy('createdAt', 'desc'),
-          startAfter(lastDoc),
-          limit(postsPerPage)
-        );
-      } else {
-        q = query(
-          collection(db, 'posts'),
-          orderBy('createdAt', 'desc'),
-          limit(postsPerPage)
-        );
       }
       
       const snapshot = await getDocs(q);
@@ -365,9 +410,108 @@ function HomePage() {
     }
   }, [posts]);
 
+  // 카테고리 변경 감지 및 처리
+  useEffect(() => {
+    // 카테고리가 변경되었을 때 실행
+    const handleCategoryChange = async () => {
+      // 로딩 중이면 중복 실행 방지
+      if (loadingMore) return;
+      
+      console.log('카테고리 변경:', selectedCategory);
+      
+      // 이전 요청 취소 (식별자 변경)
+      const requestId = Date.now();
+      currentRequestRef.current = requestId;
+      
+      // 현재 포스트를 이전 포스트로 저장
+      setPreviousPosts(posts);
+      
+      // 카테고리 변경 시 상태 초기화 (포스트는 초기화하지 않음)
+      setLastDoc(null);
+      setHasMore(true);
+      setPostsLoading(true); // 포스트 로딩 상태만 변경
+      setNoPostsMessage(false);
+      
+      try {
+        let q;
+        
+        // 카테고리별 쿼리 생성
+        if (selectedCategory) {
+          // 선택된 카테고리의 포스트만 로드
+          q = query(
+            collection(db, 'posts'),
+            where('categoryId', '==', selectedCategory),
+            orderBy('createdAt', 'desc'),
+            limit(postsPerPage)
+          );
+        } else {
+          // 전체 카테고리 포스트 로드
+          q = query(
+            collection(db, 'posts'),
+            orderBy('createdAt', 'desc'),
+            limit(postsPerPage)
+          );
+        }
+        
+        const snapshot = await getDocs(q);
+        
+        // 요청이 취소되었는지 확인
+        if (currentRequestRef.current !== requestId) {
+          console.log('요청 취소됨:', requestId);
+          return;
+        }
+        
+        const newPosts = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // 중복 제거
+        const uniquePosts = Array.from(
+          new Map(newPosts.map(post => [post.id, post])).values()
+        );
+        
+        // 새 포스트로 업데이트
+        setPosts(uniquePosts);
+        
+        if (snapshot.docs.length > 0) {
+          setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+        }
+        
+        if (newPosts.length < postsPerPage) {
+          setHasMore(false);
+        }
+        
+        // 포스트가 없는 경우 메시지 표시 (약간의 지연 후)
+        if (uniquePosts.length === 0) {
+          setTimeout(() => {
+            // 요청이 취소되지 않았는지 다시 확인
+            if (currentRequestRef.current === requestId) {
+              setNoPostsMessage(true);
+            }
+          }, 300);
+        }
+      } catch (error) {
+        console.error('카테고리 변경 시 포스트 로딩 실패:', error);
+        // 요청이 취소되지 않았는지 확인
+        if (currentRequestRef.current === requestId) {
+          setNoPostsMessage(true);
+        }
+      } finally {
+        // 요청이 취소되지 않았는지 확인
+        if (currentRequestRef.current === requestId) {
+          setPostsLoading(false);
+        }
+      }
+    };
+    
+    // 카테고리 변경 시 실행
+    handleCategoryChange();
+  }, [selectedCategory]);
+
   // 추가 게시글 로드 (무한 스크롤)
   const loadMorePosts = async () => {
-    if (loadingMore || !hasMore) return; // 이미 로딩 중이거나 더 이상 포스트가 없으면 중단
+    if (loadingMore || !hasMore || postsLoading) return; // 이미 로딩 중이거나 더 이상 포스트가 없으면 중단
     
     setLoadingMore(true);
     await loadPosts();
@@ -394,16 +538,26 @@ function HomePage() {
 
   // 선택한 카테고리에 따른 필터링 및 결과가 없을 때 처리
   const filteredPosts = selectedCategory
-    ? posts.filter(post => post.categoryId === selectedCategory)
-    : posts;
+    ? (postsLoading ? previousPosts.filter(post => post.categoryId === selectedCategory) : posts.filter(post => post.categoryId === selectedCategory))
+    : (postsLoading ? previousPosts : posts);
     
+  // 중복 ID 제거를 위한 처리
+  const uniqueFilteredPosts = Array.from(
+    new Map(filteredPosts.map(post => [post.id, post])).values()
+  );
+  
   // 카테고리 변경 시 포스트 로딩 상태 관리
   useEffect(() => {
     // 카테고리 변경 시 필터링된 포스트가 없고 로딩 중이 아니면 추가 로드
-    if (filteredPosts.length === 0 && !loading && !loadingMore && hasMore) {
-      loadMorePosts();
+    if (uniqueFilteredPosts.length === 0 && !postsLoading && !loadingMore && hasMore) {
+      // 약간의 지연 후 추가 로드 (UI가 깜빡이는 것을 방지)
+      const timer = setTimeout(() => {
+        loadMorePosts();
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, uniqueFilteredPosts.length, postsLoading, loadingMore, hasMore]);
 
   const getDefaultProfileImage = (authorId) => {
     return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${authorId}&backgroundColor=e8f5e9`;
@@ -688,29 +842,32 @@ function HomePage() {
   }, []);
 
   // 로딩 상태일 때 스켈레톤 UI 처리
-  if (loading && !isRestoringState) {
+  if (categoriesLoading && !categories.length) {
+    // 카테고리가 로딩 중이고 카테고리 데이터가 없을 때만 카테고리 스켈레톤 표시
     return (
       <div className="min-h-screen bg-white dark:bg-black">
         {/* 카테고리 네비게이션 스켈레톤 */}
-        <div>
-          <div className="max-w-[1200px] mx-auto px-4 py-4 md:py-10">
-            <div className="flex justify-center space-x-8 overflow-x-auto hide-scrollbar">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="w-16 h-6 bg-gray-300 dark:bg-neutral-900 rounded animate-pulse"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 저자 영역 스켈레톤 */}
-        <div className="py-4">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex space-x-6">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="flex flex-col items-center">
-                  <div className="w-12 h-12 bg-gray-300 dark:bg-neutral-900 rounded-full animate-pulse"></div>
-                  <div className="w-16 h-4 bg-gray-300 dark:bg-neutral-900 rounded animate-pulse mt-2"></div>
+        <div className="bg-white dark:bg-black border-b border-gray-100 dark:border-neutral-900 sticky top-16 z-40">
+          <div className="max-w-[1200px] mx-auto relative">
+            <div className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 pb-2 cursor-grab select-none hide-scrollbar">
+              <button
+                className="text-[14px] pb-2 px-1 transition-colors text-black dark:text-white border-b-2 border-black dark:border-white"
+              >
+                <div className="flex flex-col items-center gap-[10px]">
+                  <AllCategoryIcon className="w-[28px] h-[28px]" />
+                  <span>전체</span>
                 </div>
+              </button>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <button
+                  key={index}
+                  className="text-[14px] pb-2 px-1 transition-colors text-gray-500 dark:text-neutral-500"
+                >
+                  <div className="flex flex-col items-center gap-[10px]">
+                    <div className="w-[28px] h-[28px] bg-gray-300 dark:bg-neutral-900 rounded animate-pulse"></div>
+                    <span className="w-16 h-4 bg-gray-300 dark:bg-neutral-900 rounded animate-pulse"></span>
+                  </div>
+                </button>
               ))}
             </div>
           </div>
@@ -790,7 +947,14 @@ function HomePage() {
       {/* 카드 리스트 영역 (별도 배경 제거) */}
       <div className="pt-[20px] md:pt-[50px] pb-8">
         <div className="max-w-[1200px] mx-auto px-4">
-          {filteredPosts.length === 0 && !loading ? (
+          {postsLoading ? (
+            // 포스트 로딩 중일 때만 포스트 영역 스켈레톤 표시
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <PostCardSkeleton key={index} />
+              ))}
+            </div>
+          ) : uniqueFilteredPosts.length === 0 && noPostsMessage ? (
             <div className="text-center py-10">
               <p className="text-gray-500 dark:text-neutral-400">게시글이 없습니다.</p>
               {hasMore && !loadingMore && (
@@ -804,9 +968,9 @@ function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredPosts.map((post) => (
+              {uniqueFilteredPosts.map((post) => (
                 <PostCard 
-                  key={post.id} 
+                  key={`post-${post.id}`} 
                   post={post} 
                   categories={categories}
                   onShare={handleShare}
@@ -814,8 +978,19 @@ function HomePage() {
               ))}
             </div>
           )}
-          {loadingMore && <div className="text-center mt-4">Loading more posts...</div>}
-          {!hasMore && filteredPosts.length > 0 && <div className="text-center mt-4">더 이상 게시글이 없습니다.</div>}
+          {/* 로딩 중이 아니고 추가 로딩 중일 때만 로딩 스피너 표시 */}
+          {loadingMore && !postsLoading && (
+            <div className="text-center mt-6 py-2">
+              <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+              <span className="ml-2 text-gray-500 dark:text-neutral-400">포스트 불러오는 중...</span>
+            </div>
+          )}
+          {/* 더 이상 게시글이 없다는 메시지는 스크롤을 끝까지 내렸을 때만 표시 */}
+          {!hasMore && uniqueFilteredPosts.length > 0 && !postsLoading && (
+            <div className="text-center mt-6 py-4 text-gray-500 dark:text-neutral-400 text-sm">
+              모든 게시글을 불러왔습니다
+            </div>
+          )}
         </div>
       </div>
 
