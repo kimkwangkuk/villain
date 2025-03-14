@@ -331,20 +331,28 @@
 
   // 회원가입
   export const signup = async ({ email, password, photoURL }) => {
-    // 고유한 사용자 이름 생성
-    const username = await generateUniqueUsername();
-
+    console.log('signup 함수 호출됨:', { email, photoURL });
+    
     try {
+      // 고유한 사용자 이름 생성
+      const username = await generateUniqueUsername();
+      console.log('생성된 고유 사용자 이름:', username);
+
       // Firebase Auth에 사용자 생성
+      console.log('Firebase Auth에 사용자 생성 시도');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('Firebase Auth 사용자 생성 성공:', userCredential.user.uid);
       
       // 사용자 프로필 업데이트 (displayName과 photoURL 모두 설정)
+      console.log('사용자 프로필 업데이트 시도');
       await updateProfile(auth.currentUser, {
         displayName: username,
         photoURL: photoURL
       });
+      console.log('사용자 프로필 업데이트 성공');
       
       // Firestore에 사용자 정보 저장
+      console.log('Firestore에 사용자 정보 저장 시도');
       const userRef = doc(db, 'users', userCredential.user.uid);
       await setDoc(userRef, {
         email: email,
@@ -354,6 +362,7 @@
         bio: '',
         userId: userCredential.user.uid
       });
+      console.log('Firestore 사용자 정보 저장 성공');
       
       return userCredential.user;
     } catch (error) {
@@ -579,26 +588,41 @@
    * 중복된 경우에는 기본 이름 뒤에 _숫자를 붙여서 고유한 이름을 반환합니다.
    */
   export const generateUniqueUsername = async () => {
-    // 기본 이름을 생성합니다.
-    let baseUsername = generateRandomUsername();
-    let username = baseUsername;
-    let attempts = 0;
-    const maxAttempts = 20;
-    
-    // 해당 이름이 사용 가능한지 확인합니다.
-    while (!(await checkUsernameAvailability(username))) {
-      attempts++;
-      // 중복된 경우, 기본 이름 뒤에 번호를 추가합니다.
-      username = `${baseUsername}_${attempts}`;
+    console.log('generateUniqueUsername 함수 호출됨');
+    try {
+      // 기본 이름을 생성합니다.
+      let baseUsername = generateRandomUsername();
+      console.log('생성된 기본 사용자 이름:', baseUsername);
       
-      // 만약 너무 많이 중복되면 새로운 기본 이름으로 재설정합니다.
-      if (attempts >= maxAttempts) {
-        baseUsername = generateRandomUsername();
-        username = baseUsername;
-        attempts = 0;
+      let username = baseUsername;
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      // 해당 이름이 사용 가능한지 확인합니다.
+      while (!(await checkUsernameAvailability(username))) {
+        console.log(`사용자 이름 "${username}" 이미 사용 중, 새 이름 시도 중...`);
+        attempts++;
+        // 중복된 경우, 기본 이름 뒤에 번호를 추가합니다.
+        username = `${baseUsername}_${attempts}`;
+        
+        // 만약 너무 많이 중복되면 새로운 기본 이름으로 재설정합니다.
+        if (attempts >= maxAttempts) {
+          baseUsername = generateRandomUsername();
+          username = baseUsername;
+          attempts = 0;
+          console.log('최대 시도 횟수 초과, 새 기본 이름 생성:', baseUsername);
+        }
       }
+      
+      console.log('최종 생성된 고유 사용자 이름:', username);
+      return username;
+    } catch (error) {
+      console.error('사용자 이름 생성 중 오류 발생:', error);
+      // 오류 발생 시 기본 이름 반환
+      const fallbackUsername = generateRandomUsername();
+      console.log('오류로 인한 대체 사용자 이름 생성:', fallbackUsername);
+      return fallbackUsername;
     }
-    return username;
   };
 
   // 대댓글 추가

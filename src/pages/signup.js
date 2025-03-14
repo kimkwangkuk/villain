@@ -125,34 +125,61 @@ function AuthPage() {
           return;
         }
 
+        // 디버깅을 위한 로그 추가
+        console.log('회원가입 시도:', { 
+          email: formData.email
+        });
+
         const profileImageUrl = await getRandomProfileImage();
         console.log('선택된 프로필 이미지:', profileImageUrl);
 
         if (!profileImageUrl) {
           console.error('프로필 이미지를 가져오는데 실패했습니다.');
+          setError('프로필 이미지를 가져오는데 실패했습니다.');
           return;
         }
 
-        const response = await signup({
-          email: formData.email,
-          password: formData.password,
-          // 랜덤으로 생성된 username이 사용됩니다.
-          username: formData.username,
-          photoURL: profileImageUrl
-        });
+        try {
+          console.log('signup 함수 호출 전');
+          const response = await signup({
+            email: formData.email,
+            password: formData.password,
+            photoURL: profileImageUrl
+          });
+          console.log('signup 함수 호출 후');
 
-        console.log('회원가입 응답:', response);
-        if (!response.displayName) {
-          setError('사용자 이름 설정에 실패했습니다.');
+          console.log('회원가입 응답:', response);
+          
+          if (!response) {
+            setError('회원가입 응답이 없습니다.');
+            return;
+          }
+
+          if (!response.displayName) {
+            console.warn('사용자 이름이 즉시 설정되지 않았습니다. 이는 정상적인 현상일 수 있습니다.');
+          }
+
+          if (!response.photoURL) {
+            console.warn('프로필 이미지가 즉시 설정되지 않았습니다. 이는 정상적인 현상일 수 있습니다.');
+          }
+
+          alert('회원가입이 완료되었습니다.');
+          
+          // 회원가입 후 자동 로그인 처리
+          console.log('회원가입 후 자동 로그인 시도');
+          // 이미 Firebase Auth에 로그인된 상태이므로 추가 로그인 필요 없음
+          // 단, 상태 업데이트는 필요
+          
+          // 로그인 상태로 UI 변경
+          setIsLogin(true);
+          
+          // 홈페이지로 이동
+          navigate('/', { replace: true });
+        } catch (signupError) {
+          console.error('회원가입 함수 내부 오류:', signupError);
+          setError(`회원가입 처리 중 오류: ${signupError.message}`);
           return;
         }
-
-        if (!response.photoURL) {
-          console.error('프로필 이미지 설정 실패');
-        }
-
-        alert('회원가입이 완료되었습니다.');
-        setIsLogin(true);
       }
     } catch (error) {
       console.error('회원가입/로그인 실패:', error);

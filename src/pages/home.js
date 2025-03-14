@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useLocation } from 'react-router-dom';
 import { getCategories, getUserDoc } from '../api/firebase';
 import PostCard from '../components/PostCard';
 import { 
@@ -20,7 +20,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 // firestore 쿼리를 위해 추가
 import { db } from '../firebase';
-import { collection, query, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, startAfter, getDocs, doc, getDoc } from 'firebase/firestore';
 import PostCardSkeleton from '../components/PostCardSkeleton';
 
 // 홈 페이지 상단에 객체로 카테고리 아이콘 매핑
@@ -47,9 +47,15 @@ function HomePage() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isRestoringState, setIsRestoringState] = useState(false);
+  const [cachedLastDocId, setCachedLastDocId] = useState(null);
 
   // useSearchParams 훅 사용 (쿼리 파라미터 관리)
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [isBackNavigation, setIsBackNavigation] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const prevPathRef = useRef('');
 
   // 드래그 스크롤을 위한 상태와 ref 추가
   const categoryScrollRef = useRef(null);
@@ -57,7 +63,136 @@ function HomePage() {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  // 컴포넌트 mount 시 query parameter에서 카테고리 값을 가져옵니다.
+  // 스크롤 위치 저장
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPosition(window.scrollY);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  // 경로 변경 감지
+  useEffect(() => {
+    // 이전 경로와 현재 경로 비교
+    const currentPath = location.pathname + location.search;
+    
+    // 컴포넌트 마운트 시 초기화
+    if (prevPathRef.current === '') {
+      prevPathRef.current = currentPath;
+      
+      // 세션 스토리지에서 이전 페이지 경로 확인
+      const lastVisitedPath = sessionStorage.getItem('lastVisitedPath');
+      if (lastVisitedPath && lastVisitedPath.includes('/posts/')) {
+        // 포스트 상세 페이지에서 돌아온 경우
+        setIsBackNavigation(true);
+        setIsRestoringState(true);
+        
+        // 캐시된 포스트 데이터 복원
+        const cachedPosts = sessionStorage.getItem('cachedPosts');
+        if (cachedPosts) {
+          try {
+            const parsedPosts = JSON.parse(cachedPosts);
+            setPosts(parsedPosts);
+            
+            // 마지막 문서 ID 저장 (실제 lastDoc 객체는 나중에 복원)
+            const lastDocId = sessionStorage.getItem('cachedLastDocId');
+            if (lastDocId) {
+              setCachedLastDocId(lastDocId);
+            }
+            
+            // 로딩 상태 업데이트
+            setLoading(false);
+          } catch (error) {
+            console.error('캐시된 데이터 복원 실패:', error);
+          }
+        }
+      }
+    } else if (currentPath !== prevPathRef.current) {
+      prevPathRef.current = currentPath;
+    }
+    
+    // 현재 경로 저장
+    sessionStorage.setItem('lastVisitedPath', currentPath);
+    
+    return () => {
+      // 컴포넌트 언마운트 시 현재 경로 저장
+      sessionStorage.setItem('lastVisitedPath', currentPath);
+    };
+  }, [location]);
+  
+  // 뒤로가기 감지
+  useEffect(() => {
+    const handlePopState = () => {
+      setIsBackNavigation(true);
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+  
+  // 뒤로가기 후 처리
+  useEffect(() => {
+    if (isBackNavigation) {
+      // 뒤로가기 후 스크롤 위치 확인 및 추가 포스트 로드
+      setTimeout(() => {
+        // 저장된 스크롤 위치 복원
+        const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
+        if (savedScrollPosition && !isNaN(Number(savedScrollPosition))) {
+          window.scrollTo(0, Number(savedScrollPosition));
+        }
+        
+        // 화면에 포스트가 충분히 표시되지 않으면 추가 로드
+        setTimeout(() => {
+          if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+            loadMorePosts();
+          }
+          setIsBackNavigation(false);
+          setIsRestoringState(false);
+        }, 100);
+      }, 50);
+    }
+  }, [isBackNavigation]);
+
+  // 페이지 이동 시 스크롤 위치와 데이터 저장
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // 스크롤 위치 저장
+      sessionStorage.setItem('homeScrollPosition', scrollPosition.toString());
+      sessionStorage.setItem('selectedCategory', selectedCategory || '');
+      
+      // 포스트 데이터 캐싱
+      if (posts.length > 0) {
+        sessionStorage.setItem('cachedPosts', JSON.stringify(posts));
+        if (lastDoc) {
+          // lastDoc 객체는 직렬화할 수 없으므로 ID만 저장
+          sessionStorage.setItem('cachedLastDocId', lastDoc.id);
+        }
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // 페이지 이동 시에도 스크롤 위치와 데이터 저장
+    return () => {
+      sessionStorage.setItem('homeScrollPosition', scrollPosition.toString());
+      sessionStorage.setItem('selectedCategory', selectedCategory || '');
+      
+      // 포스트 데이터 캐싱
+      if (posts.length > 0) {
+        sessionStorage.setItem('cachedPosts', JSON.stringify(posts));
+        if (lastDoc) {
+          // lastDoc 객체는 직렬화할 수 없으므로 ID만 저장
+          sessionStorage.setItem('cachedLastDocId', lastDoc.id);
+        }
+      }
+      
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [scrollPosition, selectedCategory, posts, lastDoc]);
+
+  // 컴포넌트 마운트 시 query parameter에서 카테고리 값을 가져옵니다.
   useEffect(() => {
     const catFromUrl = searchParams.get('category');
     if (catFromUrl) {
@@ -65,7 +200,20 @@ function HomePage() {
     } else {
       setSelectedCategory(null);
     }
-  }, [searchParams]);
+    
+    // 카테고리 변경 시 스크롤 위치 초기화 (뒤로가기가 아닌 경우)
+    if (!isBackNavigation) {
+      window.scrollTo(0, 0);
+    }
+  }, [searchParams, isBackNavigation]);
+
+  // 카테고리 초기 로드 시 스크롤 위치 초기화
+  useEffect(() => {
+    if (categoryScrollRef.current) {
+      // 초기에는 스크롤 위치를 0으로 설정
+      categoryScrollRef.current.scrollLeft = 0;
+    }
+  }, []);
 
   // 사용자 인증 상태 구독
   useEffect(() => {
@@ -77,6 +225,11 @@ function HomePage() {
 
   // 기존에 분리되어 있던 "카테고리 불러오기"와 "게시글 초기 로드" useEffect를 하나로 통합하여 동시에 불러옴
   useEffect(() => {
+    // 이미 상태 복원 중이면 초기 로드 건너뛰기
+    if (isRestoringState) {
+      return;
+    }
+    
     const initLoad = async () => {
       try {
         const [categoriesData] = await Promise.all([
@@ -88,8 +241,30 @@ function HomePage() {
         console.error('데이터 로딩 실패:', error);
       }
       setLoading(false);
+      
+      // 페이지 로드 후 스크롤 위치 확인하여 필요시 추가 포스트 로드
+      setTimeout(() => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+          loadMorePosts();
+        }
+      }, 500);
     };
+    
     initLoad();
+  }, [isRestoringState]);
+
+  // 카테고리 데이터 로드 (상태 복원 시에도 필요)
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await getCategories();
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('카테고리 로딩 실패:', error);
+      }
+    };
+    
+    loadCategories();
   }, []);
 
   // 페이지당 불러올 게시글 수
@@ -97,9 +272,37 @@ function HomePage() {
 
   // 게시글 불러오는 함수 (무한 스크롤용)
   const loadPosts = async () => {
+    if (loadingMore) return; // 이미 로딩 중이면 중복 호출 방지
+    
     try {
       let q;
-      if (lastDoc) {
+      
+      // 캐시된 lastDocId가 있고 lastDoc이 없는 경우, 해당 ID로 문서 가져오기
+      if (cachedLastDocId && !lastDoc) {
+        // 캐시된 ID로 마지막 문서 복원
+        const docRef = doc(db, 'posts', cachedLastDocId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          // 복원된 문서로 쿼리 생성
+          q = query(
+            collection(db, 'posts'),
+            orderBy('createdAt', 'desc'),
+            startAfter(docSnap),
+            limit(postsPerPage)
+          );
+          
+          // 캐시된 ID 초기화
+          setCachedLastDocId(null);
+        } else {
+          // 문서가 없으면 처음부터 로드
+          q = query(
+            collection(db, 'posts'),
+            orderBy('createdAt', 'desc'),
+            limit(postsPerPage)
+          );
+        }
+      } else if (lastDoc) {
         q = query(
           collection(db, 'posts'),
           orderBy('createdAt', 'desc'),
@@ -113,12 +316,21 @@ function HomePage() {
           limit(postsPerPage)
         );
       }
+      
       const snapshot = await getDocs(q);
       const newPosts = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setPosts(prevPosts => [...prevPosts, ...newPosts]);
+      
+      // 중복 포스트 제거
+      const existingPostIds = new Set(posts.map(post => post.id));
+      const uniqueNewPosts = newPosts.filter(post => !existingPostIds.has(post.id));
+      
+      if (uniqueNewPosts.length > 0) {
+        setPosts(prevPosts => [...prevPosts, ...uniqueNewPosts]);
+      }
+      
       if (snapshot.docs.length > 0) {
         setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
       }
@@ -155,6 +367,8 @@ function HomePage() {
 
   // 추가 게시글 로드 (무한 스크롤)
   const loadMorePosts = async () => {
+    if (loadingMore || !hasMore) return; // 이미 로딩 중이거나 더 이상 포스트가 없으면 중단
+    
     setLoadingMore(true);
     await loadPosts();
     setLoadingMore(false);
@@ -169,17 +383,141 @@ function HomePage() {
       }
     };
     window.addEventListener('scroll', handleScroll);
+    
+    // 컴포넌트 마운트 시 현재 스크롤 위치 확인
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+      loadMorePosts();
+    }
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasMore, loadingMore, lastDoc]);
 
-  // 선택한 카테고리에 따른 필터링
+  // 선택한 카테고리에 따른 필터링 및 결과가 없을 때 처리
   const filteredPosts = selectedCategory
     ? posts.filter(post => post.categoryId === selectedCategory)
     : posts;
+    
+  // 카테고리 변경 시 포스트 로딩 상태 관리
+  useEffect(() => {
+    // 카테고리 변경 시 필터링된 포스트가 없고 로딩 중이 아니면 추가 로드
+    if (filteredPosts.length === 0 && !loading && !loadingMore && hasMore) {
+      loadMorePosts();
+    }
+  }, [selectedCategory]);
 
   const getDefaultProfileImage = (authorId) => {
     return `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${authorId}&backgroundColor=e8f5e9`;
   };
+
+  // 선택된 카테고리로 스크롤 조정
+  useEffect(() => {
+    if (categoryScrollRef.current && selectedCategory) {
+      // 선택된 카테고리 버튼 찾기
+      const selectedButton = categoryScrollRef.current.querySelector(`button[data-category="${selectedCategory}"]`);
+      
+      if (selectedButton) {
+        // 선택된 버튼의 위치 계산
+        const containerWidth = categoryScrollRef.current.offsetWidth;
+        const buttonLeft = selectedButton.offsetLeft;
+        const buttonWidth = selectedButton.offsetWidth;
+        
+        // 버튼이 중앙에 오도록 스크롤 위치 조정
+        const scrollPosition = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
+        
+        // 부드러운 스크롤 적용
+        categoryScrollRef.current.scrollTo({
+          left: Math.max(0, scrollPosition),
+          behavior: 'smooth'
+        });
+      }
+    } else if (categoryScrollRef.current && !selectedCategory) {
+      // 전체 카테고리 선택 시 스크롤 위치 초기화
+      categoryScrollRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [selectedCategory, categories]);
+
+  // 카테고리 레이아웃 조정
+  useEffect(() => {
+    if (categoryScrollRef.current && categories.length) {
+      const container = categoryScrollRef.current;
+      const containerWidth = container.offsetWidth;
+      
+      // 모든 카테고리 버튼의 총 너비 계산 (전체 버튼 포함)
+      let totalButtonsWidth = 0;
+      const buttons = container.querySelectorAll('button');
+      buttons.forEach(button => {
+        // 버튼의 실제 너비 + 마진/패딩 포함
+        const buttonRect = button.getBoundingClientRect();
+        totalButtonsWidth += buttonRect.width;
+      });
+      
+      // 간격(gap) 추가 - 버튼 개수 - 1에 gap 크기를 곱함
+      // 모바일에서는 gap-5(1.25rem = 20px), 데스크탑에서는 gap-8(2rem = 32px)
+      const gapSize = window.innerWidth < 768 ? 20 : 32;
+      totalButtonsWidth += (buttons.length - 1) * gapSize;
+      
+      // 카테고리가 적어서 컨테이너보다 작은 경우 중앙 정렬, 아니면 왼쪽 정렬
+      if (totalButtonsWidth < containerWidth) {
+        container.style.justifyContent = 'center';
+      } else {
+        container.style.justifyContent = 'flex-start';
+      }
+    }
+  }, [categories, selectedCategory]);
+
+  // 화면 크기 변경 시 카테고리 레이아웃 재조정
+  useEffect(() => {
+    const handleResize = () => {
+      if (categoryScrollRef.current && categories.length) {
+        const container = categoryScrollRef.current;
+        const containerWidth = container.offsetWidth;
+        
+        // 모든 카테고리 버튼의 총 너비 계산
+        let totalButtonsWidth = 0;
+        const buttons = container.querySelectorAll('button');
+        buttons.forEach(button => {
+          // 버튼의 실제 너비 + 마진/패딩 포함
+          const buttonRect = button.getBoundingClientRect();
+          totalButtonsWidth += buttonRect.width;
+        });
+        
+        // 간격(gap) 추가 - 버튼 개수 - 1에 gap 크기를 곱함
+        // 모바일에서는 gap-5(1.25rem = 20px), 데스크탑에서는 gap-8(2rem = 32px)
+        const gapSize = window.innerWidth < 768 ? 20 : 32;
+        totalButtonsWidth += (buttons.length - 1) * gapSize;
+        
+        // 카테고리가 적어서 컨테이너보다 작은 경우 중앙 정렬, 아니면 왼쪽 정렬
+        if (totalButtonsWidth < containerWidth) {
+          container.style.justifyContent = 'center';
+        } else {
+          container.style.justifyContent = 'flex-start';
+        }
+        
+        // 선택된 카테고리가 있으면 해당 카테고리로 스크롤
+        if (selectedCategory) {
+          const selectedButton = container.querySelector(`button[data-category="${selectedCategory}"]`);
+          
+          if (selectedButton) {
+            const buttonLeft = selectedButton.offsetLeft;
+            const buttonWidth = selectedButton.offsetWidth;
+            
+            const scrollPosition = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
+            
+            container.scrollLeft = Math.max(0, scrollPosition);
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    // 초기 로드 시에도 실행
+    handleResize();
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, [categories, selectedCategory]);
 
   const handleShare = async (e, postId) => {
     e.preventDefault();
@@ -210,6 +548,41 @@ function HomePage() {
     
     // 텍스트 선택 방지
     e.preventDefault();
+  };
+
+  // 터치 시작 핸들러 추가
+  const handleTouchStart = (e) => {
+    if (!categoryScrollRef.current) return;
+    
+    // 터치한 요소가 버튼인 경우 드래그를 시작하지 않음
+    if (e.target.tagName.toLowerCase() === 'button' || 
+        e.target.closest('button') !== null) {
+      return;
+    }
+    
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - categoryScrollRef.current.offsetLeft);
+    setScrollLeft(categoryScrollRef.current.scrollLeft);
+  };
+
+  // 터치 이동 핸들러 추가
+  const handleTouchMove = (e) => {
+    if (!isDragging || !categoryScrollRef.current) return;
+    
+    // 터치 이동 거리 계산
+    const x = e.touches[0].pageX - categoryScrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // 스크롤 속도 조절
+    
+    // 스크롤 위치 업데이트
+    categoryScrollRef.current.scrollLeft = scrollLeft - walk;
+    
+    // 페이지 스크롤 방지
+    e.preventDefault();
+  };
+
+  // 터치 종료 핸들러 추가
+  const handleTouchEnd = () => {
+    setIsDragging(false);
   };
 
   // 드래그 중 핸들러
@@ -248,16 +621,33 @@ function HomePage() {
       setIsDragging(false);
     };
     
+    // 터치 이벤트 핸들러
+    const handleGlobalTouchMove = (e) => {
+      if (isDragging && categoryScrollRef.current) {
+        const x = e.touches[0].pageX - categoryScrollRef.current.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        categoryScrollRef.current.scrollLeft = scrollLeft - walk;
+      }
+    };
+    
+    const handleGlobalTouchEnd = () => {
+      setIsDragging(false);
+    };
+    
     // 드래그 중일 때만 전역 이벤트 리스너 추가
     if (isDragging) {
       document.addEventListener('mousemove', handleGlobalMouseMove);
       document.addEventListener('mouseup', handleGlobalMouseUp);
+      document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+      document.addEventListener('touchend', handleGlobalTouchEnd);
     }
     
     // 컴포넌트 언마운트 또는 isDragging 변경 시 이벤트 리스너 정리
     return () => {
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('touchmove', handleGlobalTouchMove);
+      document.removeEventListener('touchend', handleGlobalTouchEnd);
     };
   }, [isDragging, startX, scrollLeft]);
 
@@ -275,13 +665,35 @@ function HomePage() {
     };
   }, [isDragging]);
 
+  // 스크롤바 숨기기 위한 스타일 추가
+  useEffect(() => {
+    // 스크롤바 숨기는 스타일 생성
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Chrome, Safari, Edge 스크롤바 숨기기 */
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // 컴포넌트 언마운트 시 스타일 제거
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // 로딩 상태일 때 스켈레톤 UI 처리
-  if (loading) {
+  if (loading && !isRestoringState) {
     return (
       <div className="min-h-screen bg-white dark:bg-black">
         {/* 카테고리 네비게이션 스켈레톤 */}
         <div>
-          <div className="max-w-[1200px] mx-auto px-4 py-4 md:py-10 scroll-container">
+          <div className="max-w-[1200px] mx-auto px-4 py-4 md:py-10">
             <div className="flex justify-center space-x-8 overflow-x-auto hide-scrollbar">
               {Array.from({ length: 5 }).map((_, index) => (
                 <div key={index} className="w-16 h-6 bg-gray-300 dark:bg-neutral-900 rounded animate-pulse"></div>
@@ -320,18 +732,23 @@ function HomePage() {
     <div className="min-h-screen bg-white dark:bg-black">
       {/* 카테고리 영역 (네비게이션바) */}
       <div className="bg-white dark:bg-black border-b border-gray-100 dark:border-neutral-900 sticky top-16 z-40">
-        <div className="max-w-[1200px] mx-auto relative scroll-container">
+        <div className="max-w-[1200px] mx-auto relative">
           <div 
             ref={categoryScrollRef}
-            className="flex justify-center overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-8 hide-scrollbar cursor-grab select-none"
+            className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 pb-2 cursor-grab select-none hide-scrollbar"
+            style={{ scrollBehavior: 'smooth' }}
             onMouseDown={handleMouseDown}
             onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             <button
               onClick={() => {
                 setSelectedCategory(null);
                 setSearchParams({}); // 전체 선택 시 query parameter 초기화
               }}
+              data-category="all"
               className={`text-[14px] pb-2 px-1 transition-colors ${
                 !selectedCategory
                   ? "text-black dark:text-white border-b-2 border-black dark:border-white"
@@ -348,6 +765,7 @@ function HomePage() {
               return (
                 <button
                   key={category.id}
+                  data-category={category.id}
                   onClick={() => {
                     setSelectedCategory(category.id);
                     setSearchParams({ category: category.id });
@@ -372,18 +790,32 @@ function HomePage() {
       {/* 카드 리스트 영역 (별도 배경 제거) */}
       <div className="pt-[20px] md:pt-[50px] pb-8">
         <div className="max-w-[1200px] mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredPosts.map((post) => (
-              <PostCard 
-                key={post.id} 
-                post={post} 
-                categories={categories}
-                onShare={handleShare}
-              />
-            ))}
-          </div>
+          {filteredPosts.length === 0 && !loading ? (
+            <div className="text-center py-10">
+              <p className="text-gray-500 dark:text-neutral-400">게시글이 없습니다.</p>
+              {hasMore && !loadingMore && (
+                <button 
+                  onClick={loadMorePosts}
+                  className="mt-4 px-4 py-2 bg-gray-100 dark:bg-neutral-800 rounded-md text-sm"
+                >
+                  더 불러오기
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredPosts.map((post) => (
+                <PostCard 
+                  key={post.id} 
+                  post={post} 
+                  categories={categories}
+                  onShare={handleShare}
+                />
+              ))}
+            </div>
+          )}
           {loadingMore && <div className="text-center mt-4">Loading more posts...</div>}
-          {!hasMore && <div className="text-center mt-4">더 이상 게시글이 없습니다.</div>}
+          {!hasMore && filteredPosts.length > 0 && <div className="text-center mt-4">더 이상 게시글이 없습니다.</div>}
         </div>
       </div>
 

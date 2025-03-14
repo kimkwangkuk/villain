@@ -27,7 +27,7 @@ const nouns = [
  * 형용사 + 명사 + 숫자 조합 (예: "멋진고양이123")
  * 주의: 이 함수는 완벽한 중복 방지를 보장하지 않습니다.
  */
-function generateRandomUsername() {
+export function generateRandomUsername() {
   const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
   const noun = nouns[Math.floor(Math.random() * nouns.length)];
   // 1부터 999 사이의 숫자 (겹치지 않도록 하기 위해 사용)
@@ -35,4 +35,4 @@ function generateRandomUsername() {
   return `${adjective}${noun}${number}`;
 }
 
-module.exports = { adjectives, nouns, generateRandomUsername }; 
+export { adjectives, nouns }; 
