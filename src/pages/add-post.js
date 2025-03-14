@@ -30,13 +30,26 @@ function AddPostPage() {
   useEffect(() => {
     const originalPadding = document.body.style.paddingTop;
     
-    document.body.style.paddingTop = '0';
+    document.body.style.paddingTop = '64px'; // 네비게이션 바 높이만큼 패딩 추가
     const navbar = document.querySelector('nav');
-    if (navbar) navbar.style.display = 'none';
+    // 네비게이션 바는 표시하되 오른쪽 버튼들을 숨김
+    if (navbar) {
+      navbar.style.display = 'block'; // 네비게이션 바 표시 확인
+      const navbarButtons = navbar.querySelector('div.flex.items-center.space-x-2');
+      if (navbarButtons) {
+        navbarButtons.style.display = 'none';
+      }
+    }
 
     return () => {
       document.body.style.paddingTop = originalPadding || '0';
-      if (navbar) navbar.style.display = 'block';
+      if (navbar) {
+        // 컴포넌트 언마운트 시 네비게이션 바 원상복구
+        const navbarButtons = navbar.querySelector('div.flex.items-center.space-x-2');
+        if (navbarButtons) {
+          navbarButtons.style.display = 'flex';
+        }
+      }
     };
   }, []);
 
@@ -171,7 +184,14 @@ function AddPostPage() {
   const handleConfirmCancel = () => {
     document.body.style.paddingTop = '0';
     const navbar = document.querySelector('nav');
-    if (navbar) navbar.style.display = 'block';
+    if (navbar) {
+      // 네비게이션 바 원상복구
+      navbar.style.display = 'block';
+      const navbarButtons = navbar.querySelector('div.flex.items-center.space-x-2');
+      if (navbarButtons) {
+        navbarButtons.style.display = 'flex';
+      }
+    }
     
     if (isEditing) {
       navigate(`/posts/${editingPost.id}`);
@@ -191,17 +211,17 @@ function AddPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-black flex items-center justify-center">
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-black flex items-center justify-center py-4 md:py-8">
       <div className="max-w-[820px] w-full bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative 
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 dark:before:from-black/25 before:to-transparent before:rounded-2xl"
       >
-        <div className="flex">
-          <div className="w-[340px] p-6 border-r border-gray-100 dark:border-neutral-900">
+        <div className="flex flex-col md:flex-row">
+          <div className="w-full md:w-[340px] p-6 border-b md:border-b-0 md:border-r border-gray-100 dark:border-neutral-900">
             <div className="flex flex-col items-start space-y-6">
               <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
                 <span className="text-xl">⚡</span>
               </div>
-              <div>
+              <div className="text-left">
                 <p className="text-lg font-semibold text-gray-900 dark:text-neutral-200">
                   {isEditing ? '게시글을 수정하여' : '더 이상 비슷한 일이 일어나지 않도록.'}
                 </p>
@@ -263,7 +283,7 @@ function AddPostPage() {
                   <textarea
                     name="content"
                     placeholder="빌런 경험을 모두에게 공유해주세요."
-                    className="w-full h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-base text-gray-700 dark:text-neutral-300 bg-transparent"
+                    className="w-full h-[200px] md:h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-base text-gray-700 dark:text-neutral-300 bg-transparent"
                     value={formData.content}
                     onChange={handleChange}
                   />
@@ -271,11 +291,11 @@ function AddPostPage() {
               </div>
             </div>
 
-            <div className="px-6 pb-6 flex justify-between items-center">
+            <div className="px-6 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
               <div className="text-red-500 text-sm">
                 {errors.category || errors.title || errors.content || errors.general}
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 w-full sm:w-auto justify-end">
                 <LineButton
                   type="button"
                   onClick={handleCancel}
