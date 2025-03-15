@@ -546,20 +546,36 @@
    */
   export const googleLogin = async () => {
     try {
+      console.log('googleLogin 함수 시작');
       const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
       
+      // 팝업 창이 차단되지 않도록 사용자에게 알림
+      console.log('Google 로그인 팝업 열기 시도');
+      const userCredential = await signInWithPopup(auth, provider);
+      console.log('Google 로그인 성공, 사용자 정보:', userCredential.user.uid);
+      
+      // 프로필 이미지 설정
+      console.log('랜덤 프로필 이미지 가져오기 시도');
       const randomProfileUrl = await getRandomProfileImage();
       if (randomProfileUrl) {
+        console.log('프로필 이미지 업데이트 시도');
         await updateProfile(userCredential.user, { photoURL: randomProfileUrl });
+        console.log('프로필 이미지 업데이트 성공');
+      } else {
+        console.log('랜덤 프로필 이미지를 가져오지 못했습니다. 기본 이미지 사용');
       }
       
+      // Firestore에 사용자 정보 저장
+      console.log('Firestore에 사용자 정보 저장 시도');
       const userRef = doc(db, 'users', userCredential.user.uid);
+      const username = generateRandomUsername();
+      console.log('생성된 사용자 이름:', username);
+      
       await setDoc(
         userRef,
         {
           email: userCredential.user.email,
-          username: generateRandomUsername(),
+          username: username,
           photoURL: randomProfileUrl || userCredential.user.photoURL,
           createdAt: new Date(),
           bio: '',
@@ -567,10 +583,15 @@
         },
         { merge: true }
       );
+      console.log('Firestore 사용자 정보 저장 성공');
       
       return userCredential.user;
     } catch (error) {
-      console.error('Google 로그인 실패:', error);
+      console.error('Google 로그인 실패 상세 정보:', error.code, error.message);
+      // 팝업 차단 관련 오류 확인
+      if (error.code === 'auth/popup-blocked') {
+        console.error('팝업이 차단되었습니다. 브라우저 설정에서 팝업 허용을 확인해주세요.');
+      }
       throw error;
     }
   };

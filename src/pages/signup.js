@@ -200,11 +200,14 @@ function AuthPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      console.log('구글 로그인 시도');
       await googleLogin();
+      console.log('구글 로그인 성공');
       navigate(location.state?.from || '/', { replace: true });
     } catch (error) {
       console.error('Google 로그인 실패:', error);
-      setError('Google 로그인에 실패했습니다.');
+      // 더 자세한 오류 메시지 표시
+      setError(`Google 로그인에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
     }
   };
 
