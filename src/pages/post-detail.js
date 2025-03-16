@@ -106,6 +106,13 @@ function PostDetail() {
     
     // 입력창 즉시 초기화
     setCommentContent('');
+    
+    // 텍스트 영역 높이 초기화
+    const textarea = e.target.querySelector('textarea');
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = '24px'; // 기본 높이로 재설정
+    }
 
     // 낙관적 업데이트: 현재 댓글 수를 즉시 1 증가
     const previousCommentCount = post?.commentCount || 0;
@@ -416,11 +423,11 @@ function PostDetail() {
                             className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] text-gray-900 dark:text-neutral-300 placeholder-gray-400 dark:placeholder-neutral-500 overflow-hidden"
                             style={{
                               minHeight: '24px',
-                              height: 'auto'
+                              height: commentContent ? 'auto' : '24px'
                             }}
                             onInput={(e) => {
-                              e.target.style.height = 'auto';
-                              e.target.style.height = e.target.scrollHeight + 'px';
+                              e.target.style.height = '24px';
+                              e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
                             }}
                           />
                           <div className="flex-shrink-0">

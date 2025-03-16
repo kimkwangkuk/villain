@@ -76,23 +76,51 @@ function AuthPage() {
     const errorCode = error.code;
     switch (errorCode) {
       case 'auth/email-already-in-use':
-        return '이미 사용 중인 이메일 주소입니다.';
+        return '이미 사용 중인 이메일 주소입니다. 다른 이메일로 시도하거나 로그인해주세요.';
       case 'auth/invalid-email':
-        return '유효하지 않은 이메일 주소입니다.';
+        return '유효하지 않은 이메일 주소입니다. 올바른 이메일 형식으로 입력해주세요.';
       case 'auth/operation-not-allowed':
-        return '이메일/비밀번호 로그인이 비활성화되어 있습니다.';
+        return '이메일/비밀번호 로그인이 현재 비활성화되어 있습니다. 관리자에게 문의해주세요.';
       case 'auth/weak-password':
-        return '비밀번호는 6자 이상이어야 합니다.';
+        return '비밀번호가 너무 약합니다. 6자 이상의 더 강력한 비밀번호를 사용해주세요.';
       case 'auth/user-disabled':
-        return '해당 사용자 계정이 비활성화되었습니다.';
+        return '해당 사용자 계정이 비활성화되었습니다. 관리자에게 문의해주세요.';
       case 'auth/user-not-found':
-        return '등록되지 않은 이메일입니다.';
+        return '등록되지 않은 이메일입니다. 이메일을 확인하거나 회원가입을 진행해주세요.';
       case 'auth/wrong-password':
-        return '잘못된 비밀번호입니다.';
+        return '잘못된 비밀번호입니다. 비밀번호를 확인하고 다시 시도해주세요.';
       case 'auth/too-many-requests':
-        return '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
+        return '너무 많은 로그인 시도가 있었습니다. 보안을 위해 잠시 후 다시 시도해주세요.';
+      case 'auth/network-request-failed':
+        return '네트워크 연결에 문제가 있습니다. 인터넷 연결을 확인하고 다시 시도해주세요.';
+      case 'auth/popup-blocked':
+        return '로그인 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.';
+      case 'auth/popup-closed-by-user':
+        return '로그인 팝업이 닫혔습니다. 팝업을 닫지 말고 로그인을 완료해주세요.';
+      case 'auth/unauthorized-domain':
+        return '현재 도메인이 인증되지 않았습니다. 관리자에게 문의해주세요.';
+      case 'auth/invalid-credential':
+        return '제공된 인증 정보가 잘못되었습니다. 이메일과 비밀번호를 확인해주세요.';
+      case 'auth/account-exists-with-different-credential':
+        return '이 이메일은 다른 로그인 방식으로 이미 가입되어 있습니다. 다른 로그인 방법을 시도해보세요.';
+      case 'auth/requires-recent-login':
+        return '보안상의 이유로 재로그인이 필요합니다. 로그아웃 후 다시 로그인해주세요.';
+      case 'auth/user-token-expired':
+        return '인증 세션이 만료되었습니다. 다시 로그인해주세요.';
+      case 'auth/web-storage-unsupported':
+        return '이 브라우저는 웹 스토리지를 지원하지 않습니다. 다른 브라우저로 시도해주세요.';
+      case 'auth/invalid-verification-code':
+        return '잘못된 인증 코드입니다. 올바른 코드를 입력해주세요.';
+      case 'auth/invalid-verification-id':
+        return '잘못된 인증 ID입니다. 처음부터 다시 시도해주세요.';
+      case 'auth/missing-verification-code':
+        return '인증 코드가 누락되었습니다. 코드를 입력해주세요.';
+      case 'auth/missing-verification-id':
+        return '인증 ID가 누락되었습니다. 처음부터 다시 시도해주세요.';
+      case 'auth/quota-exceeded':
+        return '서비스 할당량이 초과되었습니다. 나중에 다시 시도해주세요.';
       default:
-        return '로그인 중 오류가 발생했습니다. 다시 시도해주세요.';
+        return `회원가입/로그인 중 오류가 발생했습니다 (${errorCode}). 잠시 후 다시 시도하거나 관리자에게 문의해주세요.`;
     }
   };
 
@@ -116,12 +144,20 @@ function AuthPage() {
 
     try {
       if (isLogin) {
-        await login(formData.email, formData.password);
-        console.log('로그인 성공');
-        navigate(location.state?.from || '/', { replace: true });
+        try {
+          await login(formData.email, formData.password);
+          console.log('로그인 성공');
+          navigate(location.state?.from || '/', { replace: true });
+        } catch (loginError) {
+          console.error('로그인 실패 상세:', loginError);
+          // 더 자세한 오류 메시지 표시
+          const errorMessage = getErrorMessage(loginError);
+          setError(`로그인 실패: ${errorMessage}`);
+          return;
+        }
       } else {
         if (formData.password !== formData.confirmPassword) {
-          setError('비밀번호가 일치하지 않습니다.');
+          setError('비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
           return;
         }
 
@@ -135,7 +171,7 @@ function AuthPage() {
 
         if (!profileImageUrl) {
           console.error('프로필 이미지를 가져오는데 실패했습니다.');
-          setError('프로필 이미지를 가져오는데 실패했습니다.');
+          setError('프로필 이미지를 가져오는데 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
           return;
         }
 
@@ -151,7 +187,7 @@ function AuthPage() {
           console.log('회원가입 응답:', response);
           
           if (!response) {
-            setError('회원가입 응답이 없습니다.');
+            setError('회원가입 응답이 없습니다. 잠시 후 다시 시도해주세요.');
             return;
           }
 
@@ -177,13 +213,16 @@ function AuthPage() {
           navigate('/', { replace: true });
         } catch (signupError) {
           console.error('회원가입 함수 내부 오류:', signupError);
-          setError(`회원가입 처리 중 오류: ${signupError.message}`);
+          const errorMessage = getErrorMessage(signupError);
+          setError(`회원가입 실패: ${errorMessage}`);
           return;
         }
       }
     } catch (error) {
       console.error('회원가입/로그인 실패:', error);
-      setError(getErrorMessage(error));
+      // 더 자세한 오류 메시지 표시
+      const errorMessage = getErrorMessage(error);
+      setError(`처리 중 오류 발생: ${errorMessage}`);
     }
   };
 
@@ -206,26 +245,32 @@ function AuthPage() {
       navigate(location.state?.from || '/', { replace: true });
     } catch (error) {
       console.error('Google 로그인 실패:', error);
-      // 더 자세한 오류 메시지 표시
-      setError(`Google 로그인에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+      
+      // 도메인 인증 오류 처리
+      if (error.code === 'auth/unauthorized-domain') {
+        setError('현재 도메인이 Firebase에 등록되지 않았습니다. Firebase 콘솔에서 도메인을 추가해주세요.');
+      } else {
+        // 더 자세한 오류 메시지 표시
+        setError(`Google 로그인에 실패했습니다: ${error.code} - ${error.message || '알 수 없는 오류'}`);
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-black">
       {/* 네비게이션 바 제거하고 2분할 레이아웃으로 변경 */}
-      <div className="flex flex-col md:flex-row h-screen">
-        {/* 왼쪽 섹션: 텍스트 */}
-        <div className="w-full md:w-1/2 flex flex-col p-4 pt-20 md:p-12 lg:p-16 bg-white dark:bg-black relative">
+      <div className="flex flex-col md:flex-row h-screen p-4">
+        {/* 왼쪽 섹션: 텍스트 - 너비 증가 */}
+        <div className="w-full md:w-2/3 flex flex-col p-6 md:p-12 lg:p-16 bg-white dark:bg-black relative rounded-2xl shadow-sm mb-4 md:mb-0 md:mr-4">
           {/* 로고를 왼쪽 상단에 배치 */}
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-6 left-6">
             <Link to="/" className="text-black dark:text-white hover:text-gray-900 dark:hover:text-gray-100 flex items-center">
               <LogoIcon className="h-6 text-black dark:text-white" />
             </Link>
           </div>
           
           <div className="flex-grow flex flex-col items-center justify-center mt-10 md:mt-0">
-            <div className="text-center mb-12 space-y-6 md:space-y-4 w-full px-2 md:px-6 lg:px-10">
+            <div className="text-center mb-12 space-y-6 md:space-y-4 w-full px-4 md:px-8 lg:px-12">
               <div className="space-y-6 md:space-y-4">
                 <p className="text-gray-600 dark:text-gray-400 text-[18px] mb-4">
                   빌런 제보 익명 커뮤니티
@@ -239,13 +284,13 @@ function AuthPage() {
           </div>
         </div>
         
-        {/* 오른쪽 섹션: 로그인 폼과 버튼들 */}
-        <div className="w-full md:w-1/2 flex items-center justify-center p-8 bg-gray-200 dark:bg-[#0B0B0B]">
+        {/* 오른쪽 섹션: 로그인 폼과 버튼들 - 너비 감소 및 배경색 밝게 */}
+        <div className="w-full md:w-1/3 flex items-center justify-center p-6 md:p-10 bg-gray-100 dark:bg-[#111111] rounded-2xl shadow-sm">
           <div className="w-full max-w-md">
             {/* 이메일 로그인 폼 */}
             <form className="space-y-4 mb-6" onSubmit={handleSubmit}>
               {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-4">
+                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-4 rounded-md">
                   <div className="flex">
                     <div className="flex-shrink-0">
                       <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -261,7 +306,7 @@ function AuthPage() {
 
               {/* 입력 필드 그룹화 */}
               <div className="flex justify-center">
-                <div className="w-3/4 bg-gray-100 dark:bg-black rounded-lg overflow-hidden">
+                <div className="w-full bg-white dark:bg-[#0A0A0A] rounded-lg overflow-hidden shadow-sm">
                   <div className="border-b border-gray-300 dark:border-gray-800">
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -273,7 +318,7 @@ function AuthPage() {
                         type="email"
                         required
                         placeholder="가입하실 이메일을 입력해주세요."
-                        className="block w-full pl-10 pr-3 py-3 border-0 bg-gray-100 dark:bg-black text-gray-400 dark:text-gray-500 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
+                        className="block w-full pl-10 pr-3 py-3 border-0 bg-white dark:bg-[#0A0A0A] text-gray-600 dark:text-gray-400 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
                         value={formData.email}
                         onChange={handleChange}
                       />
@@ -291,7 +336,7 @@ function AuthPage() {
                         type="password"
                         required
                         placeholder="비밀번호를 입력해주세요."
-                        className="block w-full pl-10 pr-3 py-3 border-0 bg-gray-100 dark:bg-black text-gray-400 dark:text-gray-500 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
+                        className="block w-full pl-10 pr-3 py-3 border-0 bg-white dark:bg-[#0A0A0A] text-gray-600 dark:text-gray-400 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
                         value={formData.password}
                         onChange={handleChange}
                       />
@@ -310,7 +355,7 @@ function AuthPage() {
                           type="password"
                           required
                           placeholder="비밀번호 확인"
-                          className="block w-full pl-10 pr-3 py-3 border-0 bg-gray-100 dark:bg-black text-gray-400 dark:text-gray-500 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
+                          className="block w-full pl-10 pr-3 py-3 border-0 bg-white dark:bg-[#0A0A0A] text-gray-600 dark:text-gray-400 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
                           value={formData.confirmPassword}
                           onChange={handleChange}
                         />
@@ -323,7 +368,7 @@ function AuthPage() {
               <div className="mt-6 flex justify-center">
                 <button
                   type="submit"
-                  className="w-3/4 flex justify-center py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white dark:text-gray-800 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors border border-gray-800 dark:border-gray-200"
+                  className="w-full flex justify-center py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white dark:text-gray-800 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors border border-gray-800 dark:border-gray-200"
                 >
                   {isLogin ? '로그인' : '회원가입'}
                 </button>
@@ -332,21 +377,21 @@ function AuthPage() {
             
             {/* 구분선 */}
             <div className="relative my-6 flex justify-center">
-              <div className="w-3/4 relative">
+              <div className="w-full relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-gray-200 dark:bg-[#0B0B0B] text-gray-500 dark:text-gray-400">또는</span>
+                  <span className="px-2 bg-gray-100 dark:bg-[#111111] text-gray-500 dark:text-gray-400">또는</span>
                 </div>
               </div>
             </div>
             
-            {/* 소셜 로그인 버튼 - 가로 너비 줄임 */}
+            {/* 소셜 로그인 버튼 */}
             <div className="space-y-4 mb-6 flex justify-center">
               <button
                 onClick={handleGoogleLogin}
-                className="w-3/4 flex justify-center items-center px-4 py-3 rounded-md shadow-sm text-sm font-medium text-white dark:text-gray-800 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors border border-gray-800 dark:border-gray-200"
+                className="w-full flex justify-center items-center px-4 py-3 rounded-lg shadow-sm text-sm font-medium text-white dark:text-gray-800 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors border border-gray-800 dark:border-gray-200"
               >
                 <img 
                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
