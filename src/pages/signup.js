@@ -272,7 +272,7 @@ function AuthPage() {
           <div className="flex-grow flex flex-col items-center justify-center mt-10 md:mt-0">
             <div className="text-center space-y-6 md:space-y-4 w-full">
               <div className="space-y-6 md:space-y-4">
-                <p className="text-gray-600 dark:text-gray-400 text-[18px] mb-4">
+                <p className="text-gray-600 dark:text-gray-400 text-[18px] ">
                   빌런 제보 익명 커뮤니티
                 </p>
                 <h1 className="text-gray-800 dark:text-white text-2xl md:text-3xl lg:text-4xl font-bold" style={{ lineHeight: '1.4' }}>
