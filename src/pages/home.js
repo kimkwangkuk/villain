@@ -863,7 +863,7 @@ function HomePage() {
     return (
       <div className="min-h-screen bg-white dark:bg-black">
         {/* 카테고리 네비게이션 스켈레톤 */}
-        <div className="bg-white dark:bg-black border-b border-gray-100 dark:border-neutral-900 sticky top-16 z-40">
+        <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-800 sticky top-16 z-40">
           <div className="max-w-[1200px] mx-auto relative">
             <div className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 pb-2 cursor-grab select-none hide-scrollbar">
               <button
@@ -904,13 +904,13 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black transition-colors duration-200">
       {/* 헤더 영역 */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800">
+      <div className="sticky top-0 z-10 bg-white dark:bg-black">
         {/* 카테고리 영역 (네비게이션바) */}
-        <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-800">
           <div className="max-w-[1200px] mx-auto">
             <div 
               ref={categoryScrollRef}
-              className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 pb-2 cursor-grab select-none hide-scrollbar bg-white dark:bg-black"
+              className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 cursor-grab select-none hide-scrollbar bg-white dark:bg-black"
               style={{ scrollBehavior: 'smooth' }}
               onMouseDown={handleMouseDown}
               onMouseLeave={handleMouseUp}

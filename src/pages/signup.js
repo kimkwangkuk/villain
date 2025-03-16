@@ -263,14 +263,14 @@ function AuthPage() {
         {/* 왼쪽 섹션: 텍스트 - 너비 증가 */}
         <div className="w-full md:w-2/3 flex flex-col p-6 md:p-12 lg:p-16 bg-white dark:bg-black relative rounded-2xl shadow-sm mb-4 md:mb-0 md:mr-4">
           {/* 로고를 왼쪽 상단에 배치 */}
-          <div className="absolute top-6 left-6">
+          <div className="absolute top-1 left-0">
             <Link to="/" className="text-black dark:text-white hover:text-gray-900 dark:hover:text-gray-100 flex items-center">
               <LogoIcon className="h-6 text-black dark:text-white" />
             </Link>
           </div>
           
           <div className="flex-grow flex flex-col items-center justify-center mt-10 md:mt-0">
-            <div className="text-center mb-12 space-y-6 md:space-y-4 w-full px-4 md:px-8 lg:px-12">
+            <div className="text-center space-y-6 md:space-y-4 w-full">
               <div className="space-y-6 md:space-y-4">
                 <p className="text-gray-600 dark:text-gray-400 text-[18px] mb-4">
                   빌런 제보 익명 커뮤니티
@@ -304,65 +304,63 @@ function AuthPage() {
                 </div>
               )}
 
-              {/* 입력 필드 그룹화 */}
-              <div className="flex justify-center">
-                <div className="w-full bg-white dark:bg-[#0A0A0A] rounded-lg overflow-hidden shadow-sm">
-                  <div className="border-b border-gray-300 dark:border-gray-800">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <EmailIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                      </div>
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        placeholder="가입하실 이메일을 입력해주세요."
-                        className="block w-full pl-10 pr-3 py-3 border-0 bg-white dark:bg-[#0A0A0A] text-gray-600 dark:text-gray-400 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
-                        value={formData.email}
-                        onChange={handleChange}
-                      />
+              {/* 입력 필드 - 기본 디자인으로 변경 */}
+              <div className="space-y-4">
+                <div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <EmailIcon className="h-5 w-5 text-gray-400" />
                     </div>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      placeholder="이메일을 입력해주세요"
+                      className="block w-full pl-10 pr-3 py-2 border-0 rounded-md bg-gray-200 dark:bg-neutral-700 text-sm text-gray-900 dark:text-neutral-300 placeholder-gray-500 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
                   </div>
-                  
+                </div>
+                
+                <div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <LockIcon className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      placeholder="비밀번호를 입력해주세요"
+                      className="block w-full pl-10 pr-3 py-2 border-0 rounded-md bg-gray-200 dark:bg-neutral-700 text-sm text-gray-900 dark:text-neutral-300 placeholder-gray-500 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
+                      value={formData.password}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                
+                {!isLogin && (
                   <div>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <LockIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                        <LockIcon className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
-                        id="password"
-                        name="password"
+                        id="confirmPassword"
+                        name="confirmPassword"
                         type="password"
                         required
-                        placeholder="비밀번호를 입력해주세요."
-                        className="block w-full pl-10 pr-3 py-3 border-0 bg-white dark:bg-[#0A0A0A] text-gray-600 dark:text-gray-400 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
-                        value={formData.password}
+                        placeholder="비밀번호를 다시 입력해주세요"
+                        className="block w-full pl-10 pr-3 py-2 border-0 rounded-md bg-gray-200 dark:bg-neutral-700 text-sm text-gray-900 dark:text-neutral-300 placeholder-gray-500 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
+                        value={formData.confirmPassword}
                         onChange={handleChange}
                       />
                     </div>
                   </div>
-                  
-                  {!isLogin && (
-                    <div className="border-t border-gray-300 dark:border-gray-800">
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <LockIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                        </div>
-                        <input
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          type="password"
-                          required
-                          placeholder="비밀번호 확인"
-                          className="block w-full pl-10 pr-3 py-3 border-0 bg-white dark:bg-[#0A0A0A] text-gray-600 dark:text-gray-400 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               <div className="mt-6 flex justify-center">
@@ -403,9 +401,9 @@ function AuthPage() {
             </div>
 
             <div className="mt-6 text-center">
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {isLogin ? '계정이 없으신가요?' : '이미 계정이 있으신가요?'}{' '}
-                <button onClick={toggleForm} className="font-medium text-blue-600 hover:text-blue-500">
+                <button onClick={toggleForm} className="font-medium text-black dark:text-white hover:text-gray-700 dark:hover:text-gray-300">
                   {isLogin ? '회원가입' : '로그인'}
                 </button>
               </span>
