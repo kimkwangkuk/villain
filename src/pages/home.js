@@ -904,61 +904,59 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black transition-colors duration-200">
       {/* 헤더 영역 */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-black">
+      <div className="sticky top-16 z-50 bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-800">
         {/* 카테고리 영역 (네비게이션바) */}
-        <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-800">
-          <div className="max-w-[1200px] mx-auto">
-            <div 
-              ref={categoryScrollRef}
-              className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 cursor-grab select-none hide-scrollbar bg-white dark:bg-black"
-              style={{ scrollBehavior: 'smooth' }}
-              onMouseDown={handleMouseDown}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+        <div className="max-w-[1200px] mx-auto">
+          <div 
+            ref={categoryScrollRef}
+            className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 cursor-grab select-none hide-scrollbar bg-white dark:bg-black"
+            style={{ scrollBehavior: 'smooth' }}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <button
+              onClick={() => {
+                setSelectedCategory(null);
+                setSearchParams({}); // 전체 선택 시 query parameter 초기화
+              }}
+              data-category="all"
+              className={`text-[14px] pb-3 px-1 transition-colors ${
+                !selectedCategory
+                  ? "text-black dark:text-white border-b-2 border-black dark:border-white"
+                  : "text-gray-500 dark:text-neutral-500"
+              }`}
             >
-              <button
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setSearchParams({}); // 전체 선택 시 query parameter 초기화
-                }}
-                data-category="all"
-                className={`text-[14px] pb-2 px-1 transition-colors ${
-                  !selectedCategory
-                    ? "text-black dark:text-white border-b-2 border-black dark:border-white"
-                    : "text-gray-500 dark:text-neutral-500"
-                }`}
-              >
-                <div className="flex flex-col items-center gap-[10px]">
-                  <AllCategoryIcon className="w-[28px] h-[28px]" />
-                  <span>전체</span>
-                </div>
-              </button>
-              {categories.map((category) => {
-                const IconComponent = categoryIconMapping[`order${category.order}`] || AllCategoryIcon;
-                return (
-                  <button
-                    key={category.id}
-                    data-category={category.id}
-                    onClick={() => {
-                      setSelectedCategory(category.id);
-                      setSearchParams({ category: category.id });
-                    }}
-                    className={`text-[14px] pb-2 px-1 transition-colors ${
-                      selectedCategory === category.id
-                        ? "text-black dark:text-white border-b-2 border-black dark:border-white"
-                        : "text-gray-500 dark:text-neutral-500"
-                    }`}
-                  >
-                    <div className="flex flex-col items-center gap-[10px]">
-                      <IconComponent className="w-[28px] h-[28px]" />
-                      <span>{category.name}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+              <div className="flex flex-col items-center gap-[10px]">
+                <AllCategoryIcon className="w-[28px] h-[28px]" />
+                <span>전체</span>
+              </div>
+            </button>
+            {categories.map((category) => {
+              const IconComponent = categoryIconMapping[`order${category.order}`] || AllCategoryIcon;
+              return (
+                <button
+                  key={category.id}
+                  data-category={category.id}
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    setSearchParams({ category: category.id });
+                  }}
+                  className={`text-[14px] pb-3 px-1 transition-colors ${
+                    selectedCategory === category.id
+                      ? "text-black dark:text-white border-b-2 border-black dark:border-white"
+                      : "text-gray-500 dark:text-neutral-500"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-[10px]">
+                    <IconComponent className="w-[28px] h-[28px]" />
+                    <span>{category.name}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -975,17 +973,9 @@ function HomePage() {
                   <PostCardSkeleton key={index} />
                 ))}
               </div>
-            ) : uniqueFilteredPosts.length === 0 && noPostsMessage ? (
+            ) : uniqueFilteredPosts.length === 0 ? (
               <div className="text-center py-10">
                 <p className="text-gray-500 dark:text-neutral-400">게시글이 없습니다.</p>
-                {hasMore && !loadingMore && (
-                  <button 
-                    onClick={loadMorePosts}
-                    className="mt-4 px-4 py-2 bg-gray-100 dark:bg-neutral-800 rounded-md text-sm"
-                  >
-                    더 불러오기
-                  </button>
-                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -999,15 +989,15 @@ function HomePage() {
                 ))}
               </div>
             )}
-            {/* 로딩 중이 아니고 추가 로딩 중일 때만 로딩 스피너 표시 */}
-            {loadingMore && !postsLoading && (
+            {/* 로딩 중이 아니고 추가 로딩 중이며 포스트가 있을 때만 로딩 스피너 표시 */}
+            {loadingMore && !postsLoading && uniqueFilteredPosts.length > 0 && (
               <div className="text-center mt-6 py-2">
                 <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
                 <span className="ml-2 text-gray-500 dark:text-neutral-400">포스트 불러오는 중...</span>
               </div>
             )}
             {/* 더 이상 게시글이 없다는 메시지는 스크롤을 끝까지 내렸을 때만 표시 */}
-            {!hasMore && uniqueFilteredPosts.length > 0 && !postsLoading && (
+            {!hasMore && uniqueFilteredPosts.length > 0 && !postsLoading && !loadingMore && (
               <div className="text-center mt-6 py-4 text-gray-500 dark:text-neutral-400 text-sm">
                 모든 게시글을 불러왔습니다
               </div>

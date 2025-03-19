@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
@@ -31,6 +31,21 @@ function PostDetail() {
   const [showToast, setShowToast] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef(null);
+
+  // 외부 클릭 감지를 위한 useEffect 추가
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // 컴포넌트 마운트 시 스크롤 최상단으로 이동
   useEffect(() => {
@@ -271,7 +286,7 @@ function PostDetail() {
                 </div>
               </div>
               {/* 더보기 버튼과 팝업 메뉴 */}
-              <div className="relative">
+              <div className="relative" ref={moreMenuRef}>
                 <button 
                   className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
@@ -342,7 +357,7 @@ function PostDetail() {
             </div>
 
             {/* 좋아요/댓글/공유 버튼 컨테이너 */}
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-900 pt-3 -mx-4 px-4">
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-900 py-2 -mx-4 px-4">
               {/* 좋아요 버튼 */}
               <button 
                 onClick={handleLike}

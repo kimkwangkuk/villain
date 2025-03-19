@@ -134,7 +134,14 @@ function AuthPage() {
       return url;
     } catch (error) {
       console.error('프로필 이미지 가져오기 실패:', error);
-      return null;
+      // 기본 이미지 경로 반환
+      const defaultImageRef = ref(storage, 'profile_images/default.webp');
+      try {
+        return await getDownloadURL(defaultImageRef);
+      } catch (defaultError) {
+        console.error('기본 프로필 이미지 가져오기 실패:', defaultError);
+        return null;
+      }
     }
   };
 
@@ -354,7 +361,7 @@ function AuthPage() {
                         type="password"
                         required
                         placeholder="비밀번호를 다시 입력해주세요"
-                        className="block w-full pl-10 pr-3 py-2 border-0 rounded-md bg-gray-200 dark:bg-neutral-700 text-sm text-gray-900 dark:text-neutral-300 placeholder-gray-500 dark:placeholder-gray-600 focus:outline-none focus:ring-0"
+                        className="block w-full pl-10 pr-3 py-2 border-0 rounded-md bg-gray-200 dark:bg-neutral-800 text-sm text-gray-900 dark:text-neutral-300 placeholder-gray-500 dark:placeholder-neutral-600 focus:outline-none focus:ring-0"
                         value={formData.confirmPassword}
                         onChange={handleChange}
                       />
