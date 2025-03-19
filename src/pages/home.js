@@ -904,7 +904,7 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black transition-colors duration-200">
       {/* 헤더 영역 */}
-      <div className="sticky top-16 z-50 bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-800">
+      <div className="sticky top-16 z-50 bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-900">
         {/* 카테고리 영역 (네비게이션바) */}
         <div className="max-w-[1200px] mx-auto">
           <div 
