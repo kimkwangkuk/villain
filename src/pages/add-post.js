@@ -4,6 +4,7 @@ import { createPost, getCategories, updatePost } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { PrimaryButton, LineButton } from '../components/Button';
+import { detectUrls } from '../utils/urlUtils';
 
 function AddPostPage() {
   const navigate = useNavigate();
@@ -203,8 +204,36 @@ function AddPostPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F5F5] dark:bg-black py-8">
-        <div className="max-w-2xl mx-auto px-4">
-          <p className="text-center text-gray-700 dark:text-neutral-300">카테고리 로딩중...</p>
+        <div className="max-w-[820px] mx-auto px-4">
+          <div className="bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative">
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full md:w-[340px] p-6 border-b md:border-b-0 md:border-r border-gray-100 dark:border-neutral-900">
+                <div className="flex flex-col items-start space-y-6">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 animate-pulse"></div>
+                  <div className="space-y-4">
+                    <div className="h-6 w-48 bg-gray-100 dark:bg-neutral-800 rounded animate-pulse"></div>
+                    <div className="h-6 w-40 bg-gray-100 dark:bg-neutral-800 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="border-b border-gray-100 dark:border-neutral-900">
+                  <div className="px-6">
+                    <div className="flex justify-between items-center h-[72px]">
+                      <div className="h-5 w-24 bg-gray-100 dark:bg-neutral-800 rounded animate-pulse"></div>
+                      <div className="h-5 w-32 bg-gray-100 dark:bg-neutral-800 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="px-6 py-4">
+                  <div className="space-y-4">
+                    <div className="h-8 w-full bg-gray-100 dark:bg-neutral-800 rounded animate-pulse"></div>
+                    <div className="h-[200px] w-full bg-gray-100 dark:bg-neutral-800 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -212,7 +241,7 @@ function AddPostPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-black flex items-center justify-center py-4 md:py-8">
-      <div className="max-w-[820px] w-full bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative 
+      <div className="max-w-[820px] w-full mx-4 bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative overflow-hidden
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 dark:before:from-black/25 before:to-transparent before:rounded-2xl"
       >
         <div className="flex flex-col md:flex-row">
@@ -223,16 +252,16 @@ function AddPostPage() {
               </div>
               <div className="text-left">
                 <p className="text-lg font-semibold text-gray-900 dark:text-neutral-200">
-                  {isEditing ? '게시글을 수정하여' : '더 이상 비슷한 일이 일어나지 않도록.'}
+                  내 일상을 어지럽히는 빌런을 제보하고
                 </p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-neutral-200">
-                  {isEditing ? '정확한 정보를 공유하세요.' : '빌런의 행태를 세상에 알리세요.'}
+                  밝은 세상을 만들어요.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="border-b border-gray-100 dark:border-neutral-900">
               <div className="px-6">
                 <div className="flex justify-between items-center h-[72px]">
@@ -241,7 +270,7 @@ function AddPostPage() {
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="text-right border-none bg-transparent focus:outline-none focus:ring-0 text-gray-500 dark:text-neutral-400 cursor-pointer appearance-none pr-8 text-base select-arrow-custom"
+                    className="text-right border-none bg-transparent focus:outline-none focus:ring-0 text-gray-500 dark:text-neutral-400 cursor-pointer appearance-none pr-8 text-base select-arrow-custom max-w-[200px] truncate"
                   >
                     <option value="" className="bg-white dark:bg-neutral-800">카테고리 선택</option>
                     {categories.map((category) => (
@@ -287,12 +316,31 @@ function AddPostPage() {
                     value={formData.content}
                     onChange={handleChange}
                   />
+                  {/* URL 미리보기 */}
+                  {formData.content && (
+                    <div className="mt-2 text-sm text-gray-500 dark:text-neutral-500 space-y-1">
+                      {detectUrls(formData.content).map((part) => (
+                        part.type === 'url' && (
+                          <a
+                            key={part.key}
+                            href={part.content}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300 hover:underline w-full"
+                          >
+                            <span className="flex-shrink-0">🔗</span>
+                            <span className="truncate flex-1">{part.content}</span>
+                          </a>
+                        )
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="px-6 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
-              <div className="text-red-500 text-sm">
+              <div className="text-red-500 text-sm truncate">
                 {errors.category || errors.title || errors.content || errors.general}
               </div>
               <div className="flex space-x-2 w-full sm:w-auto justify-end">

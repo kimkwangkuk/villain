@@ -337,24 +337,24 @@ function MyPage() {
       {/* 탭 메뉴 */}
       <div className="bg-white dark:bg-black">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center overflow-x-auto whitespace-nowrap py-4 px-4 gap-8">
+          <div className="flex justify-center overflow-x-auto whitespace-nowrap pt-4 pb-0 px-4 gap-8">
             <button
               onClick={() => setActiveTab('myPosts')}
-              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
+              className={`text-[15px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
                 ${activeTab === 'myPosts' ? 'border-b-2 border-black dark:border-white' : ''}`}
             >
               내 포스트 ({myPosts.length})
             </button>
             <button
               onClick={() => setActiveTab('interestedPosts')}
-              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
+              className={`text-[15px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
                 ${activeTab === 'interestedPosts' ? 'border-b-2 border-black dark:border-white' : ''}`}
             >
               관심 포스트 ({interestedPosts.length})
             </button>
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`text-[17px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
+              className={`text-[15px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
                 ${activeTab === 'notifications' ? 'border-b-2 border-black dark:border-white' : ''}`}
             >
               알림 ({notifications.length})

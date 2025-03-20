@@ -12,6 +12,7 @@ import PostDetailSkeleton from '../components/PostDetailSkeleton';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';  // 한국어 로케일
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { detectUrls } from '../utils/urlUtils';
 
 // dayjs 설정
 dayjs.locale('ko');
@@ -346,8 +347,41 @@ function PostDetail() {
             <div className="pt-3 pb-6">
               <h1 className="text-[20px] font-semibold text-gray-900 dark:text-neutral-300 mb-2">{post?.title}</h1>
               <p className="text-[16px] text-gray-700 dark:text-neutral-400 leading-relaxed">
-                {post?.content}
+                {detectUrls(post?.content).map((part) => (
+                  part.type === 'url' ? (
+                    <a
+                      key={part.key}
+                      href={part.content}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400 hover:underline break-all"
+                    >
+                      {part.content}
+                    </a>
+                  ) : (
+                    <span key={part.key}>{part.content}</span>
+                  )
+                ))}
               </p>
+              {/* URL 미리보기 */}
+              {detectUrls(post?.content).some(part => part.type === 'url') && (
+                <div className="mt-4 text-sm text-gray-500 dark:text-neutral-500 space-y-1">
+                  {detectUrls(post?.content).map((part) => (
+                    part.type === 'url' && (
+                      <a
+                        key={part.key}
+                        href={part.content}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300 hover:underline w-full"
+                      >
+                        <span className="flex-shrink-0">🔗</span>
+                        <span className="truncate flex-1">{part.content}</span>
+                      </a>
+                    )
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 좋아요/댓글 수 표시 */}

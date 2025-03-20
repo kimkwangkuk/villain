@@ -316,7 +316,7 @@ function AuthPage() {
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <EmailIcon className="h-5 w-5 text-gray-400" />
+                      <EmailIcon className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
                     </div>
                     <input
                       id="email"
@@ -334,7 +334,7 @@ function AuthPage() {
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <LockIcon className="h-5 w-5 text-gray-400" />
+                      <LockIcon className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
                     </div>
                     <input
                       id="password"
@@ -353,7 +353,7 @@ function AuthPage() {
                   <div>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <LockIcon className="h-5 w-5 text-gray-400" />
+                        <LockIcon className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
                       </div>
                       <input
                         id="confirmPassword"
@@ -387,7 +387,7 @@ function AuthPage() {
                   <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-gray-100 dark:bg-[#111111] text-gray-500 dark:text-gray-400">또는</span>
+                  <span className="px-2 bg-gray-100 dark:bg-[#111111] text-gray-500 dark:text-gray-400 text-xs">또는</span>
                 </div>
               </div>
             </div>

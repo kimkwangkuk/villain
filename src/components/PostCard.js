@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/ko';  // 한국어 로케일
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { MessageIcon, LikeIcon, ShareIcon } from './Icons';  // 상단에 import 추가
+import { detectUrls } from '../utils/urlUtils';
 
 // dayjs 설정
 dayjs.locale('ko');
@@ -147,7 +148,22 @@ function PostCard({ post, categories, onShare }) {
               textOverflow: 'ellipsis'
             }}
           >
-            {post.content}
+            {detectUrls(post.content).map((part) => (
+              part.type === 'url' ? (
+                <a
+                  key={part.key}
+                  href={part.content}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400 hover:underline break-all"
+                >
+                  {part.content}
+                </a>
+              ) : (
+                <span key={part.key}>{part.content}</span>
+              )
+            ))}
           </p>
 
           {/* 좋아요/댓글 수 표시 */}
