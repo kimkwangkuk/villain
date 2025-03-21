@@ -211,24 +211,11 @@ function PostDetail() {
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
-
-    // 낙관적 업데이트: 삭제 직후 local state에서 commentCount를 1 감소
-    setPost(prev => ({
-      ...prev,
-      commentCount: (prev.commentCount || 0) - 1
-    }));
-
     try {
       await deleteComment(id, commentId);
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
       alert('댓글 삭제에 실패했습니다.');
-      // 삭제 실패 시 롤백: commentCount 복구
-      setPost(prev => ({
-        ...prev,
-        commentCount: (prev.commentCount || 0) + 1
-      }));
     }
   };
 
@@ -343,7 +330,7 @@ function PostDetail() {
           </div>
 
           {/* 콘텐츠 영역 */}
-          <div className="pt-[0px] p-4">
+          <div className="pt-[0px] p-4 pb-0">
             <div className="pt-3 pb-6">
               <h1 className="text-[20px] font-semibold text-gray-900 dark:text-neutral-300 mb-2">{post?.title}</h1>
               <p className="text-[16px] text-gray-700 dark:text-neutral-400 leading-relaxed">

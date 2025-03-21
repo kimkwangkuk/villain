@@ -196,16 +196,14 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   };
 
   const handleDeleteComment = async (commentId) => {
-    // 낙관적 업데이트: UI에서 먼저 댓글 제거
-    onDelete && onDelete();
+    if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
     
     try {
       await deleteComment(comment.postId, commentId);
+      onDelete && onDelete();
     } catch (error) {
-      // 실패 시 페이지 새로고침 또는 댓글 목록 다시 불러오기
       console.error('댓글 삭제 실패:', error);
       alert('댓글 삭제에 실패했습니다.');
-      window.location.reload(); // 또는 댓글 목록을 다시 불러오는 함수 호출
     }
   };
 
@@ -282,7 +280,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       </div>
 
       {/* 댓글 내용 */}
-      <div className="mt-1 ml-[26px]">
+      <div className="mt-1">
         {isEditing ? (
           <div className="mt-2">
             <textarea
@@ -315,7 +313,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
 
       {/* 좋아요/답글 버튼 영역 - 삭제된 댓글이 아닐 때만 표시 */}
       {!comment.isDeleted && (
-        <div className="mt-2 ml-[26px] flex items-center space-x-4">
+        <div className="mt-2 flex items-center space-x-4">
           <button 
             onClick={handleLike}
             disabled={isLikeLoading}
@@ -351,7 +349,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
 
       {/* 대댓글 입력 영역 */}
       {showReplyInput && (
-        <div className="mt-3 ml-[26px]">
+        <div className="mt-3">
           <form onSubmit={handleReplySubmit} className="flex items-start space-x-2">
             <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
               <img
@@ -390,7 +388,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
 
       {/* 대댓글 목록 */}
       {replies.length > 0 && (
-        <div className="mt-3 ml-[26px]">
+        <div className="mt-3">
           <button
             onClick={() => setShowReplies(!showReplies)}
             className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300 mb-2"

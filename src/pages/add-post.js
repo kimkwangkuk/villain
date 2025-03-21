@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { PrimaryButton, LineButton } from '../components/Button';
 import { detectUrls } from '../utils/urlUtils';
+import Dialog from '../components/Dialog';
 
 function AddPostPage() {
   const navigate = useNavigate();
@@ -245,7 +246,7 @@ function AddPostPage() {
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 dark:before:from-black/25 before:to-transparent before:rounded-2xl"
       >
         <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-[340px] p-6 border-b md:border-b-0 md:border-r border-gray-100 dark:border-neutral-900">
+          <div className="w-full md:w-[340px] p-6 border-b md:border-b-0 md:border-r border-gray-100 dark:border-neutral-900 bg-gray-50 dark:bg-[#111111]">
             <div className="flex flex-col items-start space-y-6">
               <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
                 <span className="text-xl">⚡</span>
@@ -362,32 +363,13 @@ function AddPostPage() {
         </div>
       </div>
 
-      {showDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 max-w-sm mx-4">
-            <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-neutral-200">
-              작성을 취소하시겠습니까?
-            </h3>
-            <p className="text-gray-500 dark:text-neutral-400 mb-4">
-              작성 중인 내용은 저장되지 않습니다.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowDialog(false)}
-                className="text-gray-700 dark:text-neutral-300 hover:text-gray-900 dark:hover:text-white"
-              >
-                아니오
-              </button>
-              <button
-                onClick={handleConfirmCancel}
-                className="bg-black dark:bg-neutral-800 text-white px-4 py-2 rounded-md"
-              >
-                네
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog 
+        isOpen={showDialog}
+        onClose={() => setShowDialog(false)}
+        onConfirm={handleConfirmCancel}
+        title="작성을 취소하시겠습니까?"
+        description="작성 중인 내용은 저장되지 않습니다."
+      />
 
       {/* 커스텀 화살표 아이콘을 위한 스타일 */}
       <style>
