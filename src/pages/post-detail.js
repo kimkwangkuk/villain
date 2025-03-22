@@ -244,10 +244,10 @@ function PostDetail() {
   if (!post) return <div className="text-center py-8 text-gray-700 dark:text-neutral-300">포스트를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="bg-white dark:bg-black min-h-screen py-8">
+    <div className="bg-white dark:bg-black min-h-screen pb-8">
       {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
-        <div className="max-w-[580px] mx-auto bg-gray-100 dark:bg-[#121212] rounded-2xl">
+        <div className="max-w-[570px] mx-auto bg-gray-100 dark:bg-[#121212] rounded-2xl">
           {/* 프로필 영역 */}
           <div className="pb-[0px] p-4">
             <div className="flex items-center justify-between">
@@ -383,7 +383,7 @@ function PostDetail() {
               <button 
                 onClick={handleLike}
                 disabled={isLikeLoading}
-                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
               >
                 <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'}`} />
                 <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px]`}>
@@ -403,7 +403,7 @@ function PostDetail() {
                     commentInput.focus();
                   }
                 }}
-                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
               >
                 <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
                 <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
@@ -416,7 +416,7 @@ function PostDetail() {
                   e.stopPropagation();
                   handleShare();
                 }}
-                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
               >
                 <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
                 <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
@@ -428,7 +428,7 @@ function PostDetail() {
 
       {/* 댓글 영역 전체를 감싸는 컨테이너 */}
       <div className="w-full px-4 mt-4">
-        <div className="max-w-[580px] mx-auto">
+        <div className="max-w-[570px] mx-auto">
           {/* 댓글 입력 영역 */}
           <div className="bg-gray-100 dark:bg-[#121212] rounded-2xl">
             <form onSubmit={handleCommentSubmit}>

@@ -21,10 +21,10 @@ function AppLayout({ children }) {
   const shouldShowNavbar = !noNavbarRoutes.includes(location.pathname);
 
   return (
-    <>
+    <div className="bg-white dark:bg-black min-h-screen">
       {shouldShowNavbar && <Navbar />}
       {shouldShowNavbar ? <Layout>{children}</Layout> : children}
-    </>
+    </div>
   );
 }
 

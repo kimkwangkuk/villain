@@ -20,7 +20,7 @@ git pull origin main
 
 
 git add .
-git commit -m "맥북에서 카드 디자인 수정"
+git commit -m "맥북에서 구글로그인오류처리"
 git push origin main
 
 

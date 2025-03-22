@@ -18,12 +18,28 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   const [replyContent, setReplyContent] = useState('');
   const [replies, setReplies] = useState([]);
   const [showReplies, setShowReplies] = useState(false);
+  const [replyMenuOpen, setReplyMenuOpen] = useState(null);
+  const replyMenuRef = useRef(null);
 
   // 바깥 영역 클릭 감지
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // 바깥 영역 클릭 감지 (대댓글 메뉴용)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (replyMenuRef.current && !replyMenuRef.current.contains(event.target)) {
+        setReplyMenuOpen(null);
       }
     };
 
@@ -104,10 +120,6 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       try {
         const replyList = await getReplies(comment.id);
         setReplies(replyList);
-        // 대댓글이 있으면 자동으로 보이게 설정
-        if (replyList.length > 0) {
-          setShowReplies(true);
-        }
       } catch (error) {
         console.error('대댓글 로딩 실패:', error);
       }
@@ -136,16 +148,26 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
 
   // 대댓글 삭제 처리
   const handleDeleteReply = async (replyId) => {
-    // 낙관적 업데이트: UI에서 먼저 대댓글 제거
-    setReplies(prev => prev.filter(reply => reply.id !== replyId));
-
     try {
+      // 낙관적 업데이트: UI에서 먼저 대댓글 제거
+      setReplies(prev => prev.filter(reply => reply.id !== replyId));
       await deleteReply(comment.postId, comment.id, replyId);
     } catch (error) {
       // 실패 시 이전 상태로 복원
       setReplies(prev => [...prev, replies.find(reply => reply.id === replyId)]);
       console.error('대댓글 삭제 실패:', error);
       alert('대댓글 삭제에 실패했습니다.');
+    }
+  };
+
+  // 댓글 삭제 처리 - 확인 메시지 제거
+  const handleDeleteComment = async () => {
+    try {
+      // 여기서는 실제 삭제 작업을 수행하지 않고 부모 컴포넌트에 알림만 전달
+      onDelete && onDelete();
+    } catch (error) {
+      console.error('댓글 삭제 실패:', error);
+      alert('댓글 삭제에 실패했습니다.');
     }
   };
 
@@ -195,22 +217,10 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
     }
   };
 
-  const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
-    
-    try {
-      await deleteComment(comment.postId, commentId);
-      onDelete && onDelete();
-    } catch (error) {
-      console.error('댓글 삭제 실패:', error);
-      alert('댓글 삭제에 실패했습니다.');
-    }
-  };
-
   return (
-    <div className="px-[20px] py-[16px]">
+    <div className="py-[16px]">
       {/* 상단 영역: 프로필 정보와 더보기 버튼 */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start px-[20px]">
         {/* 프로필 정보 그룹 */}
         <div className="flex items-center space-x-[6px]">
           <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800">
@@ -265,7 +275,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
                 <button
                   onClick={() => {
                     if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
-                      handleDeleteComment(comment.id);
+                      handleDeleteComment();
                     }
                     setShowMenu(false);
                   }}
@@ -280,7 +290,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
       </div>
 
       {/* 댓글 내용 */}
-      <div className="mt-1">
+      <div className="mt-1 px-[20px]">
         {isEditing ? (
           <div className="mt-2">
             <textarea
@@ -313,7 +323,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
 
       {/* 좋아요/답글 버튼 영역 - 삭제된 댓글이 아닐 때만 표시 */}
       {!comment.isDeleted && (
-        <div className="mt-2 flex items-center space-x-4">
+        <div className="mt-2 flex items-center space-x-4 px-[20px]">
           <button 
             onClick={handleLike}
             disabled={isLikeLoading}
@@ -331,7 +341,9 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
           >
             <MessageIcon className="w-[18px] h-[18px]" />
             <span className="ml-1 text-[13px]">
-              {replies.length > 0 ? `답글 ${replies.length}` : '답글'}
+              {replies.length > 0 
+                ? `${showReplyInput ? '답글 접기' : '답글'} ${replies.length}` 
+                : '답글'}
             </span>
           </button>
           
@@ -347,106 +359,134 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
         </div>
       )}
 
-      {/* 대댓글 입력 영역 */}
+      {/* 대댓글 영역 - 답글 버튼 클릭 시 표시 */}
       {showReplyInput && (
-        <div className="mt-3">
-          <form onSubmit={handleReplySubmit} className="flex items-start space-x-2">
-            <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
-              <img
-                src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
-                alt="프로필"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1">
-              <textarea
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="답글을 입력하세요..."
-                className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-300 dark:bg-[#111111] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                rows="2"
-              />
-              <div className="flex justify-end space-x-2 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowReplyInput(false)}
-                  className="px-3 py-1 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  등록
-                </button>
+        <div className="mt-3 bg-gray-200 dark:bg-[#0d0d0d]">
+          {/* 대댓글 입력 영역 */}
+          <div className="px-[20px] py-3 border-b border-gray-300 dark:border-neutral-800">
+            <form onSubmit={handleReplySubmit} className="flex items-start space-x-2">
+              <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
+                {user ? (
+                  <img
+                    src={user.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user.uid}&backgroundColor=e8f5e9`}
+                    alt="프로필"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // 이미지 로드 실패 시 기본 이미지로 대체
+                      e.target.src = `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user.uid}&backgroundColor=e8f5e9`;
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+                    <span className="text-xs text-gray-500 dark:text-neutral-500">?</span>
+                  </div>
+                )}
               </div>
-            </div>
-          </form>
-        </div>
-      )}
+              <div className="flex-1">
+                <textarea
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  placeholder="답글을 입력하세요..."
+                  className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-300 dark:bg-[#131313] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  rows="2"
+                />
+                <div className="flex justify-end space-x-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowReplyInput(false)}
+                    className="px-3 py-1 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  >
+                    등록
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
 
-      {/* 대댓글 목록 */}
-      {replies.length > 0 && (
-        <div className="mt-3">
-          <button
-            onClick={() => setShowReplies(!showReplies)}
-            className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300 mb-2"
-          >
-            <span className="text-[13px]">
-              {showReplies ? '답글 숨기기' : `답글 ${replies.length}개 보기`}
-            </span>
-          </button>
-          
-          {showReplies && (
-            <div className="space-y-3">
-              {replies.map((reply) => (
-                <div key={reply.id} className="flex space-x-2">
-                  <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
-                    <img
-                      src={reply.authorPhotoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${reply.userId}&backgroundColor=e8f5e9`}
-                      alt={reply.authorName}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-[13px] font-medium text-gray-900 dark:text-neutral-300">
-                        {reply.authorName || '익명'}
-                      </span>
-                      <span className="text-[13px] text-gray-400 dark:text-neutral-500">
-                        {formatDate(reply.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-[15px] text-gray-700 dark:text-neutral-400 mt-1">
-                      {reply.content}
-                    </p>
-                    
-                    {/* 대댓글 작업 버튼 */}
-                    <div className="flex items-center space-x-4 mt-1">
-                      {user && user.uid === reply.userId && (
-                        <button
-                          onClick={() => {
-                            if (window.confirm('정말로 이 답글을 삭제하시겠습니까?')) {
-                              handleDeleteReply(reply.id);
-                            }
+          {/* 대댓글 목록 */}
+          {replies.length > 0 && (
+            <div className="pt-0">
+              {replies.map((reply, index) => (
+                <div key={reply.id}>
+                  <div className="flex justify-between items-start py-3 px-[20px]">
+                    <div className="flex space-x-2">
+                      <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
+                        <img
+                          src={reply.authorPhotoURL || reply.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${reply.userId}&backgroundColor=e8f5e9`}
+                          alt="프로필"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // 이미지 로드 실패 시 기본 이미지로 대체
+                            e.target.src = `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${reply.userId}&backgroundColor=e8f5e9`;
                           }}
-                          className="text-[13px] text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
-                        >
-                          삭제
-                        </button>
-                      )}
-                      
-                      {user && user.uid !== reply.userId && (
-                        <button
-                          onClick={() => handleReportReply(reply.id)}
-                          className="text-[13px] text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
-                        >
-                          신고
-                        </button>
-                      )}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-[13px] font-medium ${reply.isDeleted ? 'text-gray-400 dark:text-neutral-500' : 'text-gray-900 dark:text-neutral-300'}`}>
+                            {reply.isDeleted ? '삭제된 댓글' : reply.authorName}
+                          </span>
+                          <span className="text-[13px] text-gray-400 dark:text-neutral-500">
+                            {formatDate(reply.createdAt)}
+                          </span>
+                        </div>
+                        <p className={`text-[15px] ${reply.isDeleted ? 'text-gray-400 dark:text-neutral-500 italic' : 'text-gray-700 dark:text-neutral-400'}`}>
+                          {reply.isDeleted ? '삭제된 댓글입니다.' : reply.content}
+                        </p>
+                      </div>
                     </div>
+                    
+                    {/* 대댓글 더보기 버튼 */}
+                    {!reply.isDeleted && (
+                      <div className="relative" ref={replyMenuRef}>
+                        <button 
+                          onClick={() => setReplyMenuOpen(replyMenuOpen === reply.id ? null : reply.id)}
+                          className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
+                        >
+                          <EllipsisIcon className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
+                        </button>
+                        
+                        {replyMenuOpen === reply.id && (
+                          <div className="absolute right-0 mt-1 w-24 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
+                            {user && user.uid === reply.userId && (
+                              <button
+                                onClick={() => {
+                                  if (window.confirm('정말로 이 답글을 삭제하시겠습니까?')) {
+                                    handleDeleteReply(reply.id);
+                                  }
+                                  setReplyMenuOpen(null);
+                                }}
+                                className="w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                              >
+                                삭제
+                              </button>
+                            )}
+                            
+                            {user && user.uid !== reply.userId && (
+                              <button
+                                onClick={() => {
+                                  handleReportReply(reply.id);
+                                  setReplyMenuOpen(null);
+                                }}
+                                className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                              >
+                                신고
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
+                  {index !== replies.length - 1 && (
+                    <div className="h-[1px] w-full bg-gray-300 dark:bg-neutral-800" />
+                  )}
                 </div>
               ))}
             </div>
@@ -457,4 +497,4 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   );
 }
 
-export default CommentCard; 
+export default CommentCard;
