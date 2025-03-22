@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import dayjs from 'dayjs';
 import { updateCommentLikes, addReply, getReplies, deleteReply, deleteComment, reportContent, hasAlreadyReported } from '../api/firebase';
 import { LikeIcon, MessageIcon, EllipsisIcon } from '../components/Icons';
+import { PrimaryButton, LineButton } from '../components/Button';
 
 function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   const { user } = useAuth();
@@ -387,23 +388,27 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder="답글을 입력하세요..."
-                  className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-300 dark:bg-[#131313] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  rows="2"
+                  className="w-full bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] text-gray-900 dark:text-neutral-300 placeholder-gray-400 dark:placeholder-neutral-500 overflow-hidden"
+                  rows="1"
+                  style={{
+                    minHeight: '24px',
+                    height: replyContent ? 'auto' : '24px'
+                  }}
+                  onInput={(e) => {
+                    e.target.style.height = '24px';
+                    e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
+                  }}
                 />
                 <div className="flex justify-end space-x-2 mt-2">
-                  <button
+                  <LineButton
                     type="button"
                     onClick={() => setShowReplyInput(false)}
-                    className="px-3 py-1 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200"
                   >
                     취소
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  >
+                  </LineButton>
+                  <PrimaryButton type="submit">
                     등록
-                  </button>
+                  </PrimaryButton>
                 </div>
               </div>
             </form>
