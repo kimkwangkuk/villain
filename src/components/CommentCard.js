@@ -253,7 +253,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
         </div>
 
         {/* 더보기 버튼 & 메뉴 - 삭제된 댓글이 아닐 때만 표시 */}
-        {user && (user.uid === comment.userId) && !comment.isDeleted && (
+        {user && !comment.isDeleted && (
           <div className="relative" ref={menuRef}>
             <button 
               onClick={() => setShowMenu(!showMenu)}
@@ -264,26 +264,40 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
             
             {showMenu && (
               <div className="absolute right-0 mt-1 w-24 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setShowMenu(false);
-                  }}
-                  className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={() => {
-                    if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
-                      handleDeleteComment();
-                    }
-                    setShowMenu(false);
-                  }}
-                  className="w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                >
-                  삭제
-                </button>
+                {user.uid === comment.userId ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        setIsEditing(true);
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+                          handleDeleteComment();
+                        }
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                    >
+                      삭제
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      handleReportComment();
+                      setShowMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                  >
+                    신고
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -347,16 +361,6 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
                 : '답글'}
             </span>
           </button>
-          
-          {/* 신고 버튼 - 자신의 댓글이 아닐 때만 표시 */}
-          {user && user.uid !== comment.userId && (
-            <button 
-              onClick={handleReportComment}
-              className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
-            >
-              <span className="text-[13px]">신고</span>
-            </button>
-          )}
         </div>
       )}
 

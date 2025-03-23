@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import CommentCard from '../components/CommentCard';
 import { db } from '../firebase';
 import { doc, getDoc, collection, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
-import { addComment, updateComment, deleteComment, updateLikes, updatePost, deletePost } from '../api/firebase';
+import { addComment, updateComment, deleteComment, updateLikes, updatePost, deletePost, updateReaction, getPostReactions } from '../api/firebase';
 import { MessageIcon, LikeIcon, ShareIcon } from '../components/Icons';
 import { PrimaryButton } from '../components/Button';
 import { EllipsisIcon } from '../components/Icons';
@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/ko';  // 한국어 로케일
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { detectUrls } from '../utils/urlUtils';
+import { reactions } from '../data/reactions';
 
 // dayjs 설정
 dayjs.locale('ko');
@@ -33,6 +34,9 @@ function PostDetail() {
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreMenuRef = useRef(null);
+  const [showReactionPopup, setShowReactionPopup] = useState(false);
+  const popupRef = useRef(null);
+  const [userReaction, setUserReaction] = useState(null);
 
   // 외부 클릭 감지를 위한 useEffect 추가
   useEffect(() => {
@@ -107,6 +111,22 @@ function PostDetail() {
 
     fetchPost();
     return () => unsubscribeComments();
+  }, [id, user]);
+
+  // 반응 데이터 로드
+  useEffect(() => {
+    const loadReactions = async () => {
+      try {
+        const reactions = await getPostReactions(id);
+        if (user && reactions[user.uid]) {
+          setUserReaction(reactions[user.uid]);
+        }
+      } catch (error) {
+        console.error('반응 데이터 로드 실패:', error);
+      }
+    };
+
+    loadReactions();
   }, [id, user]);
 
   const handleCommentSubmit = async (e) => {
@@ -237,6 +257,77 @@ function PostDetail() {
   // getRelativeTime 함수 추가
   const getRelativeTime = (date) => {
     return dayjs(date).fromNow();
+  };
+
+  // 반응 클릭 핸들러
+  const handleReactionClick = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLoggedIn || !user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    // 팝업이 열린 상태에서 버튼을 누르면 팝업 닫기
+    if (showReactionPopup) {
+      setShowReactionPopup(false);
+      return;
+    }
+
+    // 이미 반응한 상태에서 버튼을 누르면 반응 취소
+    if (userReaction) {
+      try {
+        // 낙관적 업데이트
+        setUserReaction(null);
+
+        // Firebase 업데이트
+        const result = await updateReaction(id, user.uid, null);
+        setPost(prev => ({ ...prev, reactionCount: result.reactionCount }));
+      } catch (error) {
+        console.error('반응 취소 실패:', error);
+        alert('반응 취소에 실패했습니다.');
+      }
+      return;
+    }
+
+    // 반응하지 않은 상태에서는 팝업 표시
+    setShowReactionPopup(true);
+  };
+
+  // 반응 선택 핸들러
+  const handleReactionSelect = async (reaction) => {
+    try {
+      // 이미 선택한 반응을 다시 선택한 경우 취소
+      if (userReaction?.id === reaction.id) {
+        // 낙관적 업데이트
+        setUserReaction(null);
+        setShowReactionPopup(false);
+
+        // Firebase 업데이트
+        const result = await updateReaction(id, user.uid, null);
+        setPost(prev => ({ ...prev, reactionCount: result.reactionCount }));
+        return;
+      }
+
+      // 새로운 반응 선택
+      // 낙관적 업데이트
+      const previousReaction = userReaction;
+      setUserReaction(reaction);
+      setShowReactionPopup(false);
+
+      // Firebase 업데이트
+      const result = await updateReaction(id, user.uid, reaction);
+      setPost(prev => ({ ...prev, reactionCount: result.reactionCount }));
+
+      // 실패 시 롤백
+      if (!result) {
+        setUserReaction(previousReaction);
+        throw new Error('반응 업데이트 실패');
+      }
+    } catch (error) {
+      console.error('반응 처리 실패:', error);
+      alert('반응 처리에 실패했습니다.');
+    }
   };
 
   if (loading) return <PostDetailSkeleton />;
@@ -373,41 +464,75 @@ function PostDetail() {
 
             {/* 좋아요/댓글 수 표시 */}
             <div className="flex items-center justify-between text-[14px] text-gray-500 dark:text-neutral-500 pb-3">
-              <span>{post.likes || 0}명의 반응</span>
+              <span>{post.reactionCount || 0}명의 반응</span>
               <span>댓글 {post.commentCount || 0}</span>
             </div>
 
             {/* 좋아요/댓글/공유 버튼 컨테이너 */}
             <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-900 py-2 -mx-4 px-4">
-              {/* 좋아요 버튼 */}
-              <button 
-                onClick={handleLike}
-                disabled={isLikeLoading}
-                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
-              >
-                <LikeIcon className={`w-[22px] h-[22px] ${isLiked ? 'text-red-500' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'}`} />
-                <span className={`ml-[2px] ${isLiked ? 'text-red-500' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px]`}>
-                  {isLiked ? "반응 취소" : "반응"}
-                </span>
-              </button>
+              {/* 반응 버튼 */}
+              <div className="relative">
+                <button 
+                  onClick={handleReactionClick}
+                  className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+                >
+                  {userReaction ? (
+                    <span className="text-[22px] mr-1">{userReaction.emoji}</span>
+                  ) : (
+                    <LikeIcon className="w-[22px] h-[22px] flex-shrink-0 text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+                  )}
+                  <span className={`${userReaction ? 'text-red-500' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px] truncate max-w-[60px]`}>
+                    {userReaction ? userReaction.label : "반응"}
+                  </span>
+                </button>
 
-              {/* 댓글 버튼 */}
-              <button
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    alert('로그인이 필요합니다.');
-                    return;
-                  }
-                  const commentInput = document.querySelector('textarea');
-                  if (commentInput) {
-                    commentInput.focus();
-                  }
-                }}
-                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
-              >
-                <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
-                <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
-              </button>
+                {/* 반응 팝업 */}
+                {showReactionPopup && (
+                  <div 
+                    ref={popupRef}
+                    className="absolute bottom-full left-0 mb-2 bg-white dark:bg-neutral-900 rounded-2xl p-2 shadow-xl animate-slideUp z-50"
+                  >
+                    <div className="flex gap-1">
+                      {reactions.map((reaction) => (
+                        <button
+                          key={reaction.id}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleReactionSelect(reaction);
+                          }}
+                          className={`flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all duration-200 ${
+                            userReaction?.id === reaction.id ? 'bg-gray-100 dark:bg-neutral-800' : ''
+                          }`}
+                        >
+                          <span className="text-xl mb-1">{reaction.emoji}</span>
+                          <span className="text-xs text-gray-600 dark:text-neutral-400">{reaction.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 댓글 버튼 - 중앙 고정 */}
+              <div className="absolute left-1/2 transform -translate-x-1/2">
+                <button
+                  onClick={() => {
+                    if (!isLoggedIn) {
+                      alert('로그인이 필요합니다.');
+                      return;
+                    }
+                    const commentInput = document.querySelector('textarea');
+                    if (commentInput) {
+                      commentInput.focus();
+                    }
+                  }}
+                  className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+                >
+                  <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+                  <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
+                </button>
+              </div>
 
               {/* 공유 버튼 */}
               <button

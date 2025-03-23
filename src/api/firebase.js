@@ -79,18 +79,21 @@
 
   // 사용자 상호작용 게시글 가져오기
   export const getUserInteractions = async (userId) => {
-    const interactions = []; // 댓글 및 좋아요를 저장할 배열
+    const interactions = []; // 댓글 및 반응을 저장할 배열
 
-    // 댓글이 있는 게시글 가져오기 - 필드명을 'authorId'에서 'userId'로 수정
+    // 댓글이 있는 게시글 가져오기
     const commentsSnapshot = await getDocs(query(collection(db, 'comments'), where('userId', '==', userId)));
     commentsSnapshot.forEach(commentDoc => {
       interactions.push({ postId: commentDoc.data().postId, type: 'comment' });
     });
 
-    // 좋아요가 있는 게시글 가져오기
-    const postsSnapshot = await getDocs(query(collection(db, 'posts'), where('likedBy', 'array-contains', userId)));
+    // 반응이 있는 게시글 가져오기
+    const postsSnapshot = await getDocs(query(collection(db, 'posts')));
     postsSnapshot.forEach(postDoc => {
-      interactions.push({ postId: postDoc.id, type: 'like' });
+      const postData = postDoc.data();
+      if (postData.reactions && postData.reactions[userId]) {
+        interactions.push({ postId: postDoc.id, type: 'reaction' });
+      }
     });
 
     return interactions;
@@ -855,6 +858,95 @@
 
     } catch (error) {
       console.error('포스트 삭제 실패:', error);
+      throw error;
+    }
+  };
+
+  // 반응 데이터 구조
+  export const updateReaction = async (postId, userId, reaction) => {
+    try {
+      const postRef = doc(db, 'posts', postId);
+      const postDoc = await getDoc(postRef);
+      
+      if (!postDoc.exists()) {
+        throw new Error('게시글을 찾을 수 없습니다.');
+      }
+
+      const postData = postDoc.data();
+      const reactions = postData.reactions || {};
+      const userReaction = reactions[userId];
+
+      // reaction이 null이거나 이미 같은 반응을 했다면 취소
+      if (!reaction || userReaction?.id === reaction.id) {
+        const updatedReactions = { ...reactions };
+        delete updatedReactions[userId];
+        
+        await updateDoc(postRef, {
+          reactions: updatedReactions,
+          reactionCount: (postData.reactionCount || 0) - 1
+        });
+
+        return {
+          reactions: updatedReactions,
+          reactionCount: (postData.reactionCount || 0) - 1
+        };
+      }
+
+      // 새로운 반응 추가
+      const updatedReactions = {
+        ...reactions,
+        [userId]: {
+          id: reaction.id,
+          emoji: reaction.emoji,
+          label: reaction.label,
+          timestamp: serverTimestamp()
+        }
+      };
+
+      await updateDoc(postRef, {
+        reactions: updatedReactions,
+        reactionCount: (postData.reactionCount || 0) + 1
+      });
+
+      // 새로운 반응 추가 시 알림 생성
+      if (postData.authorId && postData.authorId !== userId) {
+        try {
+          await createNotification(
+            'reaction',                   // 알림 타입
+            postId,                       // 포스트 ID
+            postData.authorId,            // 알림 수신자 (포스트 작성자)
+            userId,                       // 알림 발신자 (반응을 누른 사용자)
+            auth.currentUser?.displayName || '익명',  // 발신자 이름
+            `${reaction.label} 반응을 남겼습니다.`    // 알림 내용
+          );
+        } catch (error) {
+          console.error('반응 알림 생성 실패:', error);
+        }
+      }
+
+      return {
+        reactions: updatedReactions,
+        reactionCount: (postData.reactionCount || 0) + 1
+      };
+    } catch (error) {
+      console.error('반응 업데이트 실패:', error);
+      throw error;
+    }
+  };
+
+  // 게시글의 반응 데이터 가져오기
+  export const getPostReactions = async (postId) => {
+    try {
+      const postRef = doc(db, 'posts', postId);
+      const postDoc = await getDoc(postRef);
+      
+      if (!postDoc.exists()) {
+        throw new Error('게시글을 찾을 수 없습니다.');
+      }
+
+      return postDoc.data().reactions || {};
+    } catch (error) {
+      console.error('반응 데이터 조회 실패:', error);
       throw error;
     }
   };
