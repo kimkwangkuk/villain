@@ -204,7 +204,7 @@ function AddPostPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F5F5] dark:bg-black py-8">
+      <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#111111] py-8">
         <div className="max-w-[820px] mx-auto px-4">
           <div className="bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative">
             <div className="flex flex-col md:flex-row">
@@ -241,7 +241,7 @@ function AddPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-black flex items-center justify-center py-4 md:py-8">
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#111111] flex items-center justify-center py-4 md:py-8">
       <div className="max-w-[820px] w-full mx-4 bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative overflow-hidden
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 dark:before:from-black/25 before:to-transparent before:rounded-2xl"
       >

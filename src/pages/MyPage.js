@@ -16,6 +16,7 @@ import dayjs from 'dayjs';
 import { ProfileImageModal, EditNameModal } from '../components/Modal';
 import { updateProfile } from 'firebase/auth';
 import MyPageSkeleton from '../components/MyPageSkeleton';
+import { PrimaryButton } from '../components/Button';
 
 function MyPage() {
   const navigate = useNavigate();
@@ -373,11 +374,10 @@ function MyPage() {
             myPosts.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">아직 작성한 게시글이 없습니다.</p>
-                <Link 
-                  to="/posts/new" 
-                  className="inline-block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                >
-                  첫 게시글 작성하기
+                <Link to="/posts/new">
+                  <PrimaryButton>
+                    첫 게시글 작성하기
+                  </PrimaryButton>
                 </Link>
               </div>
             ) : (

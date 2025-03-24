@@ -11,6 +11,9 @@ import NotificationsPage from './pages/notifications';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import UserPage from './pages/UserPage';
+import PrivacyPolicy from './pages/privacy';
+import Terms from './pages/terms';
+import Footer from './components/Footer';
 
 // 네비게이션바를 표시하지 않을 라우트 목록
 const noNavbarRoutes = ['/login', '/signup'];
@@ -50,10 +53,13 @@ function App() {
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/user/:userId" element={<UserPage />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<Terms />} />
             </Routes>
           </AppLayout>
         </AuthProvider>
       </ThemeProvider>
+      <Footer />
     </BrowserRouter>
   );
 }

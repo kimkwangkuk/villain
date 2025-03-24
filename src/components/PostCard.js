@@ -34,6 +34,10 @@ function PostCard({ post, categories, onShare }) {
   // 팝업 외부 클릭 감지
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // 반응 버튼 클릭 시 이벤트 처리 방지
+      if (event.target.closest('button')) {
+        return;
+      }
       if (popupRef.current && !popupRef.current.contains(event.target)) {
         setShowReactionPopup(false);
       }
@@ -321,9 +325,9 @@ function PostCard({ post, categories, onShare }) {
               {showReactionPopup && (
                 <div 
                   ref={popupRef}
-                  className="absolute bottom-full left-0 mb-2 bg-white dark:bg-neutral-900 rounded-2xl p-2 shadow-xl animate-slideUp z-50"
+                  className="absolute bottom-full left-0 mb-2 bg-white dark:bg-neutral-900 rounded-2xl p-3 shadow-xl animate-slideUp z-50"
                 >
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     {reactions.map((reaction) => (
                       <button
                         key={reaction.id}
@@ -332,11 +336,11 @@ function PostCard({ post, categories, onShare }) {
                           e.stopPropagation();
                           handleReactionSelect(reaction);
                         }}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all duration-200 ${
+                        className={`flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all duration-200 whitespace-nowrap ${
                           userReaction?.id === reaction.id ? 'bg-gray-100 dark:bg-neutral-800' : ''
                         }`}
                       >
-                        <span className="text-xl mb-1">{reaction.emoji}</span>
+                        <span className="text-2xl mb-1">{reaction.emoji}</span>
                         <span className="text-xs text-gray-600 dark:text-neutral-400">{reaction.label}</span>
                       </button>
                     ))}

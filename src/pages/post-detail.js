@@ -41,8 +41,19 @@ function PostDetail() {
   // 외부 클릭 감지를 위한 useEffect 추가
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // 버튼 클릭 시 이벤트 처리 방지
+      if (event.target.closest('button')) {
+        return;
+      }
+      
+      // 더보기 메뉴 외부 클릭 감지
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
         setShowMoreMenu(false);
+      }
+      
+      // 반응 팝업 외부 클릭 감지
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        setShowReactionPopup(false);
       }
     };
 
@@ -268,7 +279,7 @@ function PostDetail() {
       return;
     }
 
-    // 팝업이 열린 상태에서 버튼을 누르면 팝업 닫기
+    // 팝업이 열린 상태에서 버튼을 누르면 팝업만 닫기
     if (showReactionPopup) {
       setShowReactionPopup(false);
       return;
@@ -490,9 +501,9 @@ function PostDetail() {
                 {showReactionPopup && (
                   <div 
                     ref={popupRef}
-                    className="absolute bottom-full left-0 mb-2 bg-white dark:bg-neutral-900 rounded-2xl p-2 shadow-xl animate-slideUp z-50"
+                    className="absolute bottom-full left-0 mb-2 bg-white dark:bg-neutral-900 rounded-2xl p-3 shadow-xl animate-slideUp z-50"
                   >
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
                       {reactions.map((reaction) => (
                         <button
                           key={reaction.id}
@@ -501,11 +512,11 @@ function PostDetail() {
                             e.stopPropagation();
                             handleReactionSelect(reaction);
                           }}
-                          className={`flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all duration-200 ${
+                          className={`flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all duration-200 ${
                             userReaction?.id === reaction.id ? 'bg-gray-100 dark:bg-neutral-800' : ''
                           }`}
                         >
-                          <span className="text-xl mb-1">{reaction.emoji}</span>
+                          <span className="text-2xl mb-1">{reaction.emoji}</span>
                           <span className="text-xs text-gray-600 dark:text-neutral-400">{reaction.label}</span>
                         </button>
                       ))}
