@@ -26,6 +26,14 @@ import { LineButton } from '../components/Button';
 // }
 // `;
 
+// 스피너 컴포넌트 추가
+const LoadingSpinner = () => (
+  <svg className="animate-spin h-5 w-5 text-white dark:text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+);
+
 function AuthPage() {
   const { googleLogin } = useAuth();
   const location = useLocation();
@@ -42,6 +50,7 @@ function AuthPage() {
     username: location.pathname === '/login' ? '' : generateRandomUsername()
   }));
   const [error, setError] = useState('');
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   // CSS 애니메이션을 위한 스타일 태그 추가 제거
   // useEffect(() => {
@@ -246,11 +255,18 @@ function AuthPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      setIsGoogleLoading(true);
       console.log('구글 로그인 시도');
       await googleLogin();
       console.log('구글 로그인 성공');
-      navigate(location.state?.from || '/', { replace: true });
+      
+      // 로그인 성공 후 잠시 로딩 상태 유지 (사용자에게 피드백 제공)
+      setTimeout(() => {
+        setIsGoogleLoading(false);
+        navigate(location.state?.from || '/', { replace: true });
+      }, 500); // 0.5초 지연
     } catch (error) {
+      setIsGoogleLoading(false);
       console.error('Google 로그인 실패:', error);
       
       // 도메인 인증 오류 처리
@@ -396,14 +412,21 @@ function AuthPage() {
             <div className="space-y-4 mb-6 flex justify-center">
               <button
                 onClick={handleGoogleLogin}
+                disabled={isGoogleLoading}
                 className="w-full flex justify-center items-center px-4 py-3 rounded-lg shadow-sm text-sm font-medium text-white dark:text-gray-800 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors border border-gray-800 dark:border-gray-200"
               >
-                <img 
-                  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-                  alt="Google" 
-                  className="w-5 h-5 mr-2 bg-white rounded-full p-0.5" 
-                />
-                Google로 계속하기
+                {isGoogleLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <img 
+                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+                      alt="Google" 
+                      className="w-5 h-5 mr-2 bg-white rounded-full p-0.5" 
+                    />
+                    Google로 계속하기
+                  </>
+                )}
               </button>
             </div>
 

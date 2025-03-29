@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCategories, updateLikes, updateReaction, getPostReactions } from '../api/firebase';
+import { getCategories, updateLikes, updateReaction, getPostReactions, deletePost, reportContent } from '../api/firebase';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
@@ -30,6 +30,10 @@ function PostCard({ post, categories, onShare }) {
   const popupRef = useRef(null);
   const [reactionCount, setReactionCount] = useState(post.reactionCount || 0);
   const [userReaction, setUserReaction] = useState(null);
+
+  // 더보기 메뉴 관련 상태 추가
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const moreOptionsRef = useRef(null);
 
   // 팝업 외부 클릭 감지
   useEffect(() => {
@@ -68,6 +72,40 @@ function PostCard({ post, categories, onShare }) {
       document.removeEventListener('keydown', handleEscKey);
     };
   }, [showReactionPopup]);
+
+  // 더보기 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreOptionsRef.current && !moreOptionsRef.current.contains(event.target)) {
+        setShowMoreOptions(false);
+      }
+    };
+
+    if (showMoreOptions) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMoreOptions]);
+
+  // ESC 키로 더보기 메뉴 닫기
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape') {
+        setShowMoreOptions(false);
+      }
+    };
+
+    if (showMoreOptions) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [showMoreOptions]);
 
   useEffect(() => {
     // prop으로 전달된 categories 배열에서 해당 post의 카테고리를 찾습니다.
@@ -208,6 +246,64 @@ function PostCard({ post, categories, onShare }) {
     return 'https://via.placeholder.com/40x40';  // 또는 다른 기본 이미지
   };
 
+  // 게시물 신고 처리
+  const handleReport = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowMoreOptions(false);
+    
+    // 로그인 확인
+    if (!isLoggedIn || !user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    
+    // 신고 사유 입력 (간단한 프롬프트 사용)
+    const reason = prompt('신고 사유를 입력해주세요:');
+    if (!reason) return; // 취소하거나 빈 값 입력 시 중단
+    
+    try {
+      // 신고 처리 함수 호출
+      await reportContent('post', post.id, user.uid, reason);
+      
+      // 성공 메시지
+      alert('신고가 접수되었습니다.');
+    } catch (error) {
+      console.error('신고 처리 실패:', error);
+      alert('신고 처리에 실패했습니다.');
+    }
+  };
+
+  // 게시물 삭제 처리
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowMoreOptions(false);
+    
+    // 삭제 확인
+    if (window.confirm('이 게시물을 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.')) {
+      try {
+        // 로딩 상태 추가 (선택사항)
+        // setIsDeleting(true);
+        
+        // 게시물 삭제 함수 호출
+        await deletePost(post.id);
+        
+        // 성공 메시지
+        alert('게시물이 삭제되었습니다.');
+        
+        // 페이지 새로고침 또는 리디렉션 (선택사항)
+        window.location.reload();
+      } catch (error) {
+        console.error('게시물 삭제 실패:', error);
+        alert('게시물 삭제에 실패했습니다.');
+      } finally {
+        // 로딩 상태 해제 (선택사항)
+        // setIsDeleting(false);
+      }
+    }
+  };
+
   return (
     <Link 
       to={`/posts/${post.id}`}
@@ -242,16 +338,44 @@ function PostCard({ post, categories, onShare }) {
                 </div>
               </div>
             </div>
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                // 더보기 옵션에 대한 처리 로직 추가 가능
-              }} 
-              className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
-            >
-              <span className="text-gray-300 dark:text-neutral-500 text-sm transition-colors hover:text-gray-900 dark:hover:text-neutral-300">⋮</span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowMoreOptions(!showMoreOptions);
+                }} 
+                className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
+              >
+                <span className="text-gray-300 dark:text-neutral-500 text-sm transition-colors hover:text-gray-900 dark:hover:text-neutral-300">⋮</span>
+              </button>
+              
+              {/* 더보기 메뉴 */}
+              {showMoreOptions && (
+                <div 
+                  ref={moreOptionsRef}
+                  className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 rounded-lg shadow-lg z-50 w-32 py-1 animate-fadeIn"
+                >
+                  {/* 신고 버튼 - 모든 사용자에게 표시 */}
+                  <button
+                    onClick={handleReport}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                  >
+                    신고하기
+                  </button>
+                  
+                  {/* 삭제 버튼 - 작성자에게만 표시 */}
+                  {user && post.authorId === user.uid && (
+                    <button
+                      onClick={handleDelete}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      삭제하기
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 타이틀 */}
