@@ -451,8 +451,8 @@ function PostCard({ post, categories, onShare }) {
                   {reactionEmojis.map((emoji, index) => (
                     <div 
                       key={index} 
-                      className="w-5 h-5 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-full text-sm border border-gray-200 dark:border-neutral-700"
-                      style={{ zIndex: 3 - index }}
+                      className="w-5 h-5 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-full text-sm border border-gray-200 dark:border-neutral-700 shadow-sm"
+                      style={{ zIndex: 3 - index, marginLeft: index > 0 ? '-8px' : '0' }}
                     >
                       {emoji}
                     </div>
@@ -477,7 +477,7 @@ function PostCard({ post, categories, onShare }) {
                 ) : (
                   <LikeIcon className="w-[22px] h-[22px] flex-shrink-0 text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
                 )}
-                <span className={`${userReaction ? 'text-red-500' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px] truncate max-w-[60px]`}>
+                <span className={`${userReaction ? 'text-[#FF2600]' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px] truncate max-w-[60px]`}>
                   {userReaction ? userReaction.label : "반응"}
                 </span>
               </button>

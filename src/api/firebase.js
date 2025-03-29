@@ -79,24 +79,77 @@
 
   // 사용자 상호작용 게시글 가져오기
   export const getUserInteractions = async (userId) => {
+    if (!userId) {
+      console.error('유효하지 않은 사용자 ID:', userId);
+      return [];
+    }
+    
+    console.log('상호작용 조회 시작 - 사용자 ID:', userId);
     const interactions = []; // 댓글 및 반응을 저장할 배열
 
-    // 댓글이 있는 게시글 가져오기
-    const commentsSnapshot = await getDocs(query(collection(db, 'comments'), where('userId', '==', userId)));
-    commentsSnapshot.forEach(commentDoc => {
-      interactions.push({ postId: commentDoc.data().postId, type: 'comment' });
-    });
+    try {
+      // 댓글이 있는 게시글 가져오기
+      console.log('댓글 상호작용 조회 중...');
+      const commentsSnapshot = await getDocs(
+        query(collection(db, 'comments'), where('userId', '==', userId))
+      );
+      
+      console.log('댓글 상호작용 결과:', commentsSnapshot.size);
+      commentsSnapshot.forEach(commentDoc => {
+        const commentData = commentDoc.data();
+        console.log('댓글 데이터:', commentData);
+        if (commentData.postId) {
+          interactions.push({ 
+            postId: commentData.postId, 
+            type: 'comment',
+            timestamp: commentData.createdAt
+          });
+        }
+      });
 
-    // 반응이 있는 게시글 가져오기
-    const postsSnapshot = await getDocs(query(collection(db, 'posts')));
-    postsSnapshot.forEach(postDoc => {
-      const postData = postDoc.data();
-      if (postData.reactions && postData.reactions[userId]) {
-        interactions.push({ postId: postDoc.id, type: 'reaction' });
-      }
-    });
+      // 반응이 있는 게시글 가져오기 (최적화 필요)
+      console.log('반응 상호작용 조회 중...');
+      // 모든 게시물을 가져오는 대신 reactions 필드가 있는 게시물만 가져오도록 최적화 필요
+      const postsSnapshot = await getDocs(collection(db, 'posts'));
+      
+      console.log('게시글 총 개수:', postsSnapshot.size);
+      let reactionCount = 0;
+      
+      postsSnapshot.forEach(postDoc => {
+        const postData = postDoc.data();
+        // reactions 객체가 있고, 해당 사용자의 반응이 있는지 확인
+        if (postData.reactions && postData.reactions[userId]) {
+          reactionCount++;
+          interactions.push({ 
+            postId: postDoc.id, 
+            type: 'reaction',
+            timestamp: postData.reactions[userId].timestamp || postData.updatedAt
+          });
+        }
+      });
+      console.log('반응 상호작용 결과:', reactionCount);
 
-    return interactions;
+      // 좋아요한 게시글도 가져오기
+      console.log('좋아요 상호작용 조회 중...');
+      const likedPostsSnapshot = await getDocs(
+        query(collection(db, 'posts'), where('likedBy', 'array-contains', userId))
+      );
+      
+      console.log('좋아요 상호작용 결과:', likedPostsSnapshot.size);
+      likedPostsSnapshot.forEach(postDoc => {
+        interactions.push({ 
+          postId: postDoc.id, 
+          type: 'like',
+          timestamp: postDoc.data().updatedAt
+        });
+      });
+
+      console.log('총 상호작용 수:', interactions.length);
+      return interactions;
+    } catch (error) {
+      console.error('상호작용 조회 중 오류 발생:', error);
+      return [];
+    }
   };
 
   // Comments

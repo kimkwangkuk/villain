@@ -82,14 +82,14 @@ function Navbar() {
               <div className="relative" ref={userMenuRef}>
                 <button 
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="h-[38px] px-3 bg-gray-200 dark:bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-gray-300 dark:hover:bg-neutral-700 transition-colors"
+                  className="h-[38px] w-[38px] border border-gray-300 dark:border-neutral-700 rounded-lg flex items-center justify-center hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
                 >
                   <UserIcon className="w-5 h-5 text-gray-700 dark:text-neutral-400" />
                 </button>
                 
-                {/* 유저 메뉴 드롭다운 */}
+                {/* 유저 메뉴 드롭다운 - 배경색 약간만 밝게 수정 */}
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-800 rounded-lg shadow-lg py-1 z-[1000] animate-fadeIn">
+                  <div className="absolute right-0 mt-2 w-56 bg-gray-100 dark:bg-neutral-850 rounded-lg shadow-lg py-1 z-[1000] animate-fadeIn">
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-700 flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">다크 모드</span>
                       <button 
@@ -109,13 +109,13 @@ function Navbar() {
                     <Link 
                       to="/mypage" 
                       onClick={() => setShowUserMenu(false)}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-700"
                     >
                       마이페이지
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                      className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-200 dark:hover:bg-neutral-700"
                     >
                       로그아웃
                     </button>

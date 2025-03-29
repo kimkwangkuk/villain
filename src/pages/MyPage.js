@@ -87,27 +87,43 @@ function MyPage() {
     const fetchUserInteractions = async () => {
       try {
         console.log('내 관심 포스트를 가져오는 중...');
-        const interactions = await getUserInteractions(user?.uid);
+        if (!user?.uid) {
+          console.error('사용자 ID가 없습니다');
+          return;
+        }
+        
+        const interactions = await getUserInteractions(user.uid);
         console.log('가져온 상호작용:', interactions);
         
+        if (interactions.length === 0) {
+          console.log('상호작용이 없습니다');
+          setInterestedPosts([]);
+          setLoading(false);
+          return;
+        }
+        
+        // 중복 제거 (같은 postId는 한 번만 처리)
+        const uniquePostIds = [...new Set(interactions.map(item => item.postId))];
+        console.log('중복 제거 후 게시글 ID:', uniquePostIds);
+        
         // 모든 상호작용에 해당하는 포스트를 가져옵니다.
-        const postsFromInteractions = await Promise.all(
-          interactions.map(async (interaction) => {
-            const post = await getPost(interaction.postId);
-            return post;
-          })
-        );
+        const postsPromises = uniquePostIds.map(async (postId) => {
+          try {
+            return await getPost(postId);
+          } catch (error) {
+            console.error(`게시글 ID ${postId} 로딩 실패:`, error);
+            return null;
+          }
+        });
         
-        // 같은 포스트가 여러 번 들어올 경우 중복을 제거하고,
+        const postsFromInteractions = (await Promise.all(postsPromises))
+          .filter(post => post !== null); // 오류나 삭제된 게시글 제외
+        
         // 본인이 작성한 포스트는 제외합니다.
-        const dedupedPosts = Array.from(new Map(
-          postsFromInteractions
-            .filter(post => post.authorId !== user?.uid) // 본인 포스트 제외
-            .map(post => [post.id, post])
-        ).values());
+        const filteredPosts = postsFromInteractions.filter(post => post.authorId !== user.uid);
+        console.log('필터링된 관심 포스트:', filteredPosts.length);
         
-        console.log('필터링된 관심 포스트:', dedupedPosts);
-        setInterestedPosts(dedupedPosts);
+        setInterestedPosts(filteredPosts);
       } catch (error) {
         console.error('내 관심 포스트 로딩 실패:', error);
       }
