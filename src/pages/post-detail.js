@@ -37,6 +37,7 @@ function PostDetail() {
   const [showReactionPopup, setShowReactionPopup] = useState(false);
   const popupRef = useRef(null);
   const [userReaction, setUserReaction] = useState(null);
+  const [reactionEmojis, setReactionEmojis] = useState([]);
 
   // 외부 클릭 감지를 위한 useEffect 추가
   useEffect(() => {
@@ -132,6 +133,24 @@ function PostDetail() {
         if (user && reactions[user.uid]) {
           setUserReaction(reactions[user.uid]);
         }
+        
+        // 반응 이모지 처리
+        const emojiCounts = {};
+        Object.values(reactions).forEach(reaction => {
+          if (reaction && reaction.emoji) {
+            if (!emojiCounts[reaction.emoji]) {
+              emojiCounts[reaction.emoji] = 0;
+            }
+            emojiCounts[reaction.emoji]++;
+          }
+        });
+        
+        // 이모지를 개수 기준으로 정렬하고 최대 3개만 선택
+        const sortedEmojis = Object.keys(emojiCounts)
+          .sort((a, b) => emojiCounts[b] - emojiCounts[a])
+          .slice(0, 3);
+          
+        setReactionEmojis(sortedEmojis);
       } catch (error) {
         console.error('반응 데이터 로드 실패:', error);
       }
@@ -341,6 +360,13 @@ function PostDetail() {
     }
   };
 
+  // 카테고리 클릭 핸들러 추가
+  const handleCategoryClick = (e, categoryId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/?category=${categoryId}`);
+  };
+
   if (loading) return <PostDetailSkeleton />;
   if (error) return <div className="text-center py-8 text-red-500 dark:text-red-400">{error}</div>;
   if (!post) return <div className="text-center py-8 text-gray-700 dark:text-neutral-300">포스트를 찾을 수 없습니다.</div>;
@@ -369,7 +395,13 @@ function PostDetail() {
                     {post?.authorName}
                   </div>
                   <div className="text-[12px] text-gray-500 dark:text-neutral-500">
-                    <span>{post?.categoryName}</span>
+                    {/* 카테고리를 클릭 가능한 링크로 변경 */}
+                    <button 
+                      onClick={(e) => handleCategoryClick(e, post?.categoryId)}
+                      className="hover:underline hover:text-gray-700 dark:hover:text-neutral-400 transition-colors"
+                    >
+                      {post?.categoryName}
+                    </button>
                     <span className="mx-1">·</span>
                     <span>{getRelativeTime(post?.createdAt?.toDate())}</span>
                   </div>
@@ -475,7 +507,27 @@ function PostDetail() {
 
             {/* 좋아요/댓글 수 표시 */}
             <div className="flex items-center justify-between text-[14px] text-gray-500 dark:text-neutral-500 pb-3">
-              <span>{post.reactionCount || 0}명의 반응</span>
+              <div className="flex items-center">
+                {/* 반응 이모지 표시 */}
+                {reactionEmojis.length > 0 ? (
+                  <>
+                    <div className="flex -space-x-1 mr-1">
+                      {reactionEmojis.map((emoji, index) => (
+                        <div 
+                          key={index} 
+                          className="w-5 h-5 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-full text-sm border border-gray-200 dark:border-neutral-700 shadow-sm"
+                          style={{ zIndex: 3 - index, marginLeft: index > 0 ? '-8px' : '0' }}
+                        >
+                          {emoji}
+                        </div>
+                      ))}
+                    </div>
+                    <span>{post.reactionCount || 0}명의 반응</span>
+                  </>
+                ) : (
+                  <span>{post.reactionCount || 0}명의 반응</span>
+                )}
+              </div>
               <span>댓글 {post.commentCount || 0}</span>
             </div>
 

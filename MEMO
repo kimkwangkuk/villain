@@ -20,7 +20,7 @@ git pull origin main
 
 
 git add .
-git commit -m "맥북에서 대댓글"
+git commit -m "맥북에서 메타정보추가"
 git push origin main
 
 

@@ -35,6 +35,9 @@ function PostCard({ post, categories, onShare }) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const moreOptionsRef = useRef(null);
 
+  // 반응 이모지 표시를 위한 상태 추가
+  const [reactionEmojis, setReactionEmojis] = useState([]);
+
   // 팝업 외부 클릭 감지
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -132,6 +135,24 @@ function PostCard({ post, categories, onShare }) {
         if (user && reactions[user.uid]) {
           setUserReaction(reactions[user.uid]);
         }
+        
+        // 반응 이모지 처리
+        const emojiCounts = {};
+        Object.values(reactions).forEach(reaction => {
+          if (reaction && reaction.emoji) {
+            if (!emojiCounts[reaction.emoji]) {
+              emojiCounts[reaction.emoji] = 0;
+            }
+            emojiCounts[reaction.emoji]++;
+          }
+        });
+        
+        // 이모지를 개수 기준으로 정렬하고 최대 3개만 선택
+        const sortedEmojis = Object.keys(emojiCounts)
+          .sort((a, b) => emojiCounts[b] - emojiCounts[a])
+          .slice(0, 3);
+          
+        setReactionEmojis(sortedEmojis);
       } catch (error) {
         console.error('반응 데이터 로드 실패:', error);
       }
@@ -423,7 +444,23 @@ function PostCard({ post, categories, onShare }) {
 
           {/* 좋아요/댓글 수 표시 */}
           <div className="mt-auto flex items-center justify-between text-[14px] text-gray-500 dark:text-neutral-500 pb-3">
-            <span>{reactionCount || 0}명의 반응</span>
+            <div className="flex items-center">
+              {/* 반응 이모지 표시 */}
+              {reactionEmojis.length > 0 && (
+                <div className="flex -space-x-1 mr-1">
+                  {reactionEmojis.map((emoji, index) => (
+                    <div 
+                      key={index} 
+                      className="w-5 h-5 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-full text-sm border border-gray-200 dark:border-neutral-700"
+                      style={{ zIndex: 3 - index }}
+                    >
+                      {emoji}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <span>{reactionCount || 0}명의 반응</span>
+            </div>
             <span>댓글 {commentCount || 0}</span>
           </div>
 
