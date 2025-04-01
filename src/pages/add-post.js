@@ -4,7 +4,6 @@ import { createPost, getCategories, updatePost } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { PrimaryButton, LineButton } from '../components/Button';
-import { detectUrls } from '../utils/urlUtils';
 import Dialog from '../components/Dialog';
 
 function AddPostPage() {
@@ -241,7 +240,7 @@ function AddPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#111111] flex items-center justify-center py-4 md:py-8">
+    <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-black">
       <div className="max-w-[820px] w-full mx-4 bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative overflow-hidden
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 dark:before:from-black/25 before:to-transparent before:rounded-2xl"
       >
@@ -317,25 +316,6 @@ function AddPostPage() {
                     value={formData.content}
                     onChange={handleChange}
                   />
-                  {/* URL 미리보기 */}
-                  {formData.content && (
-                    <div className="mt-2 text-sm text-gray-500 dark:text-neutral-500 space-y-1">
-                      {detectUrls(formData.content).map((part) => (
-                        part.type === 'url' && (
-                          <a
-                            key={part.key}
-                            href={part.content}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300 hover:underline w-full"
-                          >
-                            <span className="flex-shrink-0">🔗</span>
-                            <span className="truncate flex-1">{part.content}</span>
-                          </a>
-                        )
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

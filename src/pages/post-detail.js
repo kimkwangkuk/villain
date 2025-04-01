@@ -467,7 +467,7 @@ function PostDetail() {
           <div className="pt-[0px] p-4 pb-0">
             <div className="pt-3 pb-6">
               <h1 className="text-[20px] font-semibold text-gray-900 dark:text-neutral-300 mb-2">{post?.title}</h1>
-              <p className="text-[16px] text-gray-700 dark:text-neutral-400 leading-relaxed">
+              <p className="text-[16px] text-gray-700 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap">
                 {detectUrls(post?.content).map((part) => (
                   part.type === 'url' ? (
                     <a
@@ -487,20 +487,33 @@ function PostDetail() {
               {/* URL 미리보기 */}
               {detectUrls(post?.content).some(part => part.type === 'url') && (
                 <div className="mt-4 text-sm text-gray-500 dark:text-neutral-500 space-y-1">
-                  {detectUrls(post?.content).map((part) => (
-                    part.type === 'url' && (
-                      <a
-                        key={part.key}
-                        href={part.content}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300 hover:underline w-full"
-                      >
-                        <span className="flex-shrink-0">🔗</span>
-                        <span className="truncate flex-1">{part.content}</span>
-                      </a>
-                    )
-                  ))}
+                  {detectUrls(post?.content).map((part) => {
+                    if (part.type === 'url') {
+                      // URL을 파싱하여 도메인만 추출 (슬래시 없이)
+                      let displayUrl = part.content;
+                      try {
+                        const url = new URL(part.content);
+                        displayUrl = url.hostname;
+                      } catch (e) {
+                        // URL 파싱 실패 시 원래 URL 사용
+                        console.error("URL 파싱 실패:", e);
+                      }
+                      
+                      return (
+                        <a
+                          key={part.key}
+                          href={part.content}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300 hover:underline w-full"
+                        >
+                          <span className="flex-shrink-0">🔗</span>
+                          <span className="truncate flex-1">{displayUrl}</span>
+                        </a>
+                      );
+                    }
+                    return null;
+                  })}
                 </div>
               )}
             </div>
