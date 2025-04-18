@@ -5,7 +5,7 @@ function PostDetailSkeleton() {
     <div className="bg-white dark:bg-black py-8">
       {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
-        <div className="max-w-[580px] mx-auto bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
+        <div className="max-w-[590px] mx-auto bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
           {/* 프로필 영역 */}
           <div className="pb-[0px] p-4">
             <div className="flex items-center justify-between">
@@ -54,7 +54,7 @@ function PostDetailSkeleton() {
 
       {/* 댓글 영역 */}
       <div className="w-full px-4 mt-4">
-        <div className="max-w-[580px] mx-auto">
+        <div className="max-w-[590px] mx-auto">
           {/* 댓글 입력 영역 */}
           <div className="bg-gray-100 dark:bg-[#0A0A0A] rounded-2xl">
             <div className="p-[12px] w-full">

@@ -909,8 +909,8 @@ function HomePage() {
               data-category="all"
               className={`text-[14px] pb-3 px-1 transition-colors ${
                 !selectedCategory
-                  ? "text-black dark:text-white border-b-2 border-black dark:border-white"
-                  : "text-gray-500 dark:text-neutral-500"
+                  ? "text-black dark:text-black border-b-2 border-black dark:border-black"
+                  : "text-black dark:text-black"
               }`}
             >
               <div className="flex flex-col items-center gap-[10px]">
@@ -930,8 +930,8 @@ function HomePage() {
                   }}
                   className={`text-[14px] pb-3 px-1 transition-colors ${
                     selectedCategory === category.id
-                      ? "text-black dark:text-white border-b-2 border-black dark:border-white"
-                      : "text-gray-500 dark:text-neutral-500"
+                      ? "text-black dark:text-black border-b-2 border-black dark:border-black"
+                      : "text-black dark:text-black"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-[10px]">

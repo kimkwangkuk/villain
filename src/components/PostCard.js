@@ -332,7 +332,7 @@ function PostCard({ post, categories, onShare }) {
     >
       <div className="flex flex-col h-full">
         {/* 컨텐츠 영역 내에 프로필 영역 포함 */}
-        <div className="bg-[#F5F5F7] dark:bg-[#121212] rounded-2xl pt-[14px] p-5 pb-3 flex flex-col h-[360px]">
+        <div className="bg-[#F5F5F7] dark:bg-[#121212] rounded-2xl pt-[14px] p-5 pb-2 flex flex-col h-[360px] hover:bg-[#EBEBED] dark:hover:bg-[#1A1A1A] transition-colors duration-200">
           {/* 프로필 영역 - 타이틀 상단에 표시 */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
@@ -465,19 +465,19 @@ function PostCard({ post, categories, onShare }) {
           </div>
 
           {/* 좋아요/댓글/공유 버튼 컨테이너 */}
-          <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-900 pt-3 -mx-5 px-5">
+          <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-800 pt-2 -mx-5 px-4">
             {/* 반응 버튼 */}
             <div className="relative">
               <button 
                 onClick={handleReactionClick}
-                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
               >
                 {userReaction ? (
                   <span className="text-[22px] mr-1">{userReaction.emoji}</span>
                 ) : (
                   <LikeIcon className="w-[22px] h-[22px] flex-shrink-0 text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
                 )}
-                <span className={`${userReaction ? 'text-[#FF2600]' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px] truncate max-w-[60px]`}>
+                <span className={`${userReaction ? 'text-[#FF2600]' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px] truncate max-w-[60px] ml-[3px]`}>
                   {userReaction ? userReaction.label : "반응"}
                 </span>
               </button>
@@ -517,19 +517,19 @@ function PostCard({ post, categories, onShare }) {
                 e.stopPropagation();
                 navigate(`/posts/${post.id}`);
               }}
-              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
+              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
             >
               <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
-              <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
+              <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
             </button>
 
             {/* 공유 버튼 */}
             <button
               onClick={(e) => onShare(e, post.id)}
-              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-2 py-1"
+              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
             >
               <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
-              <span className="ml-[2px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
+              <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
             </button>
           </div>
         </div>

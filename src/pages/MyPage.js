@@ -295,7 +295,7 @@ function MyPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       {/* 프로필 영역 */}
-      <div className="bg-white dark:bg-black py-8">
+      <div className="bg-white dark:bg-black py-4">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col items-center">
             <div className="bg-transparent dark:bg-transparent rounded-2xl p-6 w-full max-w-md">
@@ -348,7 +348,7 @@ function MyPage() {
       {/* 탭 메뉴 */}
       <div className="bg-white dark:bg-black">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center overflow-x-auto whitespace-nowrap pt-4 pb-0 px-4 gap-8">
+          <div className="flex justify-center overflow-x-auto whitespace-nowrap pt-2 pb-0 px-4 gap-8">
             <button
               onClick={() => setActiveTab('myPosts')}
               className={`text-[15px] font-semibold pb-2 px-1 transition-colors text-black dark:text-white
