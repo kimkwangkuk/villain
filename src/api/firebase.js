@@ -55,8 +55,8 @@
     const post = {
       ...postData,
       authorId: user.uid,
-      authorName: userDoc.username || user.email,
-      authorPhotoURL: userDoc.photoURL,
+      authorName: userDoc.username || user.email || user.displayName,
+      authorPhotoURL: user.photoURL || null,
       categoryName: categoryName,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -91,7 +91,7 @@
       // 댓글이 있는 게시글 가져오기
       console.log('댓글 상호작용 조회 중...');
       const commentsSnapshot = await getDocs(
-        query(collection(db, 'comments'), where('userId', '==', userId))
+        query(collection(db, 'comments'), where('authorId', '==', userId))
       );
       
       console.log('댓글 상호작용 결과:', commentsSnapshot.size);
@@ -161,12 +161,12 @@
     const comment = {
       content,
       postId,
-      userId: user.uid,
-      authorName: userDoc.username || user.email,
-      photoURL: userDoc.photoURL || user.photoURL,
+      authorId: user.uid,
+      authorName: userDoc.username || user.email || user.displayName,
+      authorPhotoURL: user.photoURL || null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      isReply: false,  // 명시적으로 false 설정
+      isReply: false,
       likes: 0,
       likedBy: []
     };
@@ -192,7 +192,7 @@
             postId,
             postData.authorId,
             user.uid,
-            userDoc.username || user.email,
+            userDoc.username || user.email || user.displayName,
             content
           );
         }
@@ -386,13 +386,13 @@
   };
 
   // 회원가입
-  export const signup = async ({ email, password, photoURL }) => {
-    console.log('signup 함수 호출됨:', { email, photoURL });
+  export const signup = async ({ email, password, photoURL, username }) => {
+    console.log('signup 함수 호출됨:', { email, photoURL, username });
     
     try {
-      // 고유한 사용자 이름 생성
-      const username = await generateUniqueUsername();
-      console.log('생성된 고유 사용자 이름:', username);
+      // 전달받은 username을 사용하고, 없는 경우에만 생성하도록 수정
+      const finalUsername = username || generateRandomUsername();
+      console.log('사용자 이름:', finalUsername);
 
       // Firebase Auth에 사용자 생성
       console.log('Firebase Auth에 사용자 생성 시도');
@@ -402,7 +402,7 @@
       // 사용자 프로필 업데이트 (displayName과 photoURL 모두 설정)
       console.log('사용자 프로필 업데이트 시도');
       await updateProfile(auth.currentUser, {
-        displayName: username,
+        displayName: finalUsername,
         photoURL: photoURL
       });
       console.log('사용자 프로필 업데이트 성공');
@@ -412,7 +412,7 @@
       const userRef = doc(db, 'users', userCredential.user.uid);
       await setDoc(userRef, {
         email: email,
-        username: username,
+        username: finalUsername,
         photoURL: photoURL,
         createdAt: new Date(),
         bio: '',
@@ -613,19 +613,22 @@
       // 프로필 이미지 설정
       console.log('랜덤 프로필 이미지 가져오기 시도');
       const randomProfileUrl = await getRandomProfileImage();
-      if (randomProfileUrl) {
-        console.log('프로필 이미지 업데이트 시도');
-        await updateProfile(userCredential.user, { photoURL: randomProfileUrl });
-        console.log('프로필 이미지 업데이트 성공');
-      } else {
-        console.log('랜덤 프로필 이미지를 가져오지 못했습니다. 기본 이미지 사용');
-      }
+      
+      // 랜덤 사용자 이름 생성
+      const username = generateRandomUsername(); // 형용사+명사 조합의 랜덤 이름 생성
+      console.log('생성된 사용자 이름:', username);
+      
+      // 프로필 업데이트 (이름과 이미지 함께 설정)
+      console.log('사용자 프로필 업데이트 시도');
+      await updateProfile(userCredential.user, { 
+        displayName: username, 
+        photoURL: randomProfileUrl || userCredential.user.photoURL
+      });
+      console.log('사용자 프로필 업데이트 성공');
       
       // Firestore에 사용자 정보 저장
       console.log('Firestore에 사용자 정보 저장 시도');
       const userRef = doc(db, 'users', userCredential.user.uid);
-      const username = generateRandomUsername();
-      console.log('생성된 사용자 이름:', username);
       
       await setDoc(
         userRef,
@@ -652,72 +655,25 @@
     }
   };
 
-  // 이미 존재하는 사용자 이름과 중복 여부를 검사하는 함수
-  export const checkUsernameAvailability = async (username) => {
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('username', '==', username));
-    const snapshot = await getDocs(q);
-    return snapshot.empty;
-  };
-
-  /**
-   * 사용자 이름을 생성하고, 데이터베이스에 저장된 이름과 중복되지 않도록 처리하는 함수
-   * 중복된 경우에는 기본 이름 뒤에 _숫자를 붙여서 고유한 이름을 반환합니다.
-   */
-  export const generateUniqueUsername = async () => {
-    console.log('generateUniqueUsername 함수 호출됨');
-    try {
-      // 기본 이름을 생성합니다.
-      let baseUsername = generateRandomUsername();
-      console.log('생성된 기본 사용자 이름:', baseUsername);
-      
-      let username = baseUsername;
-      let attempts = 0;
-      const maxAttempts = 20;
-      
-      // 해당 이름이 사용 가능한지 확인합니다.
-      while (!(await checkUsernameAvailability(username))) {
-        console.log(`사용자 이름 "${username}" 이미 사용 중, 새 이름 시도 중...`);
-        attempts++;
-        // 중복된 경우, 기본 이름 뒤에 번호를 추가합니다.
-        username = `${baseUsername}_${attempts}`;
-        
-        // 만약 너무 많이 중복되면 새로운 기본 이름으로 재설정합니다.
-        if (attempts >= maxAttempts) {
-          baseUsername = generateRandomUsername();
-          username = baseUsername;
-          attempts = 0;
-          console.log('최대 시도 횟수 초과, 새 기본 이름 생성:', baseUsername);
-        }
-      }
-      
-      console.log('최종 생성된 고유 사용자 이름:', username);
-      return username;
-    } catch (error) {
-      console.error('사용자 이름 생성 중 오류 발생:', error);
-      // 오류 발생 시 기본 이름 반환
-      const fallbackUsername = generateRandomUsername();
-      console.log('오류로 인한 대체 사용자 이름 생성:', fallbackUsername);
-      return fallbackUsername;
-    }
-  };
-
   // 대댓글 추가
   export const addReply = async (postId, parentCommentId, replyContent) => {
     const user = auth.currentUser;
     if (!user) throw new Error('Must be logged in');
 
-    const userDoc = await getUserDoc(user.uid);
-    const reply = {
-      content: replyContent,
-      userId: user.uid,
-      authorName: userDoc.username || user.email,
-      photoURL: userDoc.photoURL || user.photoURL,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-
     try {
+      const userDoc = await getUserDoc(user.uid);
+      const reply = {
+        content: replyContent,
+        authorId: user.uid,
+        authorName: userDoc.username || user.email || user.displayName,
+        authorPhotoURL: user.photoURL || null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isReply: true,
+        parentCommentId,
+        postId
+      };
+
       // 댓글의 서브컬렉션으로 대댓글 추가
       const replyRef = await addDoc(
         collection(db, 'comments', parentCommentId, 'replies'), 
@@ -758,9 +714,18 @@
   // 게시글 수정
   export const updatePost = async (postId, updateData) => {
     try {
+      // 현재 사용자 확인 (옵션)
+      const user = auth.currentUser;
+      const updateFields = { ...updateData };
+      
+      // 사용자가 로그인한 경우 프로필 사진 업데이트 (옵션)
+      if (user && user.photoURL) {
+        updateFields.authorPhotoURL = user.photoURL;
+      }
+      
       const postRef = doc(db, 'posts', postId);
       await updateDoc(postRef, {
-        ...updateData,
+        ...updateFields,
         updatedAt: serverTimestamp()
       });
       

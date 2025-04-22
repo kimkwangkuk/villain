@@ -711,8 +711,8 @@ function PostDetail() {
                   <CommentCard
                     comment={{
                       ...comment,
-                      authorPhotoURL: comment.photoURL,
-                      userId: comment.userId,
+                      authorPhotoURL: comment.authorPhotoURL,
+                      userId: comment.authorId,
                     }}
                     postAuthorId={post.authorId}
                     onEdit={(newContent) => handleEditComment(comment.id, newContent)}

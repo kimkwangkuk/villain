@@ -196,7 +196,8 @@ function AuthPage() {
           const response = await signup({
             email: formData.email,
             password: formData.password,
-            photoURL: profileImageUrl
+            photoURL: profileImageUrl,
+            username: formData.username
           });
           console.log('signup 함수 호출 후');
 

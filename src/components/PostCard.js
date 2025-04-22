@@ -338,13 +338,16 @@ function PostCard({ post, categories, onShare }) {
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-full overflow-hidden">
                 <img
-                  src={imageError ? getDefaultProfileImage() : (post.authorPhotoURL || getDefaultProfileImage())}
+                  src={post.authorPhotoURL || getDefaultProfileImage()}
                   alt={`${post.authorName}의 프로필`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    if (!imageError) {
-                      setImageError(true);
-                    }
+                    // 이미지 로드 실패 시 이니셜 표시
+                    e.target.parentNode.innerHTML = `<div class="w-full h-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+                      <span class="text-xs text-gray-600 dark:text-gray-400">
+                        ${post.authorName?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    </div>`;
                   }}
                 />
               </div>

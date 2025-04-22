@@ -183,19 +183,7 @@ function MyPage() {
         photoURL: newImageUrl
       });
 
-      // 사용자가 작성한 모든 포스트의 authorPhotoURL 업데이트
-      const postsQuery = query(
-        collection(db, 'posts'),
-        where('authorId', '==', user.uid)
-      );
-      const postsSnapshot = await getDocs(postsQuery);
-      
-      const updatePromises = postsSnapshot.docs.map(postDoc => 
-        updateDoc(doc(db, 'posts', postDoc.id), {
-          authorPhotoURL: newImageUrl
-        })
-      );
-      await Promise.all(updatePromises);
+      // 포스트 업데이트 코드 제거: 사용자가 이미지를 변경해도 기존 포스트의 프로필 이미지는 유지됨
 
       setIsProfileImageModalOpen(false);
     } catch (error) {
@@ -229,40 +217,7 @@ function MyPage() {
         username: newName
       });
 
-      // 4. 사용자가 작성한 모든 포스트의 authorName 업데이트
-      const updatePosts = async () => {
-        const postsQuery = query(
-          collection(db, 'posts'),
-          where('authorId', '==', user.uid)
-        );
-        const postsSnapshot = await getDocs(postsQuery);
-        
-        const updatePromises = postsSnapshot.docs.map(postDoc => 
-          updateDoc(doc(db, 'posts', postDoc.id), {
-            authorName: newName
-          })
-        );
-        await Promise.all(updatePromises);
-      };
-
-      // 5. 사용자가 작성한 모든 댓글의 authorName 업데이트
-      const updateComments = async () => {
-        const commentsQuery = query(
-          collection(db, 'comments'),
-          where('authorId', '==', user.uid)
-        );
-        const commentsSnapshot = await getDocs(commentsQuery);
-        
-        const updatePromises = commentsSnapshot.docs.map(commentDoc => 
-          updateDoc(doc(db, 'comments', commentDoc.id), {
-            authorName: newName
-          })
-        );
-        await Promise.all(updatePromises);
-      };
-
-      // 포스트와 댓글 업데이트 병렬 실행
-      await Promise.all([updatePosts(), updateComments()]);
+      // 포스트와 댓글 업데이트 코드 제거: 사용자가 이름을 변경해도 기존 포스트와 댓글의 작성자 이름은 유지됨
       
       console.log('이름 업데이트 완료:', newName);
     } catch (error) {
