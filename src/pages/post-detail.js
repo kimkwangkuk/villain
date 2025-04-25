@@ -547,13 +547,13 @@ function PostDetail() {
             {/* 좋아요/댓글/공유 버튼 컨테이너 */}
             <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-900 py-2 -mx-4 px-4">
               {/* 반응 버튼 */}
-              <div className="relative">
+              <div className="relative flex-1 max-w-[33%]">
                 <button 
                   onClick={handleReactionClick}
                   className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
                 >
                   {userReaction ? (
-                    <span className="text-[22px] mr-1">{userReaction.emoji}</span>
+                    <span className="text-[18px] w-[22px] h-[22px] flex items-center justify-center flex-shrink-0">{userReaction.emoji}</span>
                   ) : (
                     <LikeIcon className="w-[22px] h-[22px] flex-shrink-0 text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
                   )}
@@ -591,7 +591,7 @@ function PostDetail() {
               </div>
 
               {/* 댓글 버튼 - 중앙 고정 */}
-              <div className="absolute left-1/2 transform -translate-x-1/2">
+              <div className="flex-1 max-w-[33%] flex justify-center">
                 <button
                   onClick={() => {
                     if (!isLoggedIn) {
@@ -611,17 +611,19 @@ function PostDetail() {
               </div>
 
               {/* 공유 버튼 */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleShare();
-                }}
-                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
-              >
-                <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
-                <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
-              </button>
+              <div className="flex-1 max-w-[33%] flex justify-end">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleShare();
+                  }}
+                  className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+                >
+                  <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+                  <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

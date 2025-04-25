@@ -470,13 +470,13 @@ function PostCard({ post, categories, onShare }) {
           {/* 좋아요/댓글/공유 버튼 컨테이너 */}
           <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-800 pt-2 -mx-5 px-4">
             {/* 반응 버튼 */}
-            <div className="relative">
+            <div className="relative flex-1 max-w-[33%]">
               <button 
                 onClick={handleReactionClick}
-                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2 w-full"
               >
                 {userReaction ? (
-                  <span className="text-[22px] mr-1">{userReaction.emoji}</span>
+                  <span className="text-[18px] w-[22px] h-[22px] flex items-center justify-center flex-shrink-0">{userReaction.emoji}</span>
                 ) : (
                   <LikeIcon className="w-[22px] h-[22px] flex-shrink-0 text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
                 )}
@@ -514,26 +514,30 @@ function PostCard({ post, categories, onShare }) {
             </div>
 
             {/* 댓글 버튼 */}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                navigate(`/posts/${post.id}`);
-              }}
-              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
-            >
-              <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
-              <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
-            </button>
+            <div className="flex-1 max-w-[33%] flex justify-center">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/posts/${post.id}`);
+                }}
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+              >
+                <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+                <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
+              </button>
+            </div>
 
             {/* 공유 버튼 */}
-            <button
-              onClick={(e) => onShare(e, post.id)}
-              className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
-            >
-              <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
-              <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
-            </button>
+            <div className="flex-1 max-w-[33%] flex justify-end">
+              <button
+                onClick={(e) => onShare(e, post.id)}
+                className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+              >
+                <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+                <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

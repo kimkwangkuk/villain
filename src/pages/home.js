@@ -690,12 +690,7 @@ function HomePage() {
   const handleMouseDown = (e) => {
     if (!categoryScrollRef.current) return;
     
-    // 클릭한 요소가 버튼인 경우 드래그를 시작하지 않음
-    if (e.target.tagName.toLowerCase() === 'button' || 
-        e.target.closest('button') !== null) {
-      return;
-    }
-    
+    // 버튼 클릭 시에도 드래그 시작 허용 (조건 삭제)
     setIsDragging(true);
     setStartX(e.pageX - categoryScrollRef.current.offsetLeft);
     setScrollLeft(categoryScrollRef.current.scrollLeft);
@@ -708,12 +703,7 @@ function HomePage() {
   const handleTouchStart = (e) => {
     if (!categoryScrollRef.current) return;
     
-    // 터치한 요소가 버튼인 경우 드래그를 시작하지 않음
-    if (e.target.tagName.toLowerCase() === 'button' || 
-        e.target.closest('button') !== null) {
-      return;
-    }
-    
+    // 버튼 터치 시에도 드래그 시작 허용 (조건 삭제)
     setIsDragging(true);
     setStartX(e.touches[0].pageX - categoryScrollRef.current.offsetLeft);
     setScrollLeft(categoryScrollRef.current.scrollLeft);
@@ -725,7 +715,7 @@ function HomePage() {
     
     // 터치 이동 거리 계산
     const x = e.touches[0].pageX - categoryScrollRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5; // 스크롤 속도 조절
+    const walk = (x - startX) * 2.5; // 스크롤 속도 증가
     
     // 스크롤 위치 업데이트
     categoryScrollRef.current.scrollLeft = scrollLeft - walk;
@@ -779,8 +769,9 @@ function HomePage() {
     const handleGlobalTouchMove = (e) => {
       if (isDragging && categoryScrollRef.current) {
         const x = e.touches[0].pageX - categoryScrollRef.current.offsetLeft;
-        const walk = (x - startX) * 1.5;
+        const walk = (x - startX) * 2.5; // 스크롤 속도 증가
         categoryScrollRef.current.scrollLeft = scrollLeft - walk;
+        e.preventDefault(); // 페이지 스크롤 방지
       }
     };
     
@@ -894,7 +885,6 @@ function HomePage() {
           <div 
             ref={categoryScrollRef}
             className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 cursor-grab select-none hide-scrollbar bg-white dark:bg-black"
-            style={{ scrollBehavior: 'smooth' }}
             onMouseDown={handleMouseDown}
             onMouseLeave={handleMouseUp}
             onTouchStart={handleTouchStart}
