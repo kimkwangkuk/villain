@@ -289,7 +289,7 @@ function AddPostPage() {
             <div className="flex justify-between items-center">
               <div className="text-[16px] font-medium text-gray-700 dark:text-neutral-300">
                 빌런 카테고리
-                <p className="text-xs text-gray-400 dark:text-neutral-600">관련도가 높은 카테고리에 게시해세요.</p>
+                <p className="text-xs text-gray-400 dark:text-neutral-600">관련도가 높은 카테고리에 게시하세요.</p>
               </div>
               <select
                 name="category"
