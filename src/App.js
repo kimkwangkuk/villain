@@ -16,7 +16,7 @@ import Terms from './pages/terms';
 import Footer from './components/Footer';
 
 // 네비게이션바를 표시하지 않을 라우트 목록
-const noNavbarRoutes = ['/login', '/signup'];
+const noNavbarRoutes = ['/login', '/signup', '/posts/new'];
 
 // 레이아웃을 관리할 컴포넌트
 function AppLayout({ children }) {
@@ -27,6 +27,7 @@ function AppLayout({ children }) {
     <div className="bg-white dark:bg-black min-h-screen">
       {shouldShowNavbar && <Navbar />}
       {shouldShowNavbar ? <Layout>{children}</Layout> : children}
+      {shouldShowNavbar && <Footer />}
     </div>
   );
 }
@@ -59,7 +60,6 @@ function App() {
           </AppLayout>
         </AuthProvider>
       </ThemeProvider>
-      <Footer />
     </BrowserRouter>
   );
 }

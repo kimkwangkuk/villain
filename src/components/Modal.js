@@ -25,6 +25,37 @@ function BaseModal({ isOpen, onClose, title, children }) {
   );
 }
 
+// 확인 모달 컴포넌트 (예/아니요 스타일)
+export function ConfirmModal({ isOpen, onClose, onConfirm, title, message }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-neutral-900 rounded-[16px] w-[320px] overflow-hidden">
+        <div className="px-[20px] py-[30px] text-center">
+          <h2 className="text-[17px] font-bold mb-4 text-center text-black dark:text-white">{title}</h2>
+          <p className="text-[15px] font-normal text-gray-700 dark:text-neutral-300 text-center">{message}</p>
+        </div>
+        
+        <div className="flex border-t border-gray-200 dark:border-neutral-800">
+          <button
+            onClick={onClose}
+            className="flex-1 py-[14px] px-[8px] text-[15px] font-bold text-black dark:text-white border-r border-gray-200 dark:border-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            아니요
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-[14px] px-[8px] text-[15px] font-bold text-black dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            네
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // 이름 변경 모달
 export function EditNameModal({ isOpen, onClose, onSubmit, initialValue = '', error }) {
   const [displayName, setDisplayName] = useState(initialValue);
@@ -81,58 +112,26 @@ export function EditNameModal({ isOpen, onClose, onSubmit, initialValue = '', er
 // 로그아웃 확인 모달
 export function LogoutConfirmModal({ isOpen, onClose, onConfirm }) {
   return (
-    <BaseModal
+    <ConfirmModal
       isOpen={isOpen}
       onClose={onClose}
-      title="로그아웃"
-    >
-      <div className="space-y-4">
-        <p className="text-gray-600 dark:text-neutral-400">정말 로그아웃 하시겠습니까?</p>
-        <div className="flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
-          >
-            취소
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            로그아웃
-          </button>
-        </div>
-      </div>
-    </BaseModal>
+      onConfirm={onConfirm}
+      title="삭제하시겠습니까?"
+      message="지금 삭제하면 되돌릴 수 없습니다. 그래도 삭제할래요?"
+    />
   );
 }
 
 // 게시글 삭제 확인 모달
 export function DeletePostConfirmModal({ isOpen, onClose, onConfirm }) {
   return (
-    <BaseModal
+    <ConfirmModal
       isOpen={isOpen}
       onClose={onClose}
-      title="게시글 삭제"
-    >
-      <div className="space-y-4">
-        <p className="text-gray-600 dark:text-neutral-400">정말 이 게시글을 삭제하시겠습니까?</p>
-        <div className="flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
-          >
-            취소
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            삭제
-          </button>
-        </div>
-      </div>
-    </BaseModal>
+      onConfirm={onConfirm}
+      title="삭제하시겠습니까?"
+      message="지금 삭제하면 되돌릴 수 없습니다. 그래도 삭제할래요?"
+    />
   );
 }
 

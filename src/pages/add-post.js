@@ -3,8 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { createPost, getCategories, updatePost } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { PrimaryButton, LineButton } from '../components/Button';
-import Dialog from '../components/Dialog';
+import { PrimaryButton, TextButton } from '../components/Button';
+import { ConfirmModal } from '../components/Modal';
+import { LogoIconSimple } from '../components/Icons';
 
 function AddPostPage() {
   const navigate = useNavigate();
@@ -27,32 +28,6 @@ function AddPostPage() {
     content: '',
     category: ''
   });
-
-  useEffect(() => {
-    const originalPadding = document.body.style.paddingTop;
-    
-    document.body.style.paddingTop = '64px'; // 네비게이션 바 높이만큼 패딩 추가
-    const navbar = document.querySelector('nav');
-    // 네비게이션 바는 표시하되 오른쪽 버튼들을 숨김
-    if (navbar) {
-      navbar.style.display = 'block'; // 네비게이션 바 표시 확인
-      const navbarButtons = navbar.querySelector('div.flex.items-center.space-x-2');
-      if (navbarButtons) {
-        navbarButtons.style.display = 'none';
-      }
-    }
-
-    return () => {
-      document.body.style.paddingTop = originalPadding || '0';
-      if (navbar) {
-        // 컴포넌트 언마운트 시 네비게이션 바 원상복구
-        const navbarButtons = navbar.querySelector('div.flex.items-center.space-x-2');
-        if (navbarButtons) {
-          navbarButtons.style.display = 'flex';
-        }
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!isLoggedIn || !user) {
@@ -126,16 +101,19 @@ function AddPostPage() {
   const validateForm = () => {
     if (!formData.category) {
       setErrors({ category: '카테고리를 선택해주세요.' });
+      alert('카테고리를 선택해주세요.');
       return false;
     }
 
     if (!formData.title.trim()) {
       setErrors({ title: '제목을 입력해주세요.' });
+      alert('제목을 입력해주세요.');
       return false;
     }
 
     if (!formData.content.trim()) {
       setErrors({ content: '내용을 입력해주세요.' });
+      alert('내용을 입력해주세요.');
       return false;
     }
 
@@ -152,6 +130,7 @@ function AddPostPage() {
 
     if (!user) {
       setErrors({ ...errors, general: '로그인이 필요합니다.' });
+      alert('로그인이 필요합니다.');
       navigate('/login');
       return;
     }
@@ -175,6 +154,7 @@ function AddPostPage() {
     } catch (error) {
       console.error(isEditing ? '게시글 수정 실패:' : '게시글 작성 실패:', error);
       setErrors({ ...errors, general: error.message || (isEditing ? '게시글 수정에 실패했습니다.' : '게시글 작성에 실패했습니다.') });
+      alert(error.message || (isEditing ? '게시글 수정에 실패했습니다.' : '게시글 작성에 실패했습니다.'));
     }
   };
 
@@ -183,17 +163,6 @@ function AddPostPage() {
   };
 
   const handleConfirmCancel = () => {
-    document.body.style.paddingTop = '0';
-    const navbar = document.querySelector('nav');
-    if (navbar) {
-      // 네비게이션 바 원상복구
-      navbar.style.display = 'block';
-      const navbarButtons = navbar.querySelector('div.flex.items-center.space-x-2');
-      if (navbarButtons) {
-        navbarButtons.style.display = 'flex';
-      }
-    }
-    
     if (isEditing) {
       navigate(`/posts/${editingPost.id}`);
     } else {
@@ -240,115 +209,112 @@ function AddPostPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-black">
-      <div className="max-w-[820px] w-full mx-4 bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative overflow-hidden
+    <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#E6E6E6] dark:bg-black">
+      <div className="max-w-[590px] w-full mx-4 bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative overflow-hidden
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 dark:before:from-black/25 before:to-transparent before:rounded-2xl"
       >
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-[340px] p-6 border-b md:border-b-0 md:border-r border-gray-100 dark:border-neutral-900 bg-gray-50 dark:bg-[#111111]">
-            <div className="flex flex-col items-start space-y-6">
-              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
-                <span className="text-xl">⚡</span>
-              </div>
-              <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-neutral-200">
-                  내 일상을 어지럽히는 빌런을 제보하고
-                </p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-neutral-200">
-                  밝은 세상을 만들어요.
-                </p>
+        {/* 상단 회색 컨테이너 - 배경색 옅은 회색으로 변경 */}
+        <div className="w-full p-[20px] border-b border-gray-100 dark:border-neutral-900 bg-gray-100 dark:bg-[#121212]">
+          <div className="flex justify-between items-center mb-4">
+            {/* 왼쪽 앱 아이콘 */}
+            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+              <LogoIconSimple className="h-5 text-black dark:text-white" />
+            </div>
+            
+            {/* 오른쪽 취소/게시 버튼 - Button.js 컴포넌트 사용 */}
+            <div className="flex space-x-2">
+              <TextButton
+                type="button"
+                onClick={handleCancel}
+              >
+                취소
+              </TextButton>
+              <PrimaryButton 
+                type="button"
+                onClick={handleSubmit}
+              >
+                {isEditing ? '수정' : '게시'}
+              </PrimaryButton>
+            </div>
+          </div>
+          
+          {/* 안내 문구 수정 */}
+          <div className="text-left">
+            <p className="text-[18px] font-semibold text-gray-900 dark:text-neutral-200 leading-[140%]">
+              빌런을 제보하거나<br />
+              빌런 관련 토론을 시작해보세요.
+            </p>
+          </div>
+        </div>
+
+        {/* 하단 흰색 컨테이너 */}
+        <div className="w-full">
+          {/* 제목 입력 영역 - 아래 라인 제거, 텍스트 사이즈 20px */}
+          <div className="px-6 pt-[20px]">
+            <textarea
+              name="title"
+              placeholder="제목을 입력해주세요."
+              className="w-full border-none focus:outline-none focus:ring-0 text-black dark:text-white text-[20px] font-medium resize-none bg-transparent"
+              value={formData.title}
+              onChange={(e) => {
+                handleChange(e);
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+              }}
+              rows="1"
+              style={{ 
+                minHeight: '24px',
+                height: 'auto'
+              }}
+            />
+          </div>
+
+          {/* 본문 입력 영역 - 텍스트 사이즈 16px 미디움 */}
+          <div className="px-6 pt-[4px] pb-[20px] ">
+            <div className="space-y-4">
+              <div>
+                <textarea
+                  name="content"
+                  placeholder="빌런 경험을 모두에게 공유해주세요."
+                  className="w-full h-[200px] md:h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-[16px] text-black dark:text-white bg-transparent"
+                  value={formData.content}
+                  onChange={handleChange}
+                />
               </div>
             </div>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="border-b border-gray-100 dark:border-neutral-900">
-              <div className="px-6">
-                <div className="flex justify-between items-center h-[72px]">
-                  <h1 className="text-base font-medium text-gray-900 dark:text-neutral-200">빌런 종류</h1>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="text-right border-none bg-transparent focus:outline-none focus:ring-0 text-gray-500 dark:text-neutral-400 cursor-pointer appearance-none pr-8 text-base select-arrow-custom max-w-[200px] truncate"
-                  >
-                    <option value="" className="bg-white dark:bg-neutral-800">카테고리 선택</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id} className="bg-white dark:bg-neutral-800">
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          {/* 카테고리 선택 영역 */}
+          <div className="px-6 pb-[20px]">
+            <div className="flex justify-between items-center">
+              <div className="text-[16px] font-medium text-gray-700 dark:text-neutral-300">
+                빌런 카테고리
+                <p className="text-xs text-gray-400 dark:text-neutral-600">관련도가 높은 카테고리에 게시해세요.</p>
               </div>
-            </div>
-
-            <div className="border-b border-gray-100 dark:border-neutral-900">
-              <div className="px-6">
-                <div className="min-h-[72px] flex items-center py-3">
-                  <textarea
-                    name="title"
-                    placeholder="제목을 입력하세요"
-                    className="w-full border-none focus:outline-none focus:ring-0 text-gray-500 dark:text-neutral-300 text-base resize-none bg-transparent"
-                    value={formData.title}
-                    onChange={(e) => {
-                      handleChange(e);
-                      e.target.style.height = 'auto';
-                      e.target.style.height = e.target.scrollHeight + 'px';
-                    }}
-                    rows="1"
-                    style={{ 
-                      minHeight: '24px',
-                      height: 'auto'
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="px-6 py-4">
-              <div className="space-y-4">
-                <div>
-                  <textarea
-                    name="content"
-                    placeholder="빌런 경험을 모두에게 공유해주세요."
-                    className="w-full h-[200px] md:h-[250px] resize-none border-none focus:outline-none focus:ring-0 text-base text-gray-700 dark:text-neutral-300 bg-transparent"
-                    value={formData.content}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="px-6 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
-              <div className="text-red-500 text-sm truncate">
-                {errors.category || errors.title || errors.content || errors.general}
-              </div>
-              <div className="flex space-x-2 w-full sm:w-auto justify-end">
-                <LineButton
-                  type="button"
-                  onClick={handleCancel}
-                >
-                  취소
-                </LineButton>
-                <PrimaryButton 
-                  type="button"
-                  onClick={handleSubmit}
-                >
-                  {isEditing ? '수정' : '올리기'}
-                </PrimaryButton>
-              </div>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-auto py-2 px-3 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-neutral-700 appearance-none pr-8 select-arrow-custom"
+              >
+                <option value="" className="bg-white dark:bg-neutral-800">선택해주세요</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id} className="bg-white dark:bg-neutral-800">
+                    {category.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
       </div>
 
-      <Dialog 
+      <ConfirmModal 
         isOpen={showDialog}
         onClose={() => setShowDialog(false)}
         onConfirm={handleConfirmCancel}
         title="작성을 취소하시겠습니까?"
-        description="작성 중인 내용은 저장되지 않습니다."
+        message="작성 중인 내용이 저장되지 않고 사라집니다."
       />
 
       {/* 커스텀 화살표 아이콘을 위한 스타일 */}

@@ -13,6 +13,19 @@ export const LogoIcon = ({ className = "w-auto h-8" }) => (
   </svg>
 );
 
+export const LogoIconSimple = ({ className = "w-auto h-6" }) => (
+  <svg 
+    viewBox="0 0 30 28" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path d="M9.80007 5.46582H0.733398L12.8223 27.5992H16.3482L18.8667 22.0658L9.80007 5.46582Z" fill="currentColor"/>
+    <rect x="9.7998" y="5.46582" width="3.06667" height="0.933333" fill="currentColor"/>
+    <path fillRule="evenodd" clipRule="evenodd" d="M23.5122 0.399414H23.9549C23.9549 3.33308 26.333 5.7113 29.2667 5.71142V6.15409C26.333 6.1542 23.9549 8.53242 23.9549 11.4661L23.5122 11.4661C23.5122 8.53234 21.1339 6.15409 18.2002 6.15409V5.71142C21.1339 5.71142 23.5122 3.33315 23.5122 0.399414Z" fill="currentColor"/>
+  </svg>
+);
+
 export const HomeIcon = ({ className = "w-6 h-6" }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
