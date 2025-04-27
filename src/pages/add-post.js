@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPost, getCategories, updatePost } from '../api/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { PrimaryButton, TextButton } from '../components/Button';
+import Dropdown from '../components/Dropdown';
 import { ConfirmModal } from '../components/Modal';
 import { LogoIconSimple } from '../components/Icons';
 
@@ -170,6 +171,30 @@ function AddPostPage() {
     }
   };
 
+  // 카테고리 선택 핸들러
+  const handleCategorySelect = (categoryId) => {
+    setFormData(prev => ({
+      ...prev,
+      category: categoryId
+    }));
+    
+    setErrors(prev => {
+      if (prev.category) {
+        const newErrors = { ...prev };
+        delete newErrors.category;
+        return newErrors;
+      }
+      return prev;
+    });
+  };
+
+  // 선택된 카테고리 이름 찾기
+  const getSelectedCategoryName = () => {
+    if (!formData.category) return '선택해주세요';
+    const selectedCategory = categories.find(c => c.id === formData.category);
+    return selectedCategory ? selectedCategory.name : '선택해주세요';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#111111] py-8">
@@ -209,8 +234,8 @@ function AddPostPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#E6E6E6] dark:bg-black">
-      <div className="max-w-[590px] w-full mx-4 bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative overflow-hidden
+    <div className="min-h-screen flex flex-col items-center justify-start pt-4 pb-4 px-4 bg-[#E6E6E6] dark:bg-black md:justify-center md:py-10 md:px-6 lg:px-8">
+      <div className="w-full md:max-w-[590px] mx-4 bg-white dark:bg-[#0A0A0A] rounded-3xl shadow-[0_90px_70px_rgba(0,0,0,0.05)] dark:shadow-[0_90px_70px_rgba(0,0,0,0.2)] relative overflow-hidden
         before:absolute before:inset-0 before:-z-10 before:blur-4xl before:bg-gradient-to-b before:from-white/25 dark:before:from-black/25 before:to-transparent before:rounded-2xl"
       >
         {/* 상단 회색 컨테이너 - 배경색 옅은 회색으로 변경 */}
@@ -254,7 +279,7 @@ function AddPostPage() {
             <textarea
               name="title"
               placeholder="제목을 입력해주세요."
-              className="w-full border-none focus:outline-none focus:ring-0 text-black dark:text-white text-[20px] font-medium resize-none bg-transparent"
+              className="w-full border-none focus:outline-none focus:ring-0 text-black dark:text-white text-[18px] font-medium resize-none bg-transparent"
               value={formData.title}
               onChange={(e) => {
                 handleChange(e);
@@ -291,19 +316,26 @@ function AddPostPage() {
                 빌런 카테고리
                 <p className="text-xs text-gray-400 dark:text-neutral-600">관련도가 높은 카테고리에 게시하세요.</p>
               </div>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-auto py-2 px-3 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-neutral-700 appearance-none pr-8 select-arrow-custom"
-              >
-                <option value="" className="bg-white dark:bg-neutral-800">선택해주세요</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id} className="bg-white dark:bg-neutral-800">
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <Dropdown
+                  selectedValue={formData.category}
+                  onChange={handleCategorySelect}
+                >
+                  <Dropdown.Button>
+                    {getSelectedCategoryName()}
+                  </Dropdown.Button>
+                  <Dropdown.Menu>
+                    {categories.map((category) => (
+                      <Dropdown.Item 
+                        key={category.id}
+                        value={category.id}
+                      >
+                        {category.name}
+                      </Dropdown.Item>
+                    ))}
+                  </Dropdown.Menu>
+                </Dropdown>
+              </div>
             </div>
           </div>
         </div>
@@ -316,28 +348,6 @@ function AddPostPage() {
         title="작성을 취소하시겠습니까?"
         message="작성 중인 내용이 저장되지 않고 사라집니다."
       />
-
-      {/* 커스텀 화살표 아이콘을 위한 스타일 */}
-      <style>
-        {`
-          .select-arrow-custom {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23737373'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right center;
-            background-size: 1.5em 1.5em;
-          }
-          
-          @media (prefers-color-scheme: dark) {
-            .select-arrow-custom {
-              background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a3a3a3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            }
-          }
-          
-          :root.dark .select-arrow-custom {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a3a3a3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-          }
-        `}
-      </style>
     </div>
   );
 }
