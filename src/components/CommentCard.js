@@ -228,13 +228,13 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
   };
 
   return (
-    <div className="py-[16px]">
-      {/* 상단 영역: 프로필 정보와 더보기 버튼 */}
-      <div className="flex justify-between items-start px-[20px]">
-        {/* 프로필 정보 그룹 - 프로필 이미지와 내용 영역을 분리 */}
-        <div className="flex space-x-3 flex-1">
+    <div className="py-[20px]">
+      {/* 새로운 레이아웃: 프로필 이미지+세로선 | 내용 영역 */}
+      <div className="flex px-[20px]">
+        {/* 왼쪽: 프로필 이미지와 세로선 */}
+        <div className="flex flex-col items-center mr-[12px]">
           {/* 프로필 이미지 */}
-          <div className="w-[36px] h-[36px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
+          <div className="w-[22px] h-[22px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
             {comment.isDeleted ? (
               <div className="w-full h-full bg-gray-300 dark:bg-neutral-700" />
             ) : (
@@ -246,7 +246,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
                   onError={(e) => {
                     // 이미지 로드 실패 시 이니셜 표시
                     e.target.parentNode.innerHTML = `<div class="w-full h-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
-                      <span class="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
                         ${comment.authorName?.charAt(0)?.toUpperCase() || '?'}
                       </span>
                     </div>`;
@@ -261,149 +261,168 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
               )
             )}
           </div>
+          
+          {/* 세로선 - 항상 표시 */}
+          <div className="w-[1px] bg-gray-300 dark:bg-neutral-700 flex-grow mt-2 min-h-[30px]"></div>
+        </div>
 
-          {/* 이름/시간 및 내용 영역 */}
-          <div className="flex-1 min-w-0">
-            {/* 이름과 시간 */}
-            <div className="flex items-center space-x-2">
-              <span className={`text-[13px] font-medium ${comment.isDeleted ? 'text-gray-400 dark:text-neutral-500' : 'text-gray-900 dark:text-neutral-300'}`}>
+        {/* 오른쪽: 댓글 내용 전체 영역 */}
+        <div className="flex-1">
+          <div className="flex justify-between">
+            {/* 이름과 날짜 */}
+            <div className="flex items-center">
+              <span className={`text-[13px] font-medium ${comment.isDeleted ? 'text-gray-400 dark:text-neutral-500' : 'text-gray-500 dark:text-neutral-400'}`}>
                 {comment.isDeleted ? '삭제된 댓글' : (comment.authorName || '익명')}
               </span>
-              <span className="text-[13px] text-gray-400 dark:text-neutral-500">
+              <span className="text-[13px] text-gray-400 dark:text-neutral-500 ml-2 font-normal">
                 {formatDate(comment.createdAt)}
               </span>
             </div>
 
-            {/* 댓글 내용 */}
-            {isEditing ? (
-              <div className="mt-2">
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-300 dark:bg-neutral-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  rows="2"
-                />
-                <div className="flex justify-end space-x-2 mt-2">
-                  <button
-                    onClick={handleCancelEdit}
-                    className="px-3 py-1 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200"
-                  >
-                    취소
-                  </button>
-                  <button
-                    onClick={handleSubmitEdit}
-                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  >
-                    수정완료
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className={`text-[15px] mt-[2px] ${comment.isDeleted ? 'text-gray-400 dark:text-neutral-500 italic' : 'text-gray-700 dark:text-neutral-400'}`}>
-                {comment.isDeleted ? '삭제된 댓글입니다.' : comment.content}
-              </p>
-            )}
-
-            {/* 좋아요/답글 버튼 영역 - 삭제된 댓글이 아닐 때만 표시 */}
-            {!comment.isDeleted && (
-              <div className="mt-2 flex items-center space-x-4">
+            {/* 더보기 버튼 */}
+            {user && !comment.isDeleted && (
+              <div className="relative ml-3" ref={menuRef}>
                 <button 
-                  onClick={handleLike}
-                  disabled={isLikeLoading}
-                  className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
                 >
-                  <LikeIcon className={`w-[18px] h-[18px] ${liked ? 'text-red-500' : ''}`} />
-                  <span className={`ml-1 text-[13px] ${liked ? 'text-red-500' : ''}`}>
-                    {commentLikes > 0 ? commentLikes : '좋아요'}
-                  </span>
+                  <EllipsisIcon className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
                 </button>
                 
-                <button 
-                  onClick={() => {
-                    if (replies.length > 0) {
-                      setShowReplies(!showReplies);
-                    } else {
-                      handleOpenReplyModal();
-                    }
-                  }}
-                  className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
-                >
-                  <MessageIcon className="w-[18px] h-[18px]" />
-                  <span className="ml-1 text-[13px]">
-                    {replies.length > 0 
-                      ? `${showReplies ? '답글 접기' : '답글'} ${replies.length}` 
-                      : '답글'}
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 더보기 버튼 & 메뉴 - 삭제된 댓글이 아닐 때만 표시 */}
-        {user && !comment.isDeleted && (
-          <div className="relative ml-3" ref={menuRef}>
-            <button 
-              onClick={() => setShowMenu(!showMenu)}
-              className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
-            >
-              <EllipsisIcon className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
-            </button>
-            
-            {showMenu && (
-              <div className="absolute right-0 mt-1 w-24 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
-                {user.uid === comment.authorId ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        setIsEditing(true);
-                        setShowMenu(false);
-                      }}
-                      className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                    >
-                      수정
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
-                          handleDeleteComment();
-                        }
-                        setShowMenu(false);
-                      }}
-                      className="w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                    >
-                      삭제
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => {
-                      handleReportComment();
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                  >
-                    신고
-                  </button>
+                {showMenu && (
+                  <div className="absolute right-0 mt-1 w-24 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
+                    {user.uid === comment.authorId ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setIsEditing(true);
+                            setShowMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+                              handleDeleteComment();
+                            }
+                            setShowMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                        >
+                          삭제
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          handleReportComment();
+                          setShowMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                      >
+                        신고
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}
           </div>
-        )}
+
+          {/* 댓글 내용 */}
+          {isEditing ? (
+            <div className="mt-2">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-300 dark:bg-neutral-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                rows="2"
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-3 py-1 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleSubmitEdit}
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  수정완료
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className={`text-[16px] mt-[2px] ${comment.isDeleted ? 'text-gray-400 dark:text-neutral-500 italic' : 'text-gray-700 dark:text-neutral-400'}`}>
+              {comment.isDeleted ? '삭제된 댓글입니다.' : comment.content}
+            </p>
+          )}
+
+          {/* 좋아요/답글 버튼 영역 - 삭제된 댓글이 아닐 때만 표시 */}
+          {!comment.isDeleted && (
+            <div className="mt-2 flex items-center space-x-4">
+              <button 
+                onClick={handleLike}
+                disabled={isLikeLoading}
+                className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
+              >
+                <LikeIcon className={`w-[22px] h-[22px] ${liked ? 'text-black dark:text-white' : ''}`} />
+                {commentLikes > 0 && (
+                  <span className={`ml-1 text-[14px] ${liked ? 'text-black dark:text-white' : ''}`}>
+                    {commentLikes}
+                  </span>
+                )}
+              </button>
+              
+              <button 
+                onClick={handleOpenReplyModal}
+                className="flex items-center text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
+              >
+                <MessageIcon className="w-[22px] h-[22px]" />
+                <span className="ml-1 text-[14px]">
+                  댓글달기
+                </span>
+              </button>
+            </div>
+          )}
+          
+          {/* 댓글 보기 버튼 - 댓글이 있고 펼쳐져 있지 않을 때만 표시 */}
+          {!comment.isDeleted && replies.length > 0 && !showReplies && (
+            <div className="mt-[28px]">
+              <button 
+                onClick={() => setShowReplies(true)}
+                className="bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-neutral-400 text-sm hover:bg-gray-300 dark:hover:bg-neutral-700 font-medium rounded-full px-4 py-2"
+              >
+                댓글 {replies.length}개
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 대댓글 목록 - 답글 있고 showReplies가 true일 때만 표시 */}
       {replies.length > 0 && showReplies && (
-        <div className="mt-3 ml-[56px] mr-[20px] bg-gray-200 dark:bg-[#0d0d0d] rounded-lg">
+        <div className="pl-[20px] pr-[20px]">
           {/* 대댓글 목록 */}
-          <div className="pt-0">
+          <div className="rounded-lg relative">
+            {/* 세로선 */}
+            <div className="flex flex-col items-center mr-[12px] w-[22px] absolute left-0 top-0 bottom-0">
+              <div className="w-[1px] bg-gray-300 dark:bg-neutral-700 flex-grow min-h-[30px]"></div>
+            </div>
             {replies.map((reply, index) => (
-              <div key={reply.id}>
-                <div className="flex justify-between items-start py-3 px-3">
-                  {/* 대댓글 내용 레이아웃도 동일하게 변경 */}
-                  <div className="flex space-x-3 flex-1">
-                    {/* 프로필 이미지 */}
-                    <div className="w-[28px] h-[28px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
+              <div key={reply.id} className="">
+                <div className="flex">
+                  {/* 대댓글 왼쪽 공간 (프로필 이미지 없이 세로선만) */}
+                  <div className="flex flex-col items-center mr-[12px] w-[22px]">
+                    <div className="w-[1px] bg-gray-300 dark:bg-neutral-700 flex-grow min-h-[30px]"></div>
+                  </div>
+                  
+                  {/* 대댓글 프로필 이미지 */}
+                  <div className="mr-[12px] py-[20px]">
+                    <div className="w-[22px] h-[22px] rounded-full overflow-hidden bg-gray-200 dark:bg-neutral-800 flex-shrink-0">
                       {reply.authorPhotoURL ? (
                         <img
                           src={reply.authorPhotoURL}
@@ -412,7 +431,7 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
                           onError={(e) => {
                             // 이미지 로드 실패 시 이미지 태그 제거하고 이니셜 표시
                             e.target.parentNode.innerHTML = `<div class="w-full h-full flex items-center justify-center">
-                              <span class="text-xs text-gray-600 dark:text-gray-400">
+                              <span className="text-xs text-gray-600 dark:text-gray-400">
                                 ${reply.authorName?.charAt(0)?.toUpperCase() || '?'}
                               </span>
                             </div>`;
@@ -426,78 +445,80 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }) {
                         </div>
                       )}
                     </div>
+                  </div>
 
-                    {/* 대댓글 정보 및 내용 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-[13px] font-medium ${reply.isDeleted ? 'text-gray-400 dark:text-neutral-500' : 'text-gray-900 dark:text-neutral-300'}`}>
+                  {/* 대댓글 내용 영역 */}
+                  <div className="flex-1 py-[20px]">
+                    <div className="flex justify-between">
+                      {/* 이름과 날짜 */}
+                      <div className="flex items-center">
+                        <span className={`text-[13px] font-medium ${reply.isDeleted ? 'text-gray-400 dark:text-neutral-500' : 'text-gray-500 dark:text-neutral-400'}`}>
                           {reply.isDeleted ? '삭제된 댓글' : reply.authorName}
                         </span>
-                        <span className="text-[13px] text-gray-400 dark:text-neutral-500">
+                        <span className="text-[13px] text-gray-400 dark:text-neutral-500 ml-2 font-normal">
                           {formatDate(reply.createdAt)}
                         </span>
                       </div>
-                      <p className={`text-[15px] mt-[2px] ${reply.isDeleted ? 'text-gray-400 dark:text-neutral-500 italic' : 'text-gray-700 dark:text-neutral-400'}`}>
-                        {reply.isDeleted ? '삭제된 댓글입니다.' : reply.content}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* 대댓글 더보기 버튼 */}
-                  {!reply.isDeleted && (
-                    <div className="relative ml-2" ref={replyMenuRef}>
-                      <button 
-                        onClick={() => setReplyMenuOpen(replyMenuOpen === reply.id ? null : reply.id)}
-                        className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
-                      >
-                        <EllipsisIcon className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
-                      </button>
                       
-                      {replyMenuOpen === reply.id && (
-                        <div className="absolute right-0 mt-1 w-24 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
-                          {user && (user.uid === reply.authorId) && (
-                            <button
-                              onClick={() => {
-                                if (window.confirm('정말로 이 답글을 삭제하시겠습니까?')) {
-                                  handleDeleteReply(reply.id);
-                                }
-                                setReplyMenuOpen(null);
-                              }}
-                              className="w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                            >
-                              삭제
-                            </button>
-                          )}
+                      {/* 대댓글 더보기 버튼 */}
+                      {!reply.isDeleted && (
+                        <div className="relative ml-2" ref={replyMenuRef}>
+                          <button 
+                            onClick={() => setReplyMenuOpen(replyMenuOpen === reply.id ? null : reply.id)}
+                            className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
+                          >
+                            <EllipsisIcon className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
+                          </button>
                           
-                          {user && user.uid !== reply.authorId && (
-                            <button
-                              onClick={() => {
-                                handleReportReply(reply.id);
-                                setReplyMenuOpen(null);
-                              }}
-                              className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                            >
-                              신고
-                            </button>
+                          {replyMenuOpen === reply.id && (
+                            <div className="absolute right-0 mt-1 w-24 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
+                              {user && (user.uid === reply.authorId) && (
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm('정말로 이 답글을 삭제하시겠습니까?')) {
+                                      handleDeleteReply(reply.id);
+                                    }
+                                    setReplyMenuOpen(null);
+                                  }}
+                                  className="w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                >
+                                  삭제
+                                </button>
+                              )}
+                              
+                              {user && user.uid !== reply.authorId && (
+                                <button
+                                  onClick={() => {
+                                    handleReportReply(reply.id);
+                                    setReplyMenuOpen(null);
+                                  }}
+                                  className="w-full text-left px-3 py-1 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                >
+                                  신고
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
                       )}
                     </div>
-                  )}
+                    
+                    {/* 대댓글 내용 */}
+                    <p className={`text-[16px] mt-[2px] ${reply.isDeleted ? 'text-gray-400 dark:text-neutral-500 italic' : 'text-gray-700 dark:text-neutral-400'}`}>
+                      {reply.isDeleted ? '삭제된 댓글입니다.' : reply.content}
+                    </p>
+                  </div>
                 </div>
-                {index !== replies.length - 1 && (
-                  <div className="h-[1px] w-full bg-gray-300 dark:bg-neutral-800" />
-                )}
               </div>
             ))}
             
-            {/* 더 답글달기 버튼 */}
-            <div className="py-2 px-3">
+            {/* 댓글 접기 버튼 */}
+            <div className="pl-[34px] pt-[16px] pb-[8px]">
               <button
-                onClick={handleOpenReplyModal}
-                className="text-blue-500 text-sm hover:text-blue-600"
+                onClick={() => setShowReplies(false)}
+                className="bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-neutral-400 text-sm hover:bg-gray-300 dark:hover:bg-neutral-700 font-medium rounded-full px-4 py-2"
               >
-                답글 달기
+                댓글 접기
               </button>
             </div>
           </div>
