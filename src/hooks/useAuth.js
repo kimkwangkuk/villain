@@ -1,51 +1,48 @@
-import { useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import { authService } from '../services/auth.service';
+'use client';
 
-export function useAuth() {
-  const { user, setUser, isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
+import { createContext, useContext, useState, useEffect } from 'react';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
-  const handleLogin = async (email, password) => {
-    try {
-      const user = await authService.login(email, password);
+// 인증 컨텍스트 생성
+const AuthContext = createContext({
+  isLoggedIn: false,
+  user: null,
+  isLoading: true
+});
+
+// 인증 제공자 컴포넌트
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Firebase 인증 상태 변화 감지
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setIsLoggedIn(true);
-      // 로그인 정보 저장
-      localStorage.setItem('isLoggedIn', 'true');
-      return user;
-    } catch (error) {
-      throw error;
-    }
-  };
+      setIsLoading(false);
+    });
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      setUser(null);
-      setIsLoggedIn(false);
-      localStorage.removeItem('isLoggedIn');
-    } catch (error) {
-      throw error;
-    }
-  };
+    // 컴포넌트 언마운트 시 구독 해제
+    return () => unsubscribe();
+  }, []);
 
-  const handleSignup = async (email, password) => {
-    try {
-      const user = await authService.signup(email, password);
-      setUser(user);
-      setIsLoggedIn(true);
-      localStorage.setItem('isLoggedIn', 'true');
-      return user;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  return {
+  const value = {
+    isLoggedIn: !!user,
     user,
-    isLoggedIn,
-    login: handleLogin,
-    logout: handleLogout,
-    signup: handleSignup
+    isLoading
   };
-} 
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// 인증 컨텍스트를 사용하기 위한 훅
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export default useAuth;

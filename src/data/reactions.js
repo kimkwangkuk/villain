@@ -5,4 +5,4 @@ export const reactions = [
   { id: 'wow', emoji: '😮', label: '놀랐어요' },
   { id: 'sad', emoji: '😢', label: '슬퍼요' },
   { id: 'angry', emoji: '😠', label: '화나요' }
-]; 
+];
