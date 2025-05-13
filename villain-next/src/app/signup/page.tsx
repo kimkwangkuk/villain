@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import { auth } from '@/firebase/firebase';
+import { auth } from '@/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { LogoIcon } from '@/components/Icons';
 

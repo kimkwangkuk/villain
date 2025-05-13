@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getCategories } from '@/api/firebase-post';
+import { getCategories } from '@/api/categories';
 import { db } from '@/firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import PostCard from '@/components/PostCard';
+import { useRouter, redirect } from 'next/navigation';
 
 interface Category {
   id: string;
@@ -27,7 +28,11 @@ interface Post {
   commentCount: number;
 }
 
-export default function Home() {
+export default function Page() {
+  redirect('/home');
+}
+
+export function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);

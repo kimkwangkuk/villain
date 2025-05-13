@@ -19,14 +19,9 @@ import {
   addDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { 
-  deletePost, 
-  updateLikes, 
-  updateReaction, 
-  getPostReactions,
-  deleteComment,
-  Reaction
-} from '@/api/firebase-post';
+import { deletePost, updateLikes } from '@/api/post';
+import { updateReaction, getPostReactions } from '@/api/reaction';
+import { deleteComment } from '@/api/comment';
 import { MessageIcon, LikeIcon, ShareIcon } from '@/components/Icons';
 import { PrimaryButton } from '@/components/Button';
 import { EllipsisIcon } from '@/components/Icons';
@@ -36,6 +31,8 @@ import 'dayjs/locale/ko';  // 한국어 로케일
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { detectUrls } from '@/utils/urlUtils';
 import { reactions } from '@/data/reactions';
+import { getCategories } from '@/api/categories';
+import { reportContent } from '@/api/report';
 
 // dayjs 설정
 dayjs.locale('ko');
@@ -523,7 +520,7 @@ function PostDetail() {
                         <button
                           onClick={() => {
                             // Next.js에서는 query를 URL 파라미터로 전달
-                            router.push(`/posts/new?isEditing=true&postId=${post?.id}&title=${encodeURIComponent(post?.title || '')}&content=${encodeURIComponent(post?.content || '')}&categoryId=${post?.categoryId || ''}`);
+                            router.push(`/add-post?isEditing=true&postId=${post?.id}&title=${encodeURIComponent(post?.title || '')}&content=${encodeURIComponent(post?.content || '')}&categoryId=${post?.categoryId || ''}`);
                             setShowMoreMenu(false);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"

@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getCategories, updateLikes, updateReaction, getPostReactions, deletePost, reportContent } from '@/api/firebase-post';
+import { getCategories } from '@/api/categories';
+import { updateLikes, deletePost } from '@/api/post';
+import { updateReaction, getPostReactions } from '@/api/reaction';
+import { reportContent } from '@/api/report';
 import { useAuth } from '@/context/AuthContext';
-import { db } from '@/firebase/firebase';
+import { db } from '@/firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';  // 한국어 로케일

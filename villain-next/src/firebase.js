@@ -47,16 +47,23 @@ const storage = getStorage(app);
 // 개발 환경에서만 에뮬레이터 연결
 if (process.env.NODE_ENV === 'development') {
   try {
-    // 원본 설정으로 포트 복원 (8080 포트가 이미 사용 중이므로 8081로 변경)
-    connectFirestoreEmulator(db, 'localhost', 8081);
-    connectAuthEmulator(auth, 'http://localhost:9099');
+    console.log('Firebase 에뮬레이터 연결 시도 - process.env.NODE_ENV:', process.env.NODE_ENV);
     
-    // Storage 에뮬레이터 추가
+    // Firestore 에뮬레이터 연결
+    console.log('Firestore 에뮬레이터 연결 시도 (localhost:8081)');
+    connectFirestoreEmulator(db, 'localhost', 8081);
+    
+    // Auth 에뮬레이터 연결
+    console.log('Auth 에뮬레이터 연결 시도 (localhost:9099)');
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    
+    // Storage 에뮬레이터 연결
+    console.log('Storage 에뮬레이터 연결 시도 (localhost:9199)');
     connectStorageEmulator(storage, 'localhost', 9199);
     
-    console.log('Firebase 에뮬레이터에 연결되었습니다');
+    console.log('Firebase 에뮬레이터에 모두 연결 완료');
   } catch (error) {
-    console.warn('Firebase 에뮬레이터 연결 실패:', error);
+    console.error('Firebase 에뮬레이터 연결 실패:', error);
   }
 }
 

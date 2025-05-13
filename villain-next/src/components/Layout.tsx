@@ -9,8 +9,8 @@ interface LayoutProps {
 
 function Layout({ children }: LayoutProps) {
   const pathname = usePathname();
-  // /posts/new 경로에서는 pt-16 클래스를 적용하지 않음
-  const isAddPostPage = pathname === '/posts/new';
+  // /add-post 경로에서는 pt-16 클래스를 적용하지 않음
+  const isAddPostPage = pathname === '/add-post';
   
   return (
     <div className={isAddPostPage ? '' : 'pt-16'}>

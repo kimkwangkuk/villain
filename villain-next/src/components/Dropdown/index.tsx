@@ -2,13 +2,49 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { DropdownArrowIcon } from '../Icons';
 
-const DropdownContext = React.createContext(null);
+interface DropdownContextProps {
+  isOpen: boolean;
+  toggleDropdown: () => void;
+  closeDropdown: () => void;
+  handleItemSelect: (value: string) => void;
+  buttonRef: React.RefObject<HTMLButtonElement>;
+  menuRef: React.RefObject<HTMLDivElement>;
+  position: { top: number; left: number; width: number };
+  selectedValue: string;
+}
 
-export const Dropdown = ({ children, selectedValue, onChange, ...props }) => {
+const DropdownContext = React.createContext<DropdownContextProps | null>(null);
+
+interface DropdownProps {
+  children: React.ReactNode;
+  selectedValue: string;
+  onChange?: (value: string) => void;
+}
+
+interface DropdownComponent extends React.FC<DropdownProps> {
+  Button: React.FC<ButtonProps>;
+  Menu: React.FC<MenuProps>;
+  Item: React.FC<ItemProps>;
+}
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children: React.ReactNode;
+}
+
+interface MenuProps {
+  children: React.ReactNode;
+}
+
+interface ItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children: React.ReactNode;
+  value: string;
+}
+
+export const Dropdown: DropdownComponent = ({ children, selectedValue, onChange, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
-  const buttonRef = useRef(null);
-  const menuRef = useRef(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -18,7 +54,7 @@ export const Dropdown = ({ children, selectedValue, onChange, ...props }) => {
     setIsOpen(false);
   };
 
-  const handleItemSelect = (value) => {
+  const handleItemSelect = (value: string) => {
     if (onChange) {
       onChange(value);
     }
@@ -37,9 +73,10 @@ export const Dropdown = ({ children, selectedValue, onChange, ...props }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (
         menuRef.current && 
+        event.target instanceof Node &&
         !menuRef.current.contains(event.target) &&
         buttonRef.current && 
         !buttonRef.current.contains(event.target)
@@ -74,8 +111,10 @@ export const Dropdown = ({ children, selectedValue, onChange, ...props }) => {
   );
 };
 
-const Button = ({ children, ...props }) => {
-  const { toggleDropdown, buttonRef, isOpen } = React.useContext(DropdownContext);
+const Button: React.FC<ButtonProps> = ({ children, ...props }) => {
+  const context = React.useContext(DropdownContext);
+  if (!context) throw new Error('Button must be used within a Dropdown');
+  const { toggleDropdown, buttonRef } = context;
 
   return (
     <button
@@ -93,10 +132,12 @@ const Button = ({ children, ...props }) => {
   );
 };
 
-const Menu = ({ children, ...props }) => {
-  const { isOpen, menuRef, position } = React.useContext(DropdownContext);
+const Menu: React.FC<MenuProps> = ({ children, ...props }) => {
+  const context = React.useContext(DropdownContext);
+  if (!context) throw new Error('Menu must be used within a Dropdown');
+  const { isOpen, menuRef, position } = context;
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof window === 'undefined') return null;
 
   return createPortal(
     <div 
@@ -117,8 +158,10 @@ const Menu = ({ children, ...props }) => {
   );
 };
 
-const Item = ({ children, value, ...props }) => {
-  const { handleItemSelect, selectedValue } = React.useContext(DropdownContext);
+const Item: React.FC<ItemProps> = ({ children, value, ...props }) => {
+  const context = React.useContext(DropdownContext);
+  if (!context) throw new Error('Item must be used within a Dropdown');
+  const { handleItemSelect, selectedValue } = context;
   const isSelected = value === selectedValue;
 
   return (

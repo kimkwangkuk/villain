@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import dayjs from 'dayjs';
-import { updateCommentLikes, addReply, getReplies, deleteReply, deleteComment, reportContent, hasAlreadyReported } from '@/api/firebase-post';
+import { updateCommentLikes, addReply, getReplies, deleteReply, deleteComment } from '@/api/comment';
+import { reportContent, hasAlreadyReported } from '@/api/report';
 import { LikeIcon, MessageIcon, EllipsisIcon } from '@/components/Icons';
 import { PrimaryButton, LineButton } from '@/components/Button';
 import { ReplyModal } from './Modal';

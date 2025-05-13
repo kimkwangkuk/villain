@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCategories, updateLikes, updateReaction, getPostReactions, deletePost, reportContent } from '@/api/firebase-post';
 import { useAuth } from '@/hooks/useAuth';
-import { db } from '@/firebase/firebase';
+import { db } from '@/firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';  // 한국어 로케일

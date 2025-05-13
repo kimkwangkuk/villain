@@ -130,7 +130,7 @@ function Navbar(): JSX.Element {
               </Link>
             )}
             
-            <Link href="/posts/new">
+            <Link href="/add-post">
               <PrimaryButton>빌런 제보</PrimaryButton>
             </Link>
           </div>

@@ -1,4 +1,4 @@
-import { db, auth, storage } from '../firebase';
+import { db, auth, storage } from '@/firebase';
 import { 
   GoogleAuthProvider,
   signInWithPopup,
@@ -6,7 +6,12 @@ import {
   User,
   updateProfile
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { 
+  doc, 
+  getDoc, 
+  setDoc,
+  serverTimestamp
+} from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
 
 // 랜덤 사용자 이름 생성 함수
@@ -33,14 +38,8 @@ const getRandomProfileImage = async () => {
     return url;
   } catch (error) {
     console.error('프로필 이미지 가져오기 실패:', error);
-    // 기본 이미지 경로 반환
-    try {
-      const defaultImageRef = ref(storage, 'profile_images/default.webp');
-      return await getDownloadURL(defaultImageRef);
-    } catch (defaultError) {
-      console.error('기본 프로필 이미지 가져오기 실패:', defaultError);
-      return null;
-    }
+    // 에뮬레이터용 임시 URL 반환
+    return 'https://example.com/default-profile.jpg';
   }
 };
 
@@ -67,7 +66,11 @@ export const googleLogin = async (): Promise<User> => {
     console.log('API: Google 로그인 성공 -', user.email);
     
     // 랜덤 프로필 이미지 가져오기
-    const randomProfileUrl = await getRandomProfileImage();
+    let profileImageUrl = await getRandomProfileImage();
+    // null 또는 undefined인 경우 항상 기본 URL 사용
+    if (!profileImageUrl) {
+      profileImageUrl = 'https://example.com/default-profile.jpg';
+    }
     
     // 랜덤 사용자 이름 생성
     const username = generateRandomUsername();
@@ -77,7 +80,7 @@ export const googleLogin = async (): Promise<User> => {
     if (user) {
       await updateProfile(user, { 
         displayName: username, 
-        photoURL: randomProfileUrl || user.photoURL
+        photoURL: profileImageUrl 
       });
       console.log('사용자 프로필 업데이트 성공');
     }
@@ -95,8 +98,8 @@ export const googleLogin = async (): Promise<User> => {
         userId: user.uid,
         email: user.email,
         username: username,
-        photoURL: randomProfileUrl || user.photoURL,
-        createdAt: new Date(),
+        photoURL: profileImageUrl,
+        createdAt: serverTimestamp(),
         bio: ''
       });
       console.log('Firestore 사용자 정보 저장 성공');

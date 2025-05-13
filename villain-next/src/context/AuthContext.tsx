@@ -22,6 +22,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   googleLogin: () => Promise<User>;
+  loading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -145,7 +146,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser,
         login,
         logout,
-        googleLogin: googleLoginHandler
+        googleLogin: googleLoginHandler,
+        loading
       }}
     >
       {children}

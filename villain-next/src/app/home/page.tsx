@@ -3,21 +3,23 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { getCategories, Category, Post } from '@/api/firebase-post';
-import { getUserDoc } from '@/api/firebase-user';
+import { getCategories, Category, createCategories } from '@/api/categories';
+import { getUserDoc } from '@/api/user';
+import { createTestData, createTestPosts } from '@/api/test-data';
 import PostCard from '@/components/PostCard';
 import { 
   AllCategoryIcon, 
   HospitalIcon,
   SchoolIcon
 } from '@/components/Icons';
-import { auth } from '@/firebase/firebase';
+import { auth } from '@/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 // firestore 쿼리
-import { db } from '@/firebase/firebase';
+import { db } from '@/firebase';
 import { collection, query, orderBy, limit, startAfter, getDocs, doc, getDoc, where, QueryDocumentSnapshot } from 'firebase/firestore';
 import PostCardSkeleton from '@/components/PostCardSkeleton';
+import { Post } from '@/api/post';
 
 // 홈 페이지 상단에 객체로 카테고리 아이콘 매핑
 const categoryIconMapping: Record<string, React.FC<{className?: string}>> = {
@@ -31,6 +33,13 @@ const categoryIconMapping: Record<string, React.FC<{className?: string}>> = {
   'order8': HospitalIcon,
   'order9': HospitalIcon,
 };
+
+// 브라우저 환경에서만 window 객체에 함수 노출
+if (typeof window !== 'undefined') {
+  (window as any).createTestData = createTestData;
+  (window as any).createTestPosts = createTestPosts;
+  (window as any).createCategories = createCategories;
+}
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -173,27 +182,36 @@ export default function PostsPage() {
     
     const initLoad = async () => {
       try {
+        console.log('홈페이지 데이터 로드 시작');
+        
         // 카테고리 먼저 로드하여 UI가 스켈레톤으로 표시되지 않도록 함
+        console.log('카테고리 로드 시도');
         const categoriesData = await getCategories();
+        console.log('카테고리 로드 완료:', categoriesData.length);
         setCategories(categoriesData);
         setCategoriesLoading(false);
         
         // 그 다음 포스트 로드
+        console.log('포스트 로드 시도');
         await loadPosts();
+        console.log('포스트 로드 완료');
         setPostsLoading(false);
       } catch (error) {
         console.error('데이터 로딩 실패:', error);
+        // 오류가 발생해도 UI 상태 업데이트
         setCategoriesLoading(false);
         setPostsLoading(false);
+        setNoPostsMessage(true);
+      } finally {
+        setLoading(false);
+        
+        // 페이지 로드 후 스크롤 위치 확인하여 필요시 추가 포스트 로드
+        setTimeout(() => {
+          if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+            loadMorePosts();
+          }
+        }, 500);
       }
-      setLoading(false);
-      
-      // 페이지 로드 후 스크롤 위치 확인하여 필요시 추가 포스트 로드
-      setTimeout(() => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
-          loadMorePosts();
-        }
-      }, 500);
     };
     
     initLoad();
