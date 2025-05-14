@@ -3,46 +3,40 @@ export interface Reaction {
   id: string;
   emoji: string;
   label: string;
-  description: string;
+  description?: string;
 }
 
 // 게시물 반응 데이터
 export const reactions: Reaction[] = [
   {
     id: 'like',
-    emoji: '❤️',
-    label: '좋아요',
-    description: '이 게시물이 마음에 들어요'
+    emoji: '👍',
+    label: '좋아요'
   },
   {
-    id: 'helpful',
-    emoji: '👍',
-    label: '도움됨',
-    description: '이 내용이 도움이 되었어요'
+    id: 'love',
+    emoji: '❤️',
+    label: '사랑해요'
+  },
+  {
+    id: 'laugh',
+    emoji: '😂',
+    label: '웃겨요'
+  },
+  {
+    id: 'wow',
+    emoji: '😮',
+    label: '놀랐어요'
   },
   {
     id: 'sad',
     emoji: '😢',
-    label: '슬퍼요',
-    description: '이 상황이 안타까워요'
+    label: '슬퍼요'
   },
   {
     id: 'angry',
-    emoji: '😡',
-    label: '화나요',
-    description: '이런 상황에 분노를 느껴요'
-  },
-  {
-    id: 'funny',
-    emoji: '😂',
-    label: '웃겨요',
-    description: '이 내용이 재미있어요'
-  },
-  {
-    id: 'surprised',
-    emoji: '😮',
-    label: '놀라워요',
-    description: '이 내용은 정말 놀라워요'
+    emoji: '😠',
+    label: '화나요'
   }
 ];
 

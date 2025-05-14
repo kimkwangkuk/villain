@@ -11,7 +11,7 @@ export const authService = {
   login: async (email, password) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
+      return userCredential;
     } catch (error) {
       throw error;
     }
@@ -21,7 +21,7 @@ export const authService = {
   signup: async (email, password) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
+      return userCredential;
     } catch (error) {
       throw error;
     }
