@@ -15,6 +15,19 @@ import { MessageIcon, LikeIcon, ShareIcon } from './Icons';  // 상단에 import
 import { detectUrls } from '@/utils/urlUtils';
 import { reactions } from '@/data/reactions';
 
+// shadcn/ui 컴포넌트 import
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 // dayjs 설정
 dayjs.locale('ko');
 dayjs.extend(relativeTime);
@@ -49,7 +62,7 @@ interface Post {
 interface PostCardProps {
   post: Post;
   categories: Category[];
-  onShare?: (postId: string) => void;
+  onShare?: (e: React.MouseEvent, postId: string) => void;
 }
 
 function PostCard({ post, categories, onShare }: PostCardProps) {
@@ -368,44 +381,34 @@ function PostCard({ post, categories, onShare }: PostCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (onShare) {
-      onShare(post.id);
+      onShare(e, post.id);
     }
   };
 
   return (
     <Link 
       href={`/postdetail/${post.id}`}
-      className="block rounded-lg transition-colors duration-200"
+      className="block transition-colors duration-200"
     >
-      <div className="flex flex-col h-full">
-        {/* 컨텐츠 영역 내에 프로필 영역 포함 */}
-        <div className="bg-[#F5F5F7] dark:bg-[#121212] rounded-2xl pt-[14px] p-5 pb-2 flex flex-col h-[360px] hover:bg-[#EBEBED] dark:hover:bg-[#1A1A1A] transition-colors duration-200">
+      <Card className="h-full hover:bg-muted/5 py-3">
+        <CardContent className="flex flex-col h-[360px] px-4">
           {/* 프로필 영역 - 타이틀 상단에 표시 */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full overflow-hidden">
-                <img
+              <Avatar className="w-8 h-8">
+                <AvatarImage
                   src={post.authorPhotoURL || getDefaultProfileImage()}
                   alt={`${post.authorName}의 프로필`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // 이미지 로드 실패 시 이니셜 표시
-                    const target = e.target as HTMLImageElement;
-                    if (target.parentNode) {
-                      (target.parentNode as HTMLElement).innerHTML = `<div class="w-full h-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
-                        <span class="text-xs text-gray-600 dark:text-gray-400">
-                          ${post.authorName?.charAt(0)?.toUpperCase() || '?'}
-                        </span>
-                      </div>`;
-                    }
-                  }}
                 />
-              </div>
+                <AvatarFallback>
+                  {post.authorName?.charAt(0)?.toUpperCase() || '?'}
+                </AvatarFallback>
+              </Avatar>
               <div className="ml-2">
-                <div className="text-[13px] font-semibold text-gray-900 dark:text-neutral-300">
+                <div className="text-[13px] font-semibold">
                   {post.authorName}
                 </div>
-                <div className="text-[12px] text-gray-500 dark:text-neutral-500">
+                <div className="text-[12px] text-muted-foreground">
                   <span>{categoryName}</span>
                   <span className="mx-1">·</span>
                   <span>{post.createdAt?.toDate && getRelativeTime(post.createdAt?.toDate())}</span>
@@ -413,87 +416,113 @@ function PostCard({ post, categories, onShare }: PostCardProps) {
               </div>
             </div>
             <div className="relative">
-              <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowMoreOptions(!showMoreOptions);
-                }} 
-                className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
-              >
-                <span className="text-gray-300 dark:text-neutral-500 text-sm transition-colors hover:text-gray-900 dark:hover:text-neutral-300">⋮</span>
-              </button>
-              
-              {/* 더보기 메뉴 */}
-              {showMoreOptions && (
-                <div 
-                  ref={moreOptionsRef}
-                  className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 rounded-lg shadow-lg z-50 w-32 py-1 animate-fadeIn"
-                >
-                  {/* 신고 버튼 - 모든 사용자에게 표시 */}
-                  <button
-                    onClick={handleReport}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
-                  >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                    <span className="text-muted-foreground">⋮</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleReport}>
                     신고하기
-                  </button>
-                  
-                  {/* 삭제 버튼 - 작성자에게만 표시 */}
+                  </DropdownMenuItem>
                   {user && post.authorId === user.uid && (
-                    <button
-                      onClick={handleDelete}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
-                    >
+                    <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                       삭제하기
-                    </button>
+                    </DropdownMenuItem>
                   )}
-                </div>
-              )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           
           {/* 타이틀 */}
-          <h2 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
+          <h2 className="text-[17px] font-bold mb-2 line-clamp-2">
             {post.title}
           </h2>
           
           {/* 본문 내용 */}
           <div className="flex-grow overflow-hidden">
-            <p className="text-[15px] text-gray-700 dark:text-neutral-300 line-clamp-7 whitespace-pre-wrap break-words">
+            <p className="text-[15px] text-muted-foreground line-clamp-7 whitespace-pre-wrap break-words">
               {post.content}
             </p>
           </div>
           
           {/* 하단 정보 영역 */}
-          <div className="mt-4 flex items-center justify-between pt-2 border-t border-gray-200 dark:border-neutral-800">
-            {/* 좋아요, 댓글 수 표시 */}
-            <div className="flex items-center space-x-4">
-              {/* 좋아요 버튼 */}
-              <button 
-                onClick={handleLike}
-                className="flex items-center space-x-1 text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
-              >
-                <LikeIcon className={`w-[18px] h-[18px] ${isLiked ? 'text-blue-500 fill-blue-500 dark:text-blue-400 dark:fill-blue-400' : 'text-gray-500 dark:text-neutral-500'}`} />
-                <span className="text-xs">{likes > 0 ? likes : ''}</span>
-              </button>
+          <div className="mt-4">
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-800 pt-2 -mx-4 px-4">
+              {/* 반응 버튼 */}
+              <div className="relative flex-1 max-w-[33%]">
+                <Button
+                  onClick={handleReactionClick}
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                >
+                  {userReaction ? (
+                    <span className="text-base">{userReaction.emoji}</span>
+                  ) : (
+                    <LikeIcon className="h-4 w-4" />
+                  )}
+                  <span className={`text-sm ${userReaction ? 'text-[#FF2600]' : ''}`}>
+                    {userReaction ? userReaction.label : "반응"}
+                  </span>
+                </Button>
+                
+                {/* 반응 팝업 */}
+                {showReactionPopup && (
+                  <div 
+                    ref={popupRef}
+                    className="absolute bottom-full left-0 mb-2 bg-popover rounded-md shadow-md p-2 z-50 flex space-x-2 border border-border"
+                  >
+                    {reactions.map((reaction) => (
+                      <button
+                        key={reaction.id}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleReactionSelect(reaction);
+                        }}
+                        className={`text-xl p-2 hover:bg-accent rounded-full transition-transform ${
+                          userReaction?.id === reaction.id ? 'scale-125 bg-accent/50' : ''
+                        }`}
+                        title={reaction.label}
+                      >
+                        {reaction.emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               
               {/* 댓글 버튼 */}
-              <div className="flex items-center space-x-1 text-gray-500 dark:text-neutral-500">
-                <MessageIcon className="w-[18px] h-[18px]" />
-                <span className="text-xs">{commentCount > 0 ? commentCount : ''}</span>
+              <div className="flex-1 max-w-[33%] flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                >
+                  <MessageIcon className="h-4 w-4" />
+                  <span className="text-sm">댓글</span>
+                </Button>
+              </div>
+              
+              {/* 공유 버튼 */}
+              <div className="flex-1 max-w-[33%] flex justify-end">
+                <Button
+                  onClick={handleShare}
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                >
+                  <ShareIcon className="h-4 w-4" />
+                  <span className="text-sm">공유</span>
+                </Button>
               </div>
             </div>
-            
-            {/* 공유 버튼 */}
-            <button 
-              onClick={handleShare}
-              className="text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300"
-            >
-              <ShareIcon className="w-[18px] h-[18px]" />
-            </button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </Link>
   );
 }

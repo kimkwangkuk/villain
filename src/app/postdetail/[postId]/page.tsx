@@ -17,7 +17,8 @@ import {
   updateDoc, 
   where,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  DocumentData
 } from 'firebase/firestore';
 import { deletePost, updateLikes } from '@/api/post';
 import { updateReaction, getPostReactions } from '@/api/reaction';
@@ -34,9 +35,46 @@ import { reactions } from '@/data/reactions';
 import { getCategories } from '@/api/categories';
 import { reportContent } from '@/api/report';
 
+// shadcn/ui 컴포넌트 import 추가
+import { Button } from "@/components/ui/button";
+
 // dayjs 설정
 dayjs.locale('ko');
 dayjs.extend(relativeTime);
+
+// URL 파트 타입 정의
+interface UrlPart {
+  type: 'url' | 'text';
+  content: string;
+  key: number;
+  display?: string;
+}
+
+// 게시물 타입 정의
+interface Post extends DocumentData {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  authorPhotoURL?: string;
+  categoryId: string;
+  categoryName?: string;
+  createdAt: any;
+  updatedAt?: any;
+  likes: number;
+  likedBy?: string[];
+  commentCount: number;
+  viewCount: number;
+  reactionCount?: number;
+}
+
+// 반응 타입 정의
+interface Reaction {
+  id: string;
+  emoji: string;
+  label: string;
+}
 
 function PostDetail() {
   // Next.js의 useParams()는 [postId]를 객체 형태로 반환합니다
@@ -49,7 +87,7 @@ function PostDetail() {
   
   const router = useRouter();
   const pathname = usePathname();
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [commentContent, setCommentContent] = useState('');
   const { user, isLoggedIn } = useAuth();
@@ -62,7 +100,7 @@ function PostDetail() {
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
   const [showReactionPopup, setShowReactionPopup] = useState(false);
   const popupRef = useRef<HTMLDivElement | null>(null);
-  const [userReaction, setUserReaction] = useState<any>(null);
+  const [userReaction, setUserReaction] = useState<Reaction | null>(null);
   const [reactionEmojis, setReactionEmojis] = useState<string[]>([]);
 
   // 외부 클릭 감지를 위한 useEffect 추가
@@ -123,7 +161,7 @@ function PostDetail() {
         const postDoc = await getDoc(postRef);
         
         if (postDoc.exists()) {
-          const postData = { id: postDoc.id, ...postDoc.data() };
+          const postData = { id: postDoc.id, ...postDoc.data() } as Post;
           console.log('포스트 데이터 로드 완료:', postData);
           setPost(postData);
           
@@ -276,7 +314,7 @@ function PostDetail() {
   };
 
   const handleLike = async () => {
-    if (!isLoggedIn || !user) {
+    if (!isLoggedIn || !user || !post) {
       alert('로그인이 필요합니다.');
       return;
     }
@@ -288,23 +326,32 @@ function PostDetail() {
     const previousIsLiked = isLiked;
     const previousLikes = post.likes;
     setIsLiked(!previousIsLiked);
-    setPost(prev => ({ 
-      ...prev, 
-      likes: previousIsLiked ? previousLikes - 1 : previousLikes + 1 
-    }));
+    setPost((prev: Post | null) => {
+      if (!prev) return null;
+      return { 
+        ...prev, 
+        likes: previousIsLiked ? previousLikes - 1 : previousLikes + 1 
+      };
+    });
     
     try {
       setIsLikeLoading(true);
       const updatedPost = await updateLikes(post.id, user.uid, user.displayName || '익명');
-      setPost(prev => ({
-        ...prev,
-        likes: updatedPost.likes,
-        likedBy: updatedPost.likedBy
-      }));
+      setPost((prev: Post | null) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          likes: updatedPost.likes,
+          likedBy: updatedPost.likedBy
+        };
+      });
     } catch (error) {
       // 요청 실패 시 롤백
       setIsLiked(previousIsLiked);
-      setPost(prev => ({ ...prev, likes: previousLikes }));
+      setPost((prev: Post | null) => {
+        if (!prev) return null;
+        return { ...prev, likes: previousLikes };
+      });
       console.error('좋아요 처리 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
     } finally {
@@ -409,7 +456,7 @@ function PostDetail() {
   };
 
   // 반응 선택 핸들러
-  const handleReactionSelect = async (reaction: any) => {
+  const handleReactionSelect = async (reaction: Reaction) => {
     const postId = params?.postId;
     if (!postId || !user) return;
     
@@ -422,7 +469,10 @@ function PostDetail() {
 
         // Firebase 업데이트
         const result = await updateReaction(postId as string, user.uid, null);
-        setPost((prev: any) => ({ ...prev, reactionCount: result.reactionCount }));
+        setPost((prev: Post | null) => {
+          if (!prev) return null;
+          return { ...prev, reactionCount: result.reactionCount };
+        });
         return;
       }
 
@@ -434,7 +484,10 @@ function PostDetail() {
 
       // Firebase 업데이트
       const result = await updateReaction(postId as string, user.uid, reaction);
-      setPost((prev: any) => ({ ...prev, reactionCount: result.reactionCount }));
+      setPost((prev: Post | null) => {
+        if (!prev) return null;
+        return { ...prev, reactionCount: result.reactionCount };
+      });
 
       // 실패 시 롤백
       if (!result) {
@@ -557,7 +610,7 @@ function PostDetail() {
             <div className="pt-3 pb-6">
               <h1 className="text-[20px] font-semibold text-gray-900 dark:text-neutral-300 mb-2">{post?.title}</h1>
               <p className="text-[16px] text-gray-700 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap">
-                {detectUrls(post?.content).map((part) => (
+                {detectUrls(post?.content).map((part: UrlPart) => (
                   part.type === 'url' ? (
                     <a
                       key={part.key}
@@ -574,9 +627,9 @@ function PostDetail() {
                 ))}
               </p>
               {/* URL 미리보기 */}
-              {detectUrls(post?.content).some(part => part.type === 'url') && (
+              {detectUrls(post?.content).some((part: UrlPart) => part.type === 'url') && (
                 <div className="mt-4 text-sm text-gray-500 dark:text-neutral-500 space-y-1">
-                  {detectUrls(post?.content).map((part) => {
+                  {detectUrls(post?.content).map((part: UrlPart) => {
                     if (part.type === 'url') {
                       // URL을 파싱하여 도메인만 추출 (슬래시 없이)
                       let displayUrl = part.content;
@@ -634,54 +687,54 @@ function PostDetail() {
             </div>
 
             {/* 좋아요/댓글/공유 버튼 컨테이너 */}
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-900 py-2 -mx-4 px-4">
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-800 pt-2 -mx-4 px-4">
               {/* 반응 버튼 */}
               <div className="relative flex-1 max-w-[33%]">
-                <button 
+                <Button
                   onClick={handleReactionClick}
-                  className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
                 >
                   {userReaction ? (
-                    <span className="text-[18px] w-[22px] h-[22px] flex items-center justify-center flex-shrink-0">{userReaction.emoji}</span>
+                    <span className="text-base">{userReaction.emoji}</span>
                   ) : (
-                    <LikeIcon className="w-[22px] h-[22px] flex-shrink-0 text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
+                    <LikeIcon className="h-4 w-4" />
                   )}
-                  <span className={`${userReaction ? 'text-[#FF2600]' : 'text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300'} text-[14px] relative top-[1px] truncate max-w-[60px] ml-[3px]`}>
+                  <span className={`text-sm ${userReaction ? 'text-[#FF2600]' : ''}`}>
                     {userReaction ? userReaction.label : "반응"}
                   </span>
-                </button>
+                </Button>
 
                 {/* 반응 팝업 */}
                 {showReactionPopup && (
                   <div 
                     ref={popupRef}
-                    className="absolute bottom-full left-0 mb-2 bg-white dark:bg-neutral-900 rounded-2xl p-3 shadow-xl animate-slideUp z-50"
+                    className="absolute bottom-full left-0 mb-2 bg-popover rounded-md shadow-md p-2 z-50 flex space-x-2 border border-border"
                   >
-                    <div className="flex gap-2">
-                      {reactions.map((reaction) => (
-                        <button
-                          key={reaction.id}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleReactionSelect(reaction);
-                          }}
-                          className={`flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all duration-200 ${
-                            userReaction?.id === reaction.id ? 'bg-gray-100 dark:bg-neutral-800' : ''
-                          }`}
-                        >
-                          <span className="text-2xl mb-1">{reaction.emoji}</span>
-                          <span className="text-xs text-gray-600 dark:text-neutral-400">{reaction.label}</span>
-                        </button>
-                      ))}
-                    </div>
+                    {reactions.map((reaction) => (
+                      <button
+                        key={reaction.id}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleReactionSelect(reaction);
+                        }}
+                        className={`text-xl p-2 hover:bg-accent rounded-full transition-transform ${
+                          userReaction?.id === reaction.id ? 'scale-125 bg-accent/50' : ''
+                        }`}
+                        title={reaction.label}
+                      >
+                        {reaction.emoji}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
 
               {/* 댓글 버튼 - 중앙 고정 */}
               <div className="flex-1 max-w-[33%] flex justify-center">
-                <button
+                <Button
                   onClick={() => {
                     if (!isLoggedIn) {
                       alert('로그인이 필요합니다.');
@@ -692,26 +745,30 @@ function PostDetail() {
                       commentInput.focus();
                     }
                   }}
-                  className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
                 >
-                  <MessageIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
-                  <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">댓글</span>
-                </button>
+                  <MessageIcon className="h-4 w-4" />
+                  <span className="text-sm">댓글</span>
+                </Button>
               </div>
 
               {/* 공유 버튼 */}
               <div className="flex-1 max-w-[33%] flex justify-end">
-                <button
+                <Button
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     handleShare();
                   }}
-                  className="flex items-center hover:bg-gray-200 dark:hover:bg-neutral-800 group transition-colors duration-200 rounded-full px-3 py-2"
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
                 >
-                  <ShareIcon className="w-[22px] h-[22px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300" />
-                  <span className="ml-[3px] text-gray-600 dark:text-neutral-500 group-hover:text-gray-800 dark:group-hover:text-neutral-300 text-[14px] relative top-[1px]">공유</span>
-                </button>
+                  <ShareIcon className="h-4 w-4" />
+                  <span className="text-sm">공유</span>
+                </Button>
               </div>
             </div>
           </div>
