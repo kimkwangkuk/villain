@@ -13,6 +13,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['var(--font-pretendard)'],
+        pretendard: ['Pretendard Variable', 'Pretendard', 'sans-serif'],
       },
     },
   },
