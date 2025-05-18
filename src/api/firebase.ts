@@ -49,9 +49,19 @@ export const googleLogin = async (): Promise<User> => {
     console.log('API: Google 로그인 시도 중...');
     
     // 개발 환경에서 추가 로깅
-    if (process.env.NODE_ENV === 'development') {
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    if (isDevelopment) {
       console.log('API: Firebase 환경 -', process.env.NODE_ENV);
-      console.log('API: 구글 로그인 진행 경로 -', typeof window !== 'undefined' ? window.location.href : 'SSR');
+      if (typeof window !== 'undefined') {
+        console.log('API: 구글 로그인 진행 경로 -', window.location.href);
+        console.log('API: 현재 호스트 -', window.location.host);
+        console.log('API: 현재 오리진 -', window.location.origin);
+        
+        // Firebase 도메인 설정 확인
+        console.log('API: Firebase authDomain -', auth.app.options.authDomain);
+      } else {
+        console.log('API: SSR 환경에서 실행 중');
+      }
     }
     
     const provider = new GoogleAuthProvider();
@@ -115,6 +125,20 @@ export const googleLogin = async (): Promise<User> => {
     if (error.code) console.error('API: 오류 코드 -', error.code);
     if (error.message) console.error('API: 오류 메시지 -', error.message);
     
+    // redirect_uri_mismatch 문제 자세한 로깅 추가
+    if (error.message && error.message.includes('redirect_uri_mismatch')) {
+      console.error('API: === 리디렉션 URI 불일치 오류 ===');
+      if (typeof window !== 'undefined') {
+        console.error('API: 현재 URL:', window.location.href);
+        console.error('API: 현재 호스트:', window.location.host);
+        console.error('API: 현재 오리진:', window.location.origin);
+      }
+      console.error('API: 이 오류는 Firebase 콘솔에 등록된 도메인과 현재 사용 중인 도메인이 일치하지 않을 때 발생합니다.');
+      console.error('API: Firebase 콘솔(https://console.firebase.google.com/project/villain-5f05a/authentication/settings)에서');
+      console.error('API: "승인된 도메인" 목록에 현재 도메인을 추가해주세요.');
+      console.error('API: ===================================');
+    }
+    
     // 오류 코드별 상세 로깅
     if (error.code === 'auth/popup-blocked') {
       console.error('팝업이 차단되었습니다. 브라우저 설정에서 팝업 허용을 확인해주세요.');
@@ -124,6 +148,10 @@ export const googleLogin = async (): Promise<User> => {
       console.error('이전 팝업 요청이 있어 새 요청이 취소되었습니다.');
     } else if (error.code === 'auth/unauthorized-domain') {
       console.error('현재 도메인이 Firebase 콘솔에 등록되지 않았습니다.');
+      console.error('Firebase 콘솔에서 "승인된 도메인" 목록에 현재 도메인을 추가해주세요.');
+      if (typeof window !== 'undefined') {
+        console.error('승인이 필요한 도메인:', window.location.host);
+      }
     }
     
     throw error;
