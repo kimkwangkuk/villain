@@ -12,7 +12,7 @@ module.exports = {
         secondary: '#10B981',
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'sans-serif'],
+        sans: ['var(--font-pretendard)'],
       },
     },
   },

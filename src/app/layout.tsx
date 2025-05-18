@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Inter } from 'next/font/google';
+// import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import ClientLayout from '@/components/ClientLayout';
 
-const inter = Inter({ subsets: ['latin'] });
+// const inter = Inter({ subsets: ['latin'] });
+const pretendard = localFont({
+  src: '../fonts/PretendardVariable.woff2',
+  variable: '--font-pretendard',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: "빌런 - 직장 내 문제 상황 공유 플랫폼",
@@ -45,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="dark">
-      <body className={inter.className}>
+      <body className={pretendard.className}>
         <ThemeProvider defaultTheme="dark">
           <AuthProvider>
             <ClientLayout>
