@@ -37,6 +37,14 @@ import { reportContent } from '@/api/report';
 
 // shadcn/ui 컴포넌트 import 추가
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // dayjs 설정
 dayjs.locale('ko');
@@ -523,33 +531,32 @@ function PostDetail() {
   }
 
   return (
-    <div className="bg-white dark:bg-black min-h-screen pb-8">
+    <div className="bg-background min-h-screen pb-8">
       {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
-        <div className="max-w-[590px] mx-auto bg-gray-100 dark:bg-[#121212] rounded-2xl">
-          {/* 프로필 영역 */}
-          <div className="pb-[0px] p-4">
+        <div className="max-w-[590px] mx-auto">
+          <Card className="bg-card shadow-sm rounded-xl overflow-hidden">
+            <CardHeader className="p-4 space-y-0 pt-4 pb-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-8 h-8 rounded-full overflow-hidden">
-                  <img
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
                     src={
                       post?.authorPhotoURL ||
                       `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${post?.authorId}&backgroundColor=e8f5e9`
                     }
                     alt={`${post?.authorName}의 프로필`}
-                    className="w-full h-full object-cover"
                   />
-                </div>
+                    <AvatarFallback className="bg-muted">{post?.authorName?.charAt(0)}</AvatarFallback>
+                  </Avatar>
                 <div className="ml-2">
-                  <div className="text-[13px] font-semibold text-gray-900 dark:text-neutral-300">
+                    <div className="text-[13px] font-semibold text-foreground">
                     {post?.authorName}
                   </div>
-                  <div className="text-[12px] text-gray-500 dark:text-neutral-500">
-                    {/* 카테고리를 클릭 가능한 링크로 변경 */}
+                    <div className="text-[12px] text-muted-foreground">
                     <button 
                       onClick={(e) => handleCategoryClick(e, post?.categoryId)}
-                      className="hover:underline hover:text-gray-700 dark:hover:text-neutral-400 transition-colors"
+                        className="hover:underline hover:text-foreground transition-colors"
                     >
                       {post?.categoryName}
                     </button>
@@ -559,57 +566,52 @@ function PostDetail() {
                 </div>
               </div>
               {/* 더보기 버튼과 팝업 메뉴 */}
-              <div className="relative" ref={moreMenuRef}>
-                <button 
-                  className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-neutral-800"
-                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                <div className="relative">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 rounded-full"
                 >
-                  <span className="text-gray-300 dark:text-neutral-500 text-sm transition-colors hover:text-gray-900 dark:hover:text-neutral-300">⋮</span>
-                </button>
-                {showMoreMenu && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-neutral-900 rounded-lg shadow-lg dark:shadow-black z-10 py-1">
+                        <span className="text-muted-foreground">⋮</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32">
                     {user?.uid === post?.authorId && (
                       <>
-                        <button
+                          <DropdownMenuItem
                           onClick={() => {
-                            // Next.js에서는 query를 URL 파라미터로 전달
                             router.push(`/add-post?isEditing=true&postId=${post?.id}&title=${encodeURIComponent(post?.title || '')}&content=${encodeURIComponent(post?.content || '')}&categoryId=${post?.categoryId || ''}`);
-                            setShowMoreMenu(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
                         >
                           수정하기
-                        </button>
-                        <button
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
                           onClick={() => {
                             if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?\n관련된 모든 댓글도 함께 삭제됩니다.')) {
                               handleDeletePost();
                             }
-                            setShowMoreMenu(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
                         >
                           삭제하기
-                        </button>
+                          </DropdownMenuItem>
                       </>
                     )}
-                    <button
-                      onClick={handleReport}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                    >
+                      <DropdownMenuItem onClick={handleReport}>
                       신고하기
-                    </button>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   </div>
-                )}
               </div>
-            </div>
-          </div>
+            </CardHeader>
 
-          {/* 콘텐츠 영역 */}
-          <div className="pt-[0px] p-4 pb-0">
+            <CardContent className="p-4 pt-3">
             <div className="pt-3 pb-6">
-              <h1 className="text-[20px] font-semibold text-gray-900 dark:text-neutral-300 mb-2">{post?.title}</h1>
-              <p className="text-[16px] text-gray-700 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap">
+                <h1 className="text-[20px] font-semibold text-foreground mb-2">{post?.title}</h1>
+                <p className="text-[16px] text-foreground/90 leading-relaxed whitespace-pre-wrap">
                 {detectUrls(post?.content).map((part: UrlPart) => (
                   part.type === 'url' ? (
                     <a
@@ -617,7 +619,7 @@ function PostDetail() {
                       href={part.content}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400 hover:underline break-all"
+                        className="text-muted-foreground hover:text-foreground hover:underline break-all"
                     >
                       {part.content}
                     </a>
@@ -628,7 +630,7 @@ function PostDetail() {
               </p>
               {/* URL 미리보기 */}
               {detectUrls(post?.content).some((part: UrlPart) => part.type === 'url') && (
-                <div className="mt-4 text-sm text-gray-500 dark:text-neutral-500 space-y-1">
+                  <div className="mt-4 text-sm text-muted-foreground space-y-1">
                   {detectUrls(post?.content).map((part: UrlPart) => {
                     if (part.type === 'url') {
                       // URL을 파싱하여 도메인만 추출 (슬래시 없이)
@@ -647,7 +649,7 @@ function PostDetail() {
                           href={part.content}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300 hover:underline w-full"
+                            className="flex items-center gap-2 text-muted-foreground hover:text-foreground hover:underline w-full"
                         >
                           <span className="flex-shrink-0">🔗</span>
                           <span className="truncate flex-1">{displayUrl}</span>
@@ -661,7 +663,7 @@ function PostDetail() {
             </div>
 
             {/* 좋아요/댓글 수 표시 */}
-            <div className="flex items-center justify-between text-[14px] text-gray-500 dark:text-neutral-500 pb-3">
+              <div className="flex items-center justify-between text-[14px] text-muted-foreground pb-3">
               <div className="flex items-center">
                 {/* 반응 이모지 표시 */}
                 {reactionEmojis.length > 0 ? (
@@ -670,7 +672,7 @@ function PostDetail() {
                       {reactionEmojis.map((emoji, index) => (
                         <div 
                           key={index} 
-                          className="w-5 h-5 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-full text-sm border border-gray-200 dark:border-neutral-700 shadow-sm"
+                            className="w-5 h-5 flex items-center justify-center bg-background rounded-full text-sm border border-border shadow-sm"
                           style={{ zIndex: 3 - index, marginLeft: index > 0 ? '-8px' : '0' }}
                         >
                           {emoji}
@@ -685,16 +687,16 @@ function PostDetail() {
               </div>
               <span>댓글 {post.commentCount || 0}</span>
             </div>
+            </CardContent>
 
-            {/* 좋아요/댓글/공유 버튼 컨테이너 */}
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-800 pt-2 -mx-4 px-4">
+            <CardFooter className="p-0 pt-2 flex items-center justify-between border-t border-border -mx-0 px-0">
               {/* 반응 버튼 */}
               <div className="relative flex-1 max-w-[33%]">
                 <Button
                   onClick={handleReactionClick}
                   variant="ghost"
                   size="sm"
-                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                  className="ml-4 flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
                 >
                   {userReaction ? (
                     <span className="text-base">{userReaction.emoji}</span>
@@ -764,14 +766,14 @@ function PostDetail() {
                   }}
                   variant="ghost"
                   size="sm"
-                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                  className="mr-4 flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
                 >
                   <ShareIcon className="h-4 w-4" />
                   <span className="text-sm">공유</span>
                 </Button>
               </div>
-            </div>
-          </div>
+            </CardFooter>
+          </Card>
         </div>
       </div>
 
@@ -779,22 +781,22 @@ function PostDetail() {
       <div className="w-full px-4 mt-4">
         <div className="max-w-[590px] mx-auto">
           {/* 댓글 입력 영역 */}
-          <div className="bg-gray-100 dark:bg-[#121212] rounded-2xl">
+          <Card className="bg-card shadow-sm mb-4">
+            <CardContent className="p-3">
             <form onSubmit={handleCommentSubmit}>
-              <div className="bg-gray-100 dark:bg-[#121212] rounded-2xl p-[12px] w-full">
+                <div className="w-full">
                 <div className="flex items-center space-x-2">
-                  <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                    <div className="flex-shrink-0">
+                      <Avatar className="h-[30px] w-[30px]">
                     {isLoggedIn ? (
-                      <img
+                          <AvatarImage
                         src={user?.photoURL || `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.uid}&backgroundColor=e8f5e9`}
                         alt="프로필"
-                        className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400">?</span>
-                      </div>
+                          <AvatarFallback className="bg-muted text-muted-foreground">?</AvatarFallback>
                     )}
+                      </Avatar>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 w-full">
@@ -805,7 +807,7 @@ function PostDetail() {
                             onChange={(e) => setCommentContent(e.target.value)}
                             placeholder="댓글을 달아주세요."
                             rows={1}
-                            className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] text-gray-900 dark:text-neutral-300 placeholder-gray-400 dark:placeholder-neutral-500 overflow-hidden"
+                              className="flex-1 bg-transparent resize-none border-none focus:outline-none focus:ring-0 text-[15px] text-foreground placeholder-muted-foreground overflow-hidden"
                             style={{
                               minHeight: '24px',
                               height: commentContent ? 'auto' : '24px'
@@ -817,9 +819,12 @@ function PostDetail() {
                             }}
                           />
                           <div className="flex-shrink-0">
-                            <PrimaryButton type="submit">
+                              <Button 
+                                type="submit" 
+                                size="sm"
+                              >
                               {pathname.includes('edit') ? '수정' : '올리기'}
-                            </PrimaryButton>
+                              </Button>
                           </div>
                         </>
                       ) : (
@@ -829,7 +834,7 @@ function PostDetail() {
                             as={`/login?from=/posts/${id}`}
                             className="flex-1"
                           >
-                            <div className="text-[15px] text-gray-400 dark:text-neutral-500">
+                              <div className="text-[15px] text-muted-foreground">
                               댓글을 작성하려면 로그인이 필요합니다.
                             </div>
                           </Link>
@@ -838,9 +843,9 @@ function PostDetail() {
                               href="/login"
                               as={`/login?from=/posts/${id}`}
                             >
-                              <PrimaryButton>
+                                <Button size="sm">
                                 로그인
-                              </PrimaryButton>
+                                </Button>
                             </Link>
                           </div>
                         </>
@@ -850,11 +855,12 @@ function PostDetail() {
                 </div>
               </div>
             </form>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* 댓글 리스트 영역 */}
           {comments.length > 0 && (
-            <div className="mt-4 bg-gray-100 dark:bg-[#121212] rounded-2xl">
+            <Card className="bg-card shadow-sm">
               {comments.map((comment, index) => (
                 <div key={comment.id}>
                   <CommentCard
@@ -868,18 +874,18 @@ function PostDetail() {
                     onDelete={() => handleDeleteComment(comment.id)}
                   />
                   {index !== comments.length - 1 && (
-                    <div className="h-[1px] bg-gray-200 dark:bg-neutral-800" />
+                    <div className="h-[1px] bg-border" />
                   )}
                 </div>
               ))}
-            </div>
+            </Card>
           )}
         </div>
       </div>
 
       {/* 토스트 메시지 */}
       {showToast && (
-        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black dark:bg-neutral-900 text-white px-4 py-2 rounded-lg">
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-background text-foreground border border-border px-4 py-2 rounded-lg shadow-md">
           링크가 복사되었습니다!
         </div>
       )}

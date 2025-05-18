@@ -171,11 +171,12 @@ function PostCard({ post, categories, onShare }: PostCardProps) {
 
     // posts 문서에 저장된 commentCount 값을 사용
     setCommentCount(post.commentCount || 0);
+    setReactionCount(post.reactionCount || 0);
 
     if (user && post.likedBy) {
       setIsLiked(post.likedBy.includes(user.uid));
     }
-  }, [categories, post.categoryId, post.likedBy, post.id, user, post.commentCount]);
+  }, [categories, post.categoryId, post.likedBy, post.id, user, post.commentCount, post.reactionCount]);
 
   // 반응 데이터 로드
   useEffect(() => {
@@ -448,8 +449,30 @@ function PostCard({ post, categories, onShare }: PostCardProps) {
             </p>
           </div>
           
+          {/* 좋아요/댓글 수 표시 영역 추가 */}
+          <div className="mt-auto pt-2 flex items-center justify-between text-[14px] text-muted-foreground pb-2">
+            <div className="flex items-center">
+              {/* 반응 이모지 표시 */}
+              {reactionEmojis.length > 0 && (
+                <div className="flex -space-x-1 mr-2">
+                  {reactionEmojis.map((emoji, index) => (
+                    <div 
+                      key={index} 
+                      className="w-5 h-5 flex items-center justify-center bg-background rounded-full text-sm border border-border shadow-sm"
+                      style={{ zIndex: 3 - index, marginLeft: index > 0 ? '-8px' : '0' }}
+                    >
+                      {emoji}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <span className="text-xs">{reactionCount || 0}명의 반응</span>
+            </div>
+            <span className="text-xs">댓글 {commentCount || 0}</span>
+          </div>
+          
           {/* 하단 정보 영역 */}
-          <div className="mt-4">
+          <div className="mt-1">
             <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-800 pt-2 -mx-4 px-4">
               {/* 반응 버튼 */}
               <div className="relative flex-1 max-w-[33%]">

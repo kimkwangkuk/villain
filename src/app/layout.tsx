@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import ClientLayout from '@/components/ClientLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -42,11 +44,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className="dark">
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ThemeProvider defaultTheme="dark">
+          <AuthProvider>
+            <ClientLayout>
+            {children}
+            </ClientLayout>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

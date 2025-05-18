@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '@/context/AuthContext';
-import { uploadImage } from '@/api/firebase-post';
+// import { uploadImage } from '@/api/firebase-post';
 
 interface BaseModalProps {
   isOpen: boolean;
@@ -82,10 +82,34 @@ interface EditNameModalProps {
 // 이름 변경 모달
 export function EditNameModal({ isOpen, onClose, onSubmit, initialValue = '', error }: EditNameModalProps) {
   const [displayName, setDisplayName] = useState(initialValue);
+  const [localError, setLocalError] = useState<string | undefined>(error);
+  
+  // 외부 에러 프롭이 변경되면 로컬 에러 상태도 업데이트
+  useEffect(() => {
+    setLocalError(error);
+  }, [error]);
+
+  const validateName = (): boolean => {
+    if (!displayName || displayName.trim() === '') {
+      setLocalError('이름을 입력해주세요.');
+      return false;
+    }
+    
+    if (displayName.length > 20) {
+      setLocalError('이름은 최대 20자까지 입력 가능합니다.');
+      return false;
+    }
+    
+    setLocalError(undefined);
+    return true;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (validateName()) {
     onSubmit(displayName);
+    }
   };
 
   return (
@@ -103,14 +127,22 @@ export function EditNameModal({ isOpen, onClose, onSubmit, initialValue = '', er
             id="displayName"
             type="text"
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-800 dark:text-neutral-300"
+            onChange={(e) => {
+              setDisplayName(e.target.value);
+              // 입력 시 이전 에러 메시지 제거
+              if (localError) setLocalError(undefined);
+            }}
+            className={`block w-full px-3 py-2 border ${localError ? 'border-red-500 dark:border-red-700' : 'border-gray-300 dark:border-neutral-700'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-800 dark:text-neutral-300`}
             placeholder="새로운 이름을 입력하세요"
             maxLength={20}
+            autoFocus
           />
-          {error && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
+          {localError && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{localError}</p>
           )}
+          <p className="mt-1 text-xs text-gray-500 dark:text-neutral-500">
+            {displayName.length}/20자
+          </p>
         </div>
         <div className="flex justify-end space-x-2">
           <button
@@ -122,7 +154,10 @@ export function EditNameModal({ isOpen, onClose, onSubmit, initialValue = '', er
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            className={`px-4 py-2 text-white rounded-md transition-colors ${
+              !displayName.trim() ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+            }`}
+            disabled={!displayName.trim()}
           >
             저장
           </button>
@@ -232,22 +267,79 @@ interface ProfileImageModalProps {
 export function ProfileImageModal({ isOpen, onClose, onSelect, currentImage }: ProfileImageModalProps) {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfileImages = async () => {
       const storage = getStorage();
       const imageUrls: string[] = [];
+      let loadedCount = 0;
       
       try {
-        // woman1.webp와 woman2.webp 가져오기
-        for (let i = 1; i <= 2; i++) {
-          const imageRef = ref(storage, `profile_images/woman${i}.webp`);
+        console.log('프로필 이미지 로드 시작');
+        console.log('현재 Storage 버킷:', storage.app.options.storageBucket);
+        
+        // 다양한 이미지 패턴을 시도합니다
+        const patterns = [
+          'profile', 'avatar', 'user', 'person', 
+          'woman', 'man', 'default', 'icon', 'pic'
+        ];
+        
+        // 개발 환경 여부 확인 (테스트용)
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        console.log('개발 환경 여부:', isDevelopment);
+        
+        // 각 패턴별로 최대 5개까지 시도 (개수 줄임)
+        for (const pattern of patterns) {
+          for (let i = 1; i <= 5; i++) {
+            try {
+              // 에뮬레이터와 실제 서비스 모두 시도
+              const imagePath = `profile_images/${pattern}${i}.webp`;
+              console.log(`이미지 로드 시도: ${imagePath}`);
+              
+              const imageRef = ref(storage, imagePath);
+              console.log('이미지 참조 URL:', imageRef.toString());
+              
           const url = await getDownloadURL(imageRef);
           imageUrls.push(url);
+              loadedCount++;
+              console.log(`이미지 로드 성공: ${pattern}${i}.webp - URL: ${url}`);
+              
+              // 이미지가 충분히 로드되면 중단
+              if (loadedCount >= 15) break;
+            } catch (imgError: any) {
+              // 더 자세한 오류 정보 로깅
+              console.error(`이미지 로드 실패: ${pattern}${i}.webp - 오류:`, 
+                imgError.code, imgError.message);
+            }
+          }
+          
+          // 이미지가 충분히 로드되면 중단
+          if (loadedCount >= 15) break;
         }
+        
+        // 안전한 기본 이미지 추가 (이미지가 없는 경우를 대비)
+        if (imageUrls.length === 0) {
+          // 기본 이미지 하드코딩 (최악의 경우를 대비)
+          imageUrls.push('https://via.placeholder.com/150?text=User1');
+          imageUrls.push('https://via.placeholder.com/150?text=User2');
+          imageUrls.push('https://via.placeholder.com/150?text=User3');
+          console.log('외부 기본 이미지를 사용합니다.');
+        }
+
+        console.log(`총 ${imageUrls.length}개의 이미지를 로드했습니다.`);
         setImages(imageUrls);
+        setError(null);
       } catch (error) {
         console.error('이미지 로딩 실패:', error);
+        setError('프로필 이미지를 불러오는데 실패했습니다.');
+        
+        // 오류 발생 시에도 기본 이미지 제공
+        setImages([
+          'https://via.placeholder.com/150?text=User1',
+          'https://via.placeholder.com/150?text=User2',
+          'https://via.placeholder.com/150?text=User3'
+        ]);
       } finally {
         setLoading(false);
       }
@@ -266,9 +358,11 @@ export function ProfileImageModal({ isOpen, onClose, onSelect, currentImage }: P
     >
       {loading ? (
         <div className="text-center py-4 text-gray-700 dark:text-neutral-300">로딩중...</div>
+      ) : error ? (
+        <div className="text-center py-4 text-red-500 dark:text-red-400">{error}</div>
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             {images.map((imageUrl, index) => (
               <button
                 key={index}
