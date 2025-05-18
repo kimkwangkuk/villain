@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
 // import { Inter } from 'next/font/google';
-import localFont from 'next/font/local';
+import { Noto_Sans_KR } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import ClientLayout from '@/components/ClientLayout';
 
 // const inter = Inter({ subsets: ['latin'] });
-const pretendard = localFont({
-  src: '../fonts/PretendardVariable.woff2',
-  variable: '--font-pretendard',
-  display: 'swap',
+const notoSansKr = Noto_Sans_KR({ 
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-pretendard', // 이전에 정의한 변수명 유지
 });
 
 export const metadata: Metadata = {
@@ -51,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="dark">
-      <body className={pretendard.className}>
+      <body className={notoSansKr.className}>
         <ThemeProvider defaultTheme="dark">
           <AuthProvider>
             <ClientLayout>
