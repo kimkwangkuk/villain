@@ -195,7 +195,7 @@ export function LoginForm({
               </div>
               <Button 
                 variant="outline" 
-                className="flex w-full items-center justify-center gap-2"
+                className="flex w-full items-center justify-center gap-2 bg-background dark:bg-background"
                 onClick={handleGoogleLogin}
                 disabled={isGoogleLoading}
                 type="button"
