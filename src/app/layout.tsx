@@ -59,7 +59,7 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
       </head>
-      <body className="font-pretendard">
+      <body>
         <ThemeProvider defaultTheme="dark">
           <AuthProvider>
             <ClientLayout>
@@ -67,6 +67,11 @@ export default function RootLayout({
             </ClientLayout>
           </AuthProvider>
         </ThemeProvider>
+        <style jsx global>{`
+          html {
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+          }
+        `}</style>
       </body>
     </html>
   );
