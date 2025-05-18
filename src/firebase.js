@@ -58,20 +58,28 @@ if (useEmulators && typeof window !== 'undefined') {
   
   try {
     // Auth 에뮬레이터 직접 연결
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: false });
     console.log('✅ Auth 에뮬레이터 연결 완료');
     
-    // Firestore 에뮬레이터 직접 연결
-    connectFirestoreEmulator(db, 'localhost', 8081);
-    console.log('✅ Firestore 에뮬레이터 연결 완료');
+    try {
+      // Firestore 에뮬레이터 직접 연결
+      connectFirestoreEmulator(db, 'localhost', 8081);
+      console.log('✅ Firestore 에뮬레이터 연결 완료');
+    } catch (error) {
+      console.error('❌ Firestore 에뮬레이터 연결 실패:', error);
+    }
     
-    // Storage 에뮬레이터 직접 연결
-    connectStorageEmulator(storage, 'localhost', 9199);
-    console.log('✅ Storage 에뮬레이터 연결 완료');
+    try {
+      // Storage 에뮬레이터 직접 연결
+      connectStorageEmulator(storage, 'localhost', 9199);
+      console.log('✅ Storage 에뮬레이터 연결 완료');
+    } catch (error) {
+      console.error('❌ Storage 에뮬레이터 연결 실패:', error);
+    }
     
-    console.log('🎉 모든 에뮬레이터 연결 완료!');
+    console.log('🎉 에뮬레이터 연결 처리 완료!');
   } catch (error) {
-    console.error('❌ 에뮬레이터 연결 실패:', error);
+    console.error('❌ Auth 에뮬레이터 연결 실패:', error);
   }
 }
 
