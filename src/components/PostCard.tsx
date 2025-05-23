@@ -473,7 +473,7 @@ function PostCard({ post, categories, onShare }: PostCardProps) {
           
           {/* 하단 정보 영역 */}
           <div className="mt-1">
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-800 pt-2 -mx-4 px-4">
+            <div className="flex items-center justify-between pt-2 -mx-4 px-4">
               {/* 반응 버튼 */}
               <div className="relative flex-1 max-w-[33%]">
                 <Button

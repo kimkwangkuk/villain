@@ -535,8 +535,8 @@ function PostDetail() {
       {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
         <div className="max-w-[590px] mx-auto">
-          <Card className="bg-card shadow-sm rounded-xl overflow-hidden">
-            <CardHeader className="p-4 space-y-0 pt-4 pb-0">
+          <Card className="bg-card shadow-sm rounded-xl overflow-hidden p-4">
+            <CardHeader className="space-y-0 p-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                   <Avatar className="h-8 w-8">
@@ -608,8 +608,8 @@ function PostDetail() {
               </div>
             </CardHeader>
 
-            <CardContent className="p-4 pt-3">
-            <div className="pt-3 pb-6">
+            <CardContent className="p-0">
+              <div>
                 <h1 className="text-[20px] font-semibold text-foreground mb-2">{post?.title}</h1>
                 <p className="text-[16px] text-foreground/90 leading-relaxed whitespace-pre-wrap">
                 {detectUrls(post?.content).map((part: UrlPart) => (
@@ -627,10 +627,12 @@ function PostDetail() {
                     <span key={part.key}>{part.content}</span>
                   )
                 ))}
-              </p>
+                </p>
+              </div>
+
               {/* URL 미리보기 */}
               {detectUrls(post?.content).some((part: UrlPart) => part.type === 'url') && (
-                  <div className="mt-4 text-sm text-muted-foreground space-y-1">
+                <div className="mt-4 text-sm text-muted-foreground space-y-1">
                   {detectUrls(post?.content).map((part: UrlPart) => {
                     if (part.type === 'url') {
                       // URL을 파싱하여 도메인만 추출 (슬래시 없이)
@@ -660,36 +662,37 @@ function PostDetail() {
                   })}
                 </div>
               )}
-            </div>
 
-            {/* 좋아요/댓글 수 표시 */}
-              <div className="flex items-center justify-between text-[14px] text-muted-foreground pb-3">
-              <div className="flex items-center">
-                {/* 반응 이모지 표시 */}
-                {reactionEmojis.length > 0 ? (
-                  <>
-                    <div className="flex -space-x-1 mr-1">
-                      {reactionEmojis.map((emoji, index) => (
-                        <div 
-                          key={index} 
-                            className="w-5 h-5 flex items-center justify-center bg-background rounded-full text-sm border border-border shadow-sm"
-                          style={{ zIndex: 3 - index, marginLeft: index > 0 ? '-8px' : '0' }}
-                        >
-                          {emoji}
+              {/* 반응과 댓글 카운트 */}
+              <div className="pt-12">
+                <div className="flex items-center justify-between text-[14px] text-muted-foreground">
+                  <div className="flex items-center">
+                    {/* 반응 이모지 표시 */}
+                    {reactionEmojis.length > 0 ? (
+                      <>
+                        <div className="flex -space-x-1 mr-1">
+                          {reactionEmojis.map((emoji, index) => (
+                            <div 
+                              key={index} 
+                              className="w-5 h-5 flex items-center justify-center bg-background rounded-full text-sm border border-border shadow-sm"
+                              style={{ zIndex: 3 - index, marginLeft: index > 0 ? '-8px' : '0' }}
+                            >
+                              {emoji}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                    <span>{post.reactionCount || 0}명의 반응</span>
-                  </>
-                ) : (
-                  <span>{post.reactionCount || 0}명의 반응</span>
-                )}
+                        <span>{post.reactionCount || 0}명의 반응</span>
+                      </>
+                    ) : (
+                      <span>{post.reactionCount || 0}명의 반응</span>
+                    )}
+                  </div>
+                  <span>댓글 {post.commentCount || 0}</span>
+                </div>
               </div>
-              <span>댓글 {post.commentCount || 0}</span>
-            </div>
             </CardContent>
 
-            <CardFooter className="p-0 pt-2 flex items-center justify-between border-t border-border -mx-0 px-0">
+            <CardFooter className="flex items-center justify-between p-0">
               {/* 반응 버튼 */}
               <div className="relative flex-1 max-w-[33%]">
                 <Button

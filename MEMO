@@ -4,29 +4,31 @@
 
 firebase emulators:start
 
-
-http://localhost:4000/
-
 await createCategories()
-@post
+await createTestPosts()
+
+
+가져오기기
+   git status
+
+   git pull origin main
 
 
 
-
-# 원격 저장소의 변경사항 가져오기
-git fetch origin
-git pull origin main
-# 원격 저장소의 변경사항을 현재 브랜치에 적용
 
 
 git add .
-git commit -m "맥북에서 메타정보추가"
+git commit -m "pc에서 네비버튼변경" 
 git push origin main
 
 
 
 
-npm run upload-images
-npm run update-categories
 
-https://lucide.dev/icons/align-vertical-justify-start?search=bubble
+Firestore 데이터: http://localhost:8080
+Authentication: http://localhost:9099
+에뮬레이터 UI: http://localhost:4000
+
+
+
+디스플레이 네임 관계 정리 필요
