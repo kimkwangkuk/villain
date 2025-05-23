@@ -608,7 +608,7 @@ function PostDetail() {
               </div>
             </CardHeader>
 
-            <CardContent className="p-0">
+            <CardContent className="p-0 pt-2">
               <div>
                 <h1 className="text-[20px] font-semibold text-foreground mb-2">{post?.title}</h1>
                 <p className="text-[16px] text-foreground/90 leading-relaxed whitespace-pre-wrap">
@@ -692,7 +692,7 @@ function PostDetail() {
               </div>
             </CardContent>
 
-            <CardFooter className="flex items-center justify-between p-0">
+            <CardFooter className="flex items-center justify-between pt-3">
               {/* 반응 버튼 */}
               <div className="relative flex-1 max-w-[33%]">
                 <Button
@@ -784,9 +784,9 @@ function PostDetail() {
       <div className="w-full px-4 mt-4">
         <div className="max-w-[590px] mx-auto">
           {/* 댓글 입력 영역 */}
-          <Card className="bg-card shadow-sm mb-4">
-            <CardContent className="p-3">
-            <form onSubmit={handleCommentSubmit}>
+          <Card className="bg-card shadow-sm mb-4 p-5">
+            <CardContent className="p-0">
+              <form onSubmit={handleCommentSubmit}>
                 <div className="w-full">
                 <div className="flex items-center space-x-2">
                     <div className="flex-shrink-0">
