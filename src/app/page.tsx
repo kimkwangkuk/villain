@@ -477,7 +477,7 @@ export default function PostsPage() {
           <div className="max-w-[1200px] mx-auto px-4">
             {postsLoading ? (
               // 포스트 로딩 중일 때만 포스트 영역 스켈레톤 표시
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <PostCardSkeleton key={index} />
                 ))}
@@ -489,13 +489,13 @@ export default function PostsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {uniqueFilteredPosts.map((post) => (
-                  <PostCard 
+              <PostCard 
                     key={`post-${post.id}`} 
                     post={post as any} 
-                    categories={categories}
+                categories={categories}
                     onShare={handleShare as any}
-                  />
-                ))}
+              />
+            ))}
               </div>
             )}
             {/* 로딩 중이 아니고 추가 로딩 중이며 포스트가 있을 때만 로딩 스피너 표시 */}
