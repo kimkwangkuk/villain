@@ -6,7 +6,7 @@ import { getCategories } from '@/api/categories';
 import { db } from '@/firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import PostCard from '@/components/PostCard';
-import { useRouter, redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 interface Category {
   id: string;
@@ -29,10 +29,6 @@ interface Post {
 }
 
 export default function Page() {
-  redirect('/home');
-}
-
-export function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +67,7 @@ export function Home() {
     fetchData();
   }, []);
 
-  const handleShare = (postId: string) => {
+  const handleShare = (e: React.MouseEvent, postId: string) => {
     // 공유 기능 구현
     alert('공유 기능은 준비 중입니다.');
   };
