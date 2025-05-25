@@ -549,7 +549,7 @@ function MyPage() {
       <div className="py-4">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col items-center">
-            <Card className="bg-card shadow-sm w-full max-w-md">
+            <Card className="bg-card shadow-sm w-full max-w-md border-0">
               <CardContent className="p-6">
                 <div className="flex flex-col items-center">
                   {/* 프로필 이미지 */}
@@ -623,7 +623,7 @@ function MyPage() {
           {/* 포스트 영역 */}
           <div className="py-6">
             <TabsContent value="myPosts">
-              <Card>
+              <Card className="border-0">
                 <CardContent className="pt-6">
                   {myPosts.length === 0 ? (
                     <div className="text-center py-8">
@@ -650,7 +650,7 @@ function MyPage() {
             </TabsContent>
 
             <TabsContent value="interestedPosts">
-              <Card>
+              <Card className="border-0">
                 <CardContent className="pt-6">
                   {interestedPosts.length === 0 ? (
                     <p className="text-center py-8 text-muted-foreground">아직 관심 포스트가 없습니다.</p>
@@ -670,7 +670,7 @@ function MyPage() {
             </TabsContent>
 
             <TabsContent value="notifications">
-              <Card>
+              <Card className="border-0">
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     {notifications.length === 0 ? (
