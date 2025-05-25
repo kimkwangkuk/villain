@@ -382,13 +382,13 @@ export default function PostsPage() {
   if (categoriesLoading && !categories.length) {
     // 카테고리가 로딩 중이고 카테고리 데이터가 없을 때만 카테고리 스켈레톤 표시
     return (
-      <div className="min-h-screen bg-white dark:bg-black">
+      <div className="min-h-screen bg-background text-foreground">
         {/* 카테고리 네비게이션 스켈레톤 */}
-        <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-800 sticky top-16 z-40">
+        <div className="bg-background border-b border-gray-200 dark:border-neutral-800 sticky top-16 z-40">
           <div className="max-w-[1200px] mx-auto relative">
             <div className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 pb-2 cursor-grab select-none hide-scrollbar">
               <button
-                className="text-[14px] pb-2 px-1 transition-colors text-black dark:text-white border-b-2 border-black dark:border-white"
+                className="text-[14px] pb-2 px-1 transition-colors text-foreground border-b-2 border-foreground"
               >
                 <div className="flex flex-col items-center gap-[10px]">
                   <AllCategoryIcon className="w-[28px] h-[28px]" />
@@ -423,22 +423,22 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black transition-colors duration-200">
+    <div className="min-h-screen bg-background text-foreground">
       {/* 헤더 영역 */}
-      <div className="sticky top-16 z-40 bg-white dark:bg-black border-b border-gray-200 dark:border-neutral-900">
+      <div className="sticky top-16 z-40 bg-background border-b border-gray-200 dark:border-neutral-900">
         {/* 카테고리 영역 (네비게이션바) */}
         <div className="max-w-[1200px] mx-auto">
           <div 
             ref={categoryScrollRef}
-            className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 cursor-grab select-none hide-scrollbar bg-white dark:bg-black"
+            className="flex overflow-x-auto whitespace-nowrap pt-4 md:pt-10 px-4 gap-5 md:gap-6 lg:gap-8 cursor-grab select-none hide-scrollbar bg-background"
           >
             <button
               onClick={() => handleCategoryChange(null)}
               data-category="all"
               className={`text-[14px] pb-3 px-1 transition-colors ${
                 !selectedCategory
-                  ? "text-black dark:text-white border-b-2 border-black dark:border-white"
-                  : "text-black dark:text-white"
+                  ? "text-foreground border-b-2 border-foreground"
+                  : "text-foreground"
               }`}
             >
               <div className="flex flex-col items-center gap-[10px]">
@@ -455,8 +455,8 @@ export default function PostsPage() {
                   onClick={() => handleCategoryChange(category.id)}
                   className={`text-[14px] pb-3 px-1 transition-colors ${
                     selectedCategory === category.id
-                      ? "text-black dark:text-white border-b-2 border-black dark:border-white"
-                      : "text-black dark:text-white"
+                      ? "text-foreground border-b-2 border-foreground"
+                      : "text-foreground"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-[10px]">
@@ -471,9 +471,9 @@ export default function PostsPage() {
       </div>
 
       {/* 메인 컨텐츠 영역 */}
-      <div className="bg-white dark:bg-black transition-colors duration-200">
+      <div className="bg-background transition-colors duration-200">
         {/* 카드 리스트 영역 */}
-        <div className="pt-[20px] md:pt-[50px] pb-8 bg-white dark:bg-black">
+        <div className="pt-[20px] md:pt-[50px] pb-8 bg-background">
           <div className="max-w-[1200px] mx-auto px-4">
             {postsLoading ? (
               // 포스트 로딩 중일 때만 포스트 영역 스켈레톤 표시
@@ -508,10 +508,10 @@ export default function PostsPage() {
         </div>
         
         {/* 하단 영역 */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 z-10">
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-gray-200 dark:border-gray-800 z-10">
           {/* 토스트 메시지 */}
           {showToast && (
-            <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black dark:bg-neutral-900 text-white px-4 py-2 rounded-lg z-50">
+            <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-lg z-50">
               링크가 복사되었습니다!
             </div>
           )}

@@ -54,8 +54,8 @@ function Navbar(): JSX.Element {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-[1001] transition-all duration-200
       ${isScrolled 
-        ? 'bg-white dark:bg-black shadow-sm dark:shadow-black' 
-        : 'bg-white dark:bg-black'}`}
+        ? 'bg-background shadow-sm dark:shadow-black' 
+        : 'bg-background'}`}
     >
       <div className="px-4">
         <div className="flex justify-between items-center h-16">
