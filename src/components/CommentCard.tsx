@@ -134,8 +134,8 @@ function CommentCard({ comment, postAuthorId, onEdit, onDelete }: CommentCardPro
       setIsLikeLoading(true);
       const updatedComment = await updateCommentLikes(comment.id, user.uid);
       // 서버 응답으로 상태 동기화
-      setCommentLikes(updatedComment.likes);
-      setLiked(updatedComment.likedBy.includes(user.uid));
+      setCommentLikes(updatedComment.likes ?? 0);
+      setLiked((updatedComment.likedBy ?? []).includes(user.uid));
     } catch (error) {
       // 실패 시 이전 상태로 롤백
       setLiked(previousLiked);
