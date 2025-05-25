@@ -535,7 +535,7 @@ function PostDetail() {
       {/* 프로필과 콘텐츠를 감싸는 컨테이너 */}
       <div className="w-full px-4">
         <div className="max-w-[590px] mx-auto">
-          <Card className="bg-card shadow-sm rounded-xl overflow-hidden p-4">
+          <Card className="bg-card shadow-sm rounded-xl overflow-hidden p-5 pb-3">
             <CardHeader className="space-y-0 p-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
