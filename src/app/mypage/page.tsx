@@ -544,7 +544,7 @@ function MyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white dark:bg-black text-foreground">
       {/* 프로필 영역 */}
       <div className="py-4">
         <div className="max-w-7xl mx-auto px-4">
